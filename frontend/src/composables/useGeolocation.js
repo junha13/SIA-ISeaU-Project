@@ -1,4 +1,4 @@
-// src/composables/useGeolocation.js
+// 위치 정보 가져오기 composable
 import { ref } from 'vue'
 
 export function useGeolocation() {
@@ -12,7 +12,7 @@ export function useGeolocation() {
 
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                error.value = '이 브라우저에서는 위치 정보를 지원하지 않습니다.'
+                error.value = '이 브라우저에서는 위치 정보 기능을 지원하지 않습니다.'
                 loading.value = false
                 reject(error.value)
                 return
@@ -28,7 +28,7 @@ export function useGeolocation() {
                     resolve(position.value)
                 },
                 (err) => {
-                    error.value = `위치 정보를 가져올 수 없습니다 (${err.message})`
+                    error.value = `위치 정보를 가져올 수 없습니다: ${err.message}`
                     loading.value = false
                     reject(error.value)
                 },

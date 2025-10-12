@@ -10,8 +10,8 @@
           <p class="mb-0" style="white-space: pre-line;">{{ message }}</p>
         </div>
         <div class="modal-footer justify-content-center">
-          <button class="btn btn-secondary" @click="$emit('update:isVisible', false)">취소</button>
           <button class="btn btn-primary" @click="$emit('confirm')">확인</button>
+          <button class="btn btn-secondary" @click="$emit('update:isVisible', false)">취소</button>
         </div>
       </div>
     </div>
