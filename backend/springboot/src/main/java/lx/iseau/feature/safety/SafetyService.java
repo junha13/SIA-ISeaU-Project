@@ -1,4 +1,4 @@
-package lx.iseayou.feature.user;
+package lx.iseau.feature.safety;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,17 +8,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UserService {
+public class SafetyService {
 	
 	@Autowired
-	UserDAO dao;
+	SafetyDAO dao;
 	
 	/*
 	 * 설명
 	 */
 	@Transactional
-	public Map<String, Object> a(UserVO user) {
-		int num = 3;
+	public Map<String, Object> a(int num) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
 		map.put("result", num);

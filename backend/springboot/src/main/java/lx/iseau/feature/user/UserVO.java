@@ -1,4 +1,4 @@
-package lx.iseayou.feature.user;
+package lx.iseau.feature.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

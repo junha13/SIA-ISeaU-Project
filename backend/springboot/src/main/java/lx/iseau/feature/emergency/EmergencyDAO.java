@@ -1,4 +1,4 @@
-package lx.iseayou.feature.emergency;
+package lx.iseau.feature.emergency;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

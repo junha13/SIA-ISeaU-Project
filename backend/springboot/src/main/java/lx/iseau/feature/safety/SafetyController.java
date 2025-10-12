@@ -1,4 +1,4 @@
-package lx.iseayou.feature.marine;
+package lx.iseau.feature.safety;
 
 import java.util.Map;
 
@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/marine")
+@RequestMapping("/api/safety")
 @RestController
-public class MarineController {
+public class SafetyController {
 	
 	@Autowired
-	MarineService service;
+	SafetyService service;
 
 	/*
 	 * 설명
@@ -23,7 +23,7 @@ public class MarineController {
 		Map<String, Object> result = service.a(num);
 		return ResponseEntity
 				.ok()
-				.header("api", "marine/a")
+				.header("api", "safety/a")
 				.body(Map.of("data", result));
 	}
 }

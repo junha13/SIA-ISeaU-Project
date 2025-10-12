@@ -1,4 +1,4 @@
-package lx.iseayou.feature.marine;
+package lx.iseau.feature.emergency;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MarineService {
+public class EmergencyService {
 	
 	@Autowired
-	MarineDAO dao;
+	EmergencyDAO dao;
 	
 	/*
 	 * 설명

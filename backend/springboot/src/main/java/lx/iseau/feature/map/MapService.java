@@ -1,4 +1,4 @@
-package lx.iseayou.feature.map;
+package lx.iseau.feature.map;
 
 import java.util.HashMap;
 import java.util.Map;

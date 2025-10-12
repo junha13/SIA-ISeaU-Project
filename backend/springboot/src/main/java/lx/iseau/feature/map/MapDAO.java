@@ -1,4 +1,4 @@
-package lx.iseayou.feature.map;
+package lx.iseau.feature.map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

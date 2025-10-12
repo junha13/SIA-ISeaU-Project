@@ -1,4 +1,4 @@
-package lx.iseayou.common.config;
+package lx.iseau.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
