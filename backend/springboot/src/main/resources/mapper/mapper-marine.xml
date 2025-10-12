@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="lx.iseayou.feature.marine.MarineDAO">
+<mapper namespace="lx.iseau.feature.marine.MarineDAO">
 
 
 </mapper>

@@ -1,4 +1,4 @@
-package lx.iseayou;
+package lx.iseau;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SpringBootApplication
-@MapperScan(basePackages = "lx.iseayou.feature")
+@MapperScan(basePackages = "lx.iseau.feature")
 public class SpringbootApplication {
 	
    /*

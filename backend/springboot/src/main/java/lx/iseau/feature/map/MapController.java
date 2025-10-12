@@ -1,4 +1,4 @@
-package lx.iseayou.feature.emergency;
+package lx.iseau.feature.map;
 
 import java.util.Map;
 
@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/emergency")
+@RequestMapping("/api/map")
 @RestController
-public class EmergencyController {
+public class MapController {
 	
 	@Autowired
-	EmergencyService service;
+	MapService service;
 
 	/*
 	 * 설명
@@ -23,7 +23,7 @@ public class EmergencyController {
 		Map<String, Object> result = service.a(num);
 		return ResponseEntity
 				.ok()
-				.header("api", "emergency/a")
+				.header("api", "map/a")
 				.body(Map.of("data", result));
 	}
 }

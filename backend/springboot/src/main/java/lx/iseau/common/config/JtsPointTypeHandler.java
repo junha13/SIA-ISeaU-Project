@@ -1,4 +1,4 @@
-package lx.iseayou.common.config;
+package lx.iseau.common.config;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
