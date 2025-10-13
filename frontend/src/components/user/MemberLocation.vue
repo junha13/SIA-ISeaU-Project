@@ -11,14 +11,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useGroupStore } from '@/stores/groupStore'
+import { defineProps } from 'vue'
 
-const groupStore = useGroupStore()
-const members = ref([])
-
-onMounted(async () => {
-  await groupStore.getGroupMembers('group01')
-  members.value = groupStore.groupMembers
+defineProps({
+  members: {
+    type: Array,
+    default: () => []
+  }
 })
 </script>
