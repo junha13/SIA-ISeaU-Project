@@ -13,7 +13,7 @@
 Servers/*
 
 ###Metronic###
-teamProject/frontend/public/assets/*
+frontend/public/assets
 
 ### C++ ###
 # Prerequisites
