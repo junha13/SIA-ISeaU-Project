@@ -1,4 +1,4 @@
-package lx.iseau.feature.user;
+package lx.iseau.feature.report;
 
 import java.util.Map;
 
@@ -8,22 +8,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/user")
+@RequestMapping("/api/report")
 @RestController
-public class UserController {
+public class ReportController {
 	
 	@Autowired
-	UserService service;
+	ReportService service;
 
 	/*
 	 * 설명
 	 */
 	@RequestMapping("/a")
-	public ResponseEntity<?> a(@RequestBody UserVO user) {
-		Map<String, Object> result = service.a(user);
+	public ResponseEntity<?> a(@RequestBody int num) {
+		Map<String, Object> result = service.a(num);
 		return ResponseEntity
 				.ok()
-				.header("api", "User/a")
+				.header("api", "Report/a")
 				.body(Map.of("data", result));
 	}
 }
