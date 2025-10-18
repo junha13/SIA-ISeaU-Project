@@ -1,5 +1,5 @@
 // src/api/beach.js
-import { useApi } from '@/data/useApi.js';
+import { useApi } from '@/utils/useApi.js';
 
 // 해수욕장 목록 조회 API (GET)
 const { execute: fetchBeachList } = useApi('get', '/beaches');

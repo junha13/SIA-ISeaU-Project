@@ -53,9 +53,9 @@
         </div>
       </div>
 
-      <!-- 카드 2: 안전 수칙 -->
+      <!-- 카드 2: 안전 수칙 (SafetyGuide 라우트 연결) -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: safetyColor, color: darkColor }">
+        <div class="feature-card" :style="{ borderColor: safetyColor, color: darkColor }" @click="goToPage('SafetyGuide')">
           <i class="fas fa-shield-alt fs-2 mb-3" :style="{ color: safetyColor }"></i>
           <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">안전 수칙</p>
         </div>
@@ -63,15 +63,15 @@
 
       <!-- 카드 3: 그룹 -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }">
+        <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }" @click="goToPage('GroupMain')">
           <i class="fas fa-users fs-2 mb-3" :style="{ color: cautionColor }"></i>
           <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">그룹</p>
         </div>
       </div>
 
-      <!-- 카드 4: 신고 -->
+      <!-- 카드 4: 신고 (SOSMain 라우트 연결) -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: dangerColor, color: darkColor }">
+        <div class="feature-card" :style="{ borderColor: dangerColor, color: darkColor }" @click="goToPage('SOSMain')">
           <i class="fas fa-exclamation-triangle fs-2 mb-3" :style="{ color: dangerColor }"></i>
           <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">신고</p>
         </div>
