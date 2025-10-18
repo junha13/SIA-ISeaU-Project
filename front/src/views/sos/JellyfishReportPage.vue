@@ -16,23 +16,28 @@
     <div class="text-center mb-4 p-5 rounded-3 border" style="background-color: #f8f9fa; cursor: pointer;" @click="triggerFileUpload">
       <i class="fas fa-camera fs-1 mb-2 text-muted"></i>
       <p class="mb-0 fw-bold text-muted">사진 등록</p>
+      <!-- 파일 이름 표시 -->
+      <small v-if="sosStore.reportData.imageFile" class="text-success fw-bold">{{ sosStore.reportData.imageFile.name }}</small>
       <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" style="display: none;">
     </div>
 
     <!-- 제보 양식 -->
     <div class="mb-3">
       <label class="fw-bold mb-2" :style="{ color: darkColor }">위치 (필수)</label>
-      <input type="text" class="form-control rounded-3" placeholder="발견 위치를 입력하세요">
+      <input type="text" class="form-control rounded-3" placeholder="발견 위치를 입력하세요"
+             :value="sosStore.reportData.location" @input="updateLocation">
     </div>
 
     <div class="mb-3">
       <label class="fw-bold mb-2" :style="{ color: darkColor }">전화번호</label>
-      <input type="tel" class="form-control rounded-3" placeholder="전화번호를 입력하세요">
+      <input type="tel" class="form-control rounded-3" placeholder="전화번호를 입력하세요"
+             :value="sosStore.reportData.phone" @input="updatePhone">
     </div>
 
     <div class="mb-5">
       <label class="fw-bold mb-2" :style="{ color: darkColor }">상세 설명</label>
-      <textarea class="form-control rounded-3" rows="4" placeholder="상세 설명을 입력하세요"></textarea>
+      <textarea class="form-control rounded-3" rows="4" placeholder="상세 설명을 입력하세요"
+                :value="sosStore.reportData.description" @input="updateDescription"></textarea>
     </div>
 
     <!-- 제보 완료 버튼 (고정 하단) -->
@@ -49,14 +54,22 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useConfirmModal } from '@/utils/modalUtils.js'; // 모달 유틸리티 import
+import { useConfirmModal } from '@/utils/modalUtils.js';
+import { useSOSStore } from '@/stores/sosStore'; // SOS Store 임포트
 
 const { showConfirmModal } = useConfirmModal();
+const sosStore = useSOSStore(); // Store 인스턴스
 
 const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
 const fileInput = ref(null);
+
+// --- Form Update Handlers (Store Action 호출)
+const updateLocation = (e) => sosStore.updateReportData('location', e.target.value);
+const updatePhone = (e) => sosStore.updateReportData('phone', e.target.value);
+const updateDescription = (e) => sosStore.updateReportData('description', e.target.value);
+
 
 const triggerFileUpload = () => {
   fileInput.value.click();
@@ -65,6 +78,7 @@ const triggerFileUpload = () => {
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
+    sosStore.updateReportData('imageFile', file); // 파일 객체를 Store에 저장
     showConfirmModal({
       title: '사진 등록 완료',
       message: `선택된 파일: ${file.name}`,
@@ -75,19 +89,32 @@ const handleFileUpload = (event) => {
   }
 };
 
-const submitReport = () => {
-  // API 호출을 통해 제보 데이터를 전송해야 합니다.
-  showConfirmModal({
-    title: '제보 완료',
-    message: '해파리 제보가 성공적으로 접수되었습니다. 감사합니다.',
-    type: 'success',
-    autoHide: true,
-    duration: 2000
-  });
+const submitReport = async () => {
+  if (!sosStore.reportData.location) {
+    showConfirmModal({ title: '필수 입력', message: '발견 위치를 입력해주세요.', type: 'error' });
+    return;
+  }
+
+  try {
+    // Store Action 호출 (API 전송 및 폼 초기화)
+    await sosStore.submitJellyfishReport();
+
+    showConfirmModal({
+      title: '제보 완료',
+      message: '해파리 제보가 성공적으로 접수되었습니다. 감사합니다.',
+      type: 'success',
+      autoHide: true,
+      duration: 2000
+    });
+
+  } catch (e) {
+    showConfirmModal({ title: '제보 실패', message: e.message, type: 'error' });
+  }
 };
 </script>
 
 <style scoped>
+/* (스타일 유지) */
 .jellyfish-report-page {
   /* 하단 버튼 공간 확보 (버튼 높이 + 패딩 고려) */
   min-height: calc(100vh - 55px - 60px);

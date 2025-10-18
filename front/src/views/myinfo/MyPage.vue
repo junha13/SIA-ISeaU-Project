@@ -11,11 +11,11 @@
       <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
       <div class="d-flex justify-content-between py-2 border-bottom">
         <span class="text-muted">이름</span>
-        <span class="fw-bold">{{ userInfo.name }}</span>
+        <span class="fw-bold">{{ authStore.getUserInfo.name }}</span>
       </div>
       <div class="d-flex justify-content-between py-2">
         <span class="text-muted">전화번호</span>
-        <span class="fw-bold">{{ userInfo.phone }}</span>
+        <span class="fw-bold">{{ authStore.getUserInfo.phone }}</span>
       </div>
     </div>
 
@@ -49,19 +49,19 @@
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">1단계 (현재 200M)</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="level1" v-model="settings.alertLevel1" :style="switchStyle(settings.alertLevel1)">
+          <input class="form-check-input" type="checkbox" id="level1" v-model="settings.alertLevel1" @change="updateSettings" :style="switchStyle(settings.alertLevel1)">
         </div>
       </div>
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">2단계 (현재 200M)</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="level2" v-model="settings.alertLevel2" :style="switchStyle(settings.alertLevel2)">
+          <input class="form-check-input" type="checkbox" id="level2" v-model="settings.alertLevel2" @change="updateSettings" :style="switchStyle(settings.alertLevel2)">
         </div>
       </div>
       <div class="d-flex justify-content-between align-items-center py-2 border-bottom pb-4">
         <span class="text-muted small">3단계 (현재 200M)</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="level3" v-model="settings.alertLevel3" :style="switchStyle(settings.alertLevel3)">
+          <input class="form-check-input" type="checkbox" id="level3" v-model="settings.alertLevel3" @change="updateSettings" :style="switchStyle(settings.alertLevel3)">
         </div>
       </div>
 
@@ -70,13 +70,13 @@
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">그룹 위치 미갱신 알림</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="missing" v-model="settings.missingAlert" :style="switchStyle(settings.missingAlert)">
+          <input class="form-check-input" type="checkbox" id="missing" v-model="settings.missingAlert" @change="updateSettings" :style="switchStyle(settings.missingAlert)">
         </div>
       </div>
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">조위/물때 알림</span>
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="tide" v-model="settings.tideAlert" :style="switchStyle(settings.tideAlert)">
+          <input class="form-check-input" type="checkbox" id="tide" v-model="settings.tideAlert" @change="updateSettings" :style="switchStyle(settings.tideAlert)">
         </div>
       </div>
     </div>
@@ -100,29 +100,22 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore'; // Auth Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
+const authStore = useAuthStore(); // Auth Store 인스턴스
 
 // --- Color Definitions ---
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
-// --- Dummy Data ---
-const userInfo = ref({
-  name: '김바다',
-  phone: '010-1234-5678',
-});
+// --- State ---
+// 설정 상태를 Store에서 직접 가져오기 위해 구조 분해 할당 대신 전체 settings 객체를 참조
+const settings = authStore.getUserInfo.settings;
 
-const settings = ref({
-  alertLevel1: true,
-  alertLevel2: true,
-  alertLevel3: false,
-  missingAlert: true,
-  tideAlert: false,
-});
 
 // --- Computed & Methods ---
 const switchStyle = (isActive) => {
@@ -137,10 +130,18 @@ const switchStyle = (isActive) => {
 };
 
 /**
- * 로그아웃 처리 함수 (Promise 체인 오류 수정 및 강제 리로드 로직 유지)
+ * 설정 변경 시 Store Action 호출
+ */
+const updateSettings = () => {
+  // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
+  // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
+  authStore.updateSettings(settings);
+};
+
+/**
+ * 로그아웃 처리 함수
  */
 const handleLogout = async () => {
-  // 1. 확인 모달 (Promise를 반환하며, await로 결과를 받음)
   const result = await showConfirmModal({
     title: '로그아웃',
     message: '정말로 로그아웃 하시겠습니까?',
@@ -150,27 +151,17 @@ const handleLogout = async () => {
   });
 
   if (result) {
-    // 2. API 호출: 로그아웃 처리 (생략)
-    // await authApi.logout();
-
-    // 3. 성공 알림 모달 (Promise를 반환하지만, 결과를 await로 받고 .then()을 사용하지 않음)
-    // 이전 에러의 원인이었던 .then() 호출을 제거합니다.
-    await showConfirmModal({
-      title: '완료',
-      message: '성공적으로 로그아웃되었습니다.',
-      type: 'success',
-      autoHide: true,
-      duration: 1000,
-    });
-
-    // 4. 로그인 페이지로 이동 시도
     try {
-      // Option A: Vue Router를 사용한 일반적인 이동
-      router.push({ name: 'Login' });
+      // Auth Store의 logout Action 호출 (성공 시 Store 내에서 모달 알림 및 페이지 이동 처리)
+      await authStore.logout();
     } catch (e) {
-      // Option B: Vue Router 이동이 실패할 경우, 강제로 페이지를 리로드하며 경로 변경
-      console.error("Vue Router push failed, using window.location.href fallback.", e);
-      window.location.href = '/login';
+      // API 호출 실패 등의 에러 처리
+      showConfirmModal({
+        title: '오류',
+        message: '로그아웃 중 에러가 발생했습니다.',
+        type: 'error',
+        autoHide: true,
+      });
     }
   }
 };
