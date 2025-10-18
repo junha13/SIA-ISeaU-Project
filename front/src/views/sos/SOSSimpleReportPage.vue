@@ -25,7 +25,6 @@
     </div>
 
     <!-- 119 신고하기 버튼 (고정 하단) -->
-    <!-- AppLayout의 footer 위에 확실히 보이도록 fixed-bottom 적용 -->
     <div class="fixed-action-bottom p-3">
       <button class="btn btn-block w-100 fw-bolder py-3 fs-5 text-white rounded-3 shadow"
               :style="{ backgroundColor: dangerColor }"
@@ -38,9 +37,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useConfirmModal } from '@/utils/modalUtils.js'; // 모달 유틸리티 import
+import { useConfirmModal } from '@/utils/modalUtils.js';
+import { useSOSStore } from '@/stores/sosStore'; // SOS Store 임포트
 
 const { showConfirmModal } = useConfirmModal();
+const sosStore = useSOSStore(); // Store 인스턴스
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -68,14 +69,20 @@ const handle119Report = () => {
   showConfirmModal({
     title: title,
     message: message,
-    type: 'confirm', // Confirm 모달 사용
-  }).then(confirmed => {
+    type: 'confirm',
+  }).then(async (confirmed) => {
     if (confirmed) {
-      // 실제 신고 로직 (예: 'tel:119' 또는 API 호출)
+      // 신고 로깅 및 로직 처리
+      const situation = selectedSituation.value || '상황 미선택';
+
+      // Store Action 호출 (API 로깅)
+      await sosStore.logEmergencyCall('119_simple_report', situation);
+
+      // 신고 완료 알림
       showConfirmModal({
         title: '신고 요청 완료',
         message: '119 긴급 신고를 요청했습니다.\n잠시 후 연결됩니다.',
-        type: 'error', // 긴급 상황을 위해 dangerColor 기반의 error 타입을 사용
+        type: 'error',
         autoHide: true,
         duration: 3000
       });
@@ -97,19 +104,19 @@ const handle119Report = () => {
   border: 1px solid #ced4da;
 }
 .btn-info-highlight {
-  /* 디자인을 위해 d1ecf1 대신 주 컬러의 연한 버전 사용 */
+  /* 디자인을 위해 주 컬러의 연한 버전 사용 */
   background-color: #e6f6fa;
   color: v-bind(darkColor);
   border: 1px solid v-bind(mainColor);
 }
 
 .fixed-action-bottom {
-  position: fixed; /* Fixed로 변경 */
-  bottom: 60px; /* AppLayout의 footer (60px) 위에 배치 */
+  position: fixed;
+  bottom: 60px;
   left: 0;
   right: 0;
   background-color: white;
   border-top: 1px solid #eee;
-  z-index: 100; /* Footer보다 높은 z-index */
+  z-index: 100;
 }
 </style>

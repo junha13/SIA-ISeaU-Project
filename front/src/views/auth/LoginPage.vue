@@ -1,8 +1,10 @@
 <template>
   <div class="auth-page d-flex flex-column align-items-center justify-content-center min-vh-100 p-4"
        :style="{ backgroundColor: 'white' }">
+    <!-- Logo -->
     <h1 class="logo fw-bolder mb-5" :style="{ color: darkColor, fontSize: '2.5rem' }">I Sea U</h1>
 
+    <!-- Login Form Container -->
     <div class="auth-card p-4 rounded-3 shadow-lg w-100" style="max-width: 400px; background-color: white; border: 1px solid #eee;">
 
       <h5 class="fw-bold mb-4" :style="{ color: mainColor }">로그인</h5>
@@ -15,6 +17,7 @@
         <input type="password" class="form-control" placeholder="비밀번호" v-model="password">
       </div>
 
+      <!-- Checkbox & Login Button -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="form-check">
           <input class="form-check-input" type="checkbox" id="rememberMe" v-model="rememberMe">
@@ -27,6 +30,7 @@
         </button>
       </div>
 
+      <!-- Links -->
       <div class="d-flex justify-content-end gap-3 small">
         <a href="#" @click.prevent="$router.push({ name: 'Register' })" class="text-decoration-none" :style="{ color: darkColor }">
           회원가입 >
@@ -44,9 +48,11 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
+const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -67,24 +73,29 @@ const handleLogin = async () => {
     return;
   }
 
-  // 1. API 호출: 로그인 시도
-  // try {
-  //   // const response = await authApi.login(username.value, password.value);
+  try {
+    // Store Action 호출 (API 통신 및 상태 업데이트)
+    await authStore.login(username.value, password.value);
 
-  // 2. 성공 시 메인 페이지로 이동
-  showConfirmModal({
-    title: '로그인 성공',
-    message: `${username.value}님 환영합니다!`,
-    type: 'success',
-    autoHide: true,
-    duration: 1000,
-  }).then(() => {
+    // 성공 시 모달 표시 후 페이지 이동
+    showConfirmModal({
+      title: '로그인 성공',
+      message: `${username.value}님 환영합니다!`,
+      type: 'success',
+      autoHide: true,
+      duration: 1000,
+    });
+
     router.push({ name: 'Main' });
-  });
 
-  // } catch (e) {
-  //   showConfirmModal({ title: '로그인 실패', message: '아이디 또는 비밀번호가 올바르지 않습니다.', type: 'error' });
-  // }
+  } catch (e) {
+    // Store에서 던진 에러 메시지 표시
+    showConfirmModal({
+      title: '로그인 실패',
+      message: e.message,
+      type: 'error'
+    });
+  }
 };
 </script>
 

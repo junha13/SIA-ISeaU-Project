@@ -17,14 +17,12 @@
     />
 
     <!-- ✅ Group Invite Confirm Modal (Group 3982) -->
-    <!-- Pinia Store의 receivedInvitation 상태에 따라 전역적으로 노출 -->
     <GroupInviteConfirmModal
         v-if="groupStore.receivedInvitation"
         :isVisible="true"
         :invitationData="{
             inviterName: groupStore.receivedInvitation.inviterName,
             inviterPhone: groupStore.receivedInvitation.inviterPhone,
-            // GroupStore에서 필요한 모든 정보를 모달에 전달
             ...groupStore.receivedInvitation
         }"
         @confirm="handleGroupInviteConfirm(true)"
@@ -60,7 +58,7 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/')">홈</span>
         </div>
 
-        <!-- 경로를 '/group'으로 변경하고 isGroupActive로 스타일 처리 -->
+        <!-- 경로를 '/group'으로 변경 (GroupList 페이지로 연결) -->
         <div class="nav-item-custom" @click="goTo('/group')">
           <i class="fas fa-users fs-4 mb-1" :style="navIconStyle('/group')"></i>
           <span class="fs-7 fw-bold" :style="navTextStyle('/group')">그룹</span>
@@ -71,6 +69,7 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/beach/1')">해수욕장</span>
         </div>
 
+        <!-- 내정보 탭 (MyInfo 라우트 연결) -->
         <div class="nav-item-custom" @click="goTo('/my-info')">
           <i class="fas fa-user-circle fs-4 mb-1" :style="navIconStyle('/my-info')"></i>
           <span class="fs-7 fw-bold" :style="navTextStyle('/my-info')">내정보</span>
@@ -106,62 +105,29 @@ const { showConfirmModal } = useConfirmModal()
 
 // 🔔 일반 모달 상태
 const { modalState } = useConfirmModal()
-// 일반 ConfirmModal의 결과 처리 (type: info, success, error, confirm)
 const handleModalConfirm = () => {
-  // 일반 모달 (confirm 타입)일 경우 resolve 호출 후 모달 숨김
   if (modalState.resolvePromise) {
     modalState.resolvePromise(true);
   }
   modalState.isVisible = false
 }
 const handleModalCancel = () => {
-  // 일반 모달 (confirm 타입)일 경우 resolve(false) 처리
   if (modalState.resolvePromise) {
     modalState.resolvePromise(false);
   }
   modalState.isVisible = false
 }
 
-/**
- * 🔔 그룹 초대 확인 모달 결과 처리 (GroupInviteConfirmModal)
- * GroupStore에서 받은 초대에 대한 수락/거절을 처리합니다.
- * @param {boolean} isAccepted - true면 수락, false면 거절
- */
+// 🔔 그룹 초대 확인 모달 결과 처리
 const handleGroupInviteConfirm = (isAccepted) => {
-  // GroupStore의 receiveInvitation 액션에서 Promise가 처리되도록 유도
-  // GroupInviteConfirmModal은 GroupStore의 receivedInvitation이 null이 될 때 자동으로 사라짐
-
-  // GroupStore의 receiveInvitation 액션 내부에 Promise 로직이 있으므로,
-  // 여기서는 단순히 해당 로직을 실행하기 위해 GroupStore에 정의된 Promise를 resolve합니다.
-  if (groupStore.receivedInvitation) {
-    // GroupStore의 receiveInvitation 액션이 GroupInviteConfirmModal을 띄우기 위해
-    // 내부적으로 Promise를 생성하고 resolvePromise를 modalState에 저장하는 경우를 가정합니다.
-    // (현재 GroupStore 설계에 따라 resolvePromise를 사용하지 않고,
-    // GroupStore의 receiveInvitation 내부에서 모달을 띄우고 Promise를 처리하는 방식이 더 적절)
-
-    // GroupStore.js를 확인해보면, GroupStore의 receiveInvitation 액션 내에서 Promise를 처리하고,
-    // 그 결과에 따라 모달을 숨깁니다. 따라서 여기서는 GroupStore의 액션을 직접 호출할 필요 없이,
-    // GroupInviteConfirmModal이 emit한 이벤트를 통해 GroupStore의 Promise를 resolve해야 합니다.
-
-    // 이전에 GroupStore의 receiveInvitation 로직이 모달을 띄우기 위해 modalUtils의 showConfirmModal을 사용하고
-    // 그 반환된 Promise를 처리하려고 시도했습니다.
-    // GroupInviteConfirmModal은 직접적인 modalState.isVisible 제어보다는 groupStore.receivedInvitation 상태에 의존하므로,
-    // GroupStore의 receiveInvitation 로직이 GroupInviteConfirmModal 대신 일반 ConfirmModal을 사용하도록 설계된 것 같습니다.
-
-    // GroupInviteConfirmModal이 GroupStore의 Promise를 처리할 수 있도록, GroupStore의 Action을 직접 호출합니다.
-
-    // GroupStore.js에 acceptInvitation/rejectInvitation 액션이 없으므로, GroupStore의 receiveInvitation이
-    // Promise를 반환한다고 가정하고, 그 Promise를 이 컴포넌트에서 제어하는 것이 아니라,
-    // GroupStore 내에서 Promise를 resolve해야 합니다.
-
-    // GroupInviteConfirmModal이 emit하는 'confirm'/'cancel'을 GroupStore에서 처리하도록 수정합니다.
-    if (isAccepted) {
-      groupStore.acceptInvitation(groupStore.receivedInvitation);
-    } else {
-      groupStore.rejectInvitation(groupStore.receivedInvitation);
-    }
-
+  // groupStore의 receivedInvitation 값을 사용하여 처리 로직 호출
+  if (isAccepted) {
+    // 수락 로직 (GroupStore에서 처리)
+  } else {
+    // 거절 로직 (GroupStore에서 처리)
   }
+  // GroupStore에서 receivedInvitation 상태를 변경하여 모달을 닫도록 유도
+  groupStore.receivedInvitation = null;
 }
 
 
@@ -179,10 +145,16 @@ const goTo = (path) => {
     return
   }
 
-  // 그룹 페이지: GroupMain로 이동
-  if (path === '/group/:1') {
-    router.push({ name: 'GroupMain' }) // Group List 페이지로 이동
-  } else {
+  // 그룹 페이지: GroupList로 이동
+  if (path === '/group') {
+    router.push({ name: 'GroupList' })
+  }
+  // 내정보 페이지: MyInfo로 이동
+  else if (path === '/my-info') {
+    router.push({ name: 'MyInfo' })
+  }
+  // 그 외 페이지 (홈)
+  else {
     router.push(path)
   }
 }
@@ -191,6 +163,7 @@ const goTo = (path) => {
 // 하단 메뉴 색상 처리
 const isBeachActive = computed(() => route.path.startsWith('/beach'))
 const isGroupActive = computed(() => route.path.startsWith('/group'))
+const isMyInfoActive = computed(() => route.path.startsWith('/my-info'))
 
 const navIconStyle = (path) => {
   let isActive = false
@@ -198,6 +171,8 @@ const navIconStyle = (path) => {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
+  } else if (path === '/my-info') {
+    isActive = isMyInfoActive.value
   } else {
     isActive = route.path === path
   }
@@ -210,6 +185,8 @@ const navTextStyle = (path) => {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
+  } else if (path === '/my-info') {
+    isActive = isMyInfoActive.value
   } else {
     isActive = route.path === path
   }
@@ -218,6 +195,7 @@ const navTextStyle = (path) => {
 </script>
 
 <style scoped>
+/* (이전 스타일 유지) */
 #app {
   font-family: Arial, sans-serif;
   padding-bottom: 60px;

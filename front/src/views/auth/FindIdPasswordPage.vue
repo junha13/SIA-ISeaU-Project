@@ -95,6 +95,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
+import { authApi } from '@/api/auth'; // authApi 임포트
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
@@ -104,12 +105,12 @@ const darkColor = '#0B1956';
 const inactiveColor = '#f8f9fa';
 
 // --- State ---
-const activeTab = ref('id'); // 'id' or 'password'
-const idStep = ref(1); // 1: 입력, 2: 결과
-const pwStep = ref(1); // 1: 인증, 2: 완료
+const activeTab = ref('id');
+const idStep = ref(1);
+const pwStep = ref(1);
 
 const idForm = ref({ name: '', phone: '', code: '' });
-const idResult = ref({ name: '김준하', username: 'junha123' }); // Dummy result
+const idResult = ref({ name: '김준하', username: 'junha123' });
 
 const pwForm = ref({ username: '', phone: '', code: '' });
 
@@ -120,7 +121,6 @@ const activeTabStyle = computed(() => ({
   color: 'white',
   borderColor: mainColor,
 }));
-
 const inactiveTabStyle = computed(() => ({
   backgroundColor: inactiveColor,
   color: darkColor,
@@ -130,57 +130,73 @@ const inactiveTabStyle = computed(() => ({
 // --- Methods ---
 const changeTab = (tab) => {
   activeTab.value = tab;
-  idStep.value = 1; // 탭 변경 시 초기화
-  pwStep.value = 1; // 탭 변경 시 초기화
+  idStep.value = 1;
+  pwStep.value = 1;
 };
 
-const requestVerification = (type) => {
-  // 인증번호 발송 API 호출 로직
+const requestVerification = async (type) => {
+  // 인증번호 발송 API 호출 (더미)
+  // try { await authApi.sendVerificationCode({ phone: type === 'id' ? idForm.value.phone : pwForm.value.phone }); } catch { ... }
+
   showConfirmModal({ title: '인증번호 발송', message: '인증번호가 발송되었습니다. (더미: 12345)', type: 'info', autoHide: true });
 };
 
 const verifyAndFindId = async () => {
-  // 인증번호 확인 및 아이디 찾기 API 호출
-  if (idForm.value.code === '12345' && idForm.value.name && idForm.value.phone) {
-    // API 성공 시
-    idStep.value = 2;
-  } else {
+  if (idForm.value.code !== '12345' || !idForm.value.name || !idForm.value.phone) {
     showConfirmModal({ title: '인증 실패', message: '정보를 확인하거나 인증번호를 다시 요청해주세요.', type: 'error' });
+    return;
+  }
+
+  try {
+    // API 호출: 아이디 찾기
+    const { data } = await authApi.findId(idForm.value);
+
+    idResult.value = data;
+    idStep.value = 2; // 성공
+
+  } catch (e) {
+    showConfirmModal({ title: '찾기 실패', message: e.response?.data?.message || '일치하는 정보가 없습니다.', type: 'error' });
   }
 };
 
 const verifyAndResetPassword = async () => {
-  // 인증번호 확인 및 비밀번호 재설정 전 인증 완료
-  if (pwForm.value.code === '12345' && pwForm.value.username && pwForm.value.phone) {
-    // API 성공 시
-    pwStep.value = 2;
+  if (pwForm.value.code !== '12345' || !pwForm.value.username || !pwForm.value.phone) {
+    showConfirmModal({ title: '인증 실패', message: '정보를 확인하거나 인증번호를 다시 요청해주세요.', type: 'error' });
+    return;
+  }
 
-    // 1초 후 비밀번호 재설정 페이지로 리다이렉트
+  try {
+    // API 호출: 비밀번호 찾기 전 인증
+    const { data } = await authApi.verifyUserForPasswordReset(pwForm.value);
+
+    pwStep.value = 2; // 성공
+
     setTimeout(() => {
-      router.push({ name: 'ResetPassword' });
+      // 사용자 정보를 쿼리 파라미터로 넘겨 재설정 페이지로 이동
+      router.push({ name: 'ResetPassword', query: { username: pwForm.value.username } });
     }, 1000);
 
-  } else {
-    showConfirmModal({ title: '인증 실패', message: '정보를 확인하거나 인증번호를 다시 요청해주세요.', type: 'error' });
+  } catch (e) {
+    showConfirmModal({ title: '인증 실패', message: e.response?.data?.message || '일치하는 정보가 없습니다.', type: 'error' });
   }
 };
 </script>
 
 <style scoped>
+/* (스타일 유지) */
 /* 입력 필드 스타일 오버라이드 */
 .form-control {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
 }
-
-/* 탭 스타일 오버라이드 (body-3.png 디자인 기반) */
+/* 탭 스타일 오버라이드 */
 .nav-tabs {
   border-bottom: none;
 }
 .nav-link {
   border: 1px solid #ced4da;
-  border-bottom-color: transparent !important; /* 아래쪽 테두리 제거 */
+  border-bottom-color: transparent !important;
   border-radius: 0.475rem 0.475rem 0 0;
   color: v-bind(darkColor);
   background-color: #f8f9fa;

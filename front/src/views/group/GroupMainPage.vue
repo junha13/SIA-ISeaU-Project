@@ -1,10 +1,12 @@
 <template>
   <div class="group-main-page">
-    <!-- 1. Header (AppLayout Header와 구분됨) -->
+    <!-- 1. Header (뒤로가기 버튼 추가) -->
     <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
       <div class="d-flex align-items-center">
-        <!-- 현재 그룹명 표시 (드롭다운으로 그룹 선택 가능하게 구현 예정) -->
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">그룹 위치 알림</h5>
+        <!-- 뒤로 가기 버튼 -->
+        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.push({ name: 'GroupList' })" style="cursor: pointer;" :style="{ color: darkColor }"></i>
+        <!-- 현재 그룹명 표시 -->
+        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">{{ activeGroupName }} 위치 알림</h5>
       </div>
       <div>
         <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
@@ -16,7 +18,7 @@
     <div class="map-area position-relative" style="height: 400px; background-color: #f0f0f0;">
       <!-- 지도 Placeholder -->
       <div class="h-100 w-100 d-flex justify-content-center align-items-center text-muted fw-bold">
-        지도 영역 (Map API 연동 필요)
+        지도 영역 (그룹 ID: {{ activeGroupId }})
       </div>
 
       <!-- 지도 오버레이 버튼 -->
@@ -72,18 +74,16 @@
 
     <!-- 그룹원 추가 모달 -->
     <GroupInviteModal v-model:isVisible="showInviteModal" />
-
-    <!-- 위치 공유 확인 모달 (초대 받았을 때) -->
-    <!-- Pinia Store에 receivedInvitation이 있으면 ConfirmModal 대신 이 모달을 띄워야 함 -->
-    <!-- ConfimModal.vue를 확장하여 GroupInviteConfirmModal을 구현하지 않고, GroupInviteConfirmModal을 새로 만듭니다. -->
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore.js';
-import GroupInviteModal from '@/components/GroupInviteModal.vue'; // 5번 파일
+import GroupInviteModal from '@/components/GroupInviteModal.vue';
 
+const route = useRoute();
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
@@ -91,28 +91,42 @@ const dangerColor = '#EB725B';
 const groupStore = useGroupStore();
 const showInviteModal = ref(false);
 
+// 라우트 파라미터에서 그룹 ID 가져오기
+const activeGroupId = computed(() => parseInt(route.params.id) || null);
+// 그룹 스토어의 그룹 목록에서 현재 그룹 이름 찾기
+const activeGroupName = computed(() =>
+    groupStore.getMyGroupList.find(g => g.id === activeGroupId.value)?.name || '그룹 위치 알림'
+);
+
+
 // Pinia에서 그룹 위치 정보 가져오기
 const groupLocations = computed(() => groupStore.getActiveGroupLocations);
 
-onMounted(() => {
-  // 초기 그룹 목록 및 위치 정보 로드
-  groupStore.fetchGroups();
-  groupStore.fetchLocations();
+// --- Lifecycle & Watchers ---
 
-  // (임시) 초대 테스트를 위한 Pinia Action 호출 (실제는 푸시 알림)
-  // setTimeout(() => {
-  //   groupStore.receiveInvitation({
-  //      id: 99, inviterName: '김해양', inviterPhone: '010-1111-1111', groupId: 1
-  //   });
-  // }, 3000);
+const loadGroupData = () => {
+  if (activeGroupId.value) {
+    // Pinia Store의 활성 그룹 ID 업데이트
+    groupStore.setActiveGroup(activeGroupId.value);
+    // 위치 정보 로드
+    groupStore.fetchLocations();
+  }
+}
+
+onMounted(() => {
+  // 마운트 시 데이터 로드
+  groupStore.fetchGroups(); // 그룹 목록을 먼저 로드
 });
+
+// URL의 그룹 ID가 변경될 때마다 데이터 다시 로드
+watch(activeGroupId, loadGroupData, { immediate: true });
 
 // 지도 마커 스타일 (더미)
 const markerStyle = (color) => ({
   backgroundColor: color,
   width: '12px',
   height: '12px',
-  top: `${Math.random() * 80 + 10}%`, // 맵 영역 내 랜덤 위치
+  top: `${Math.random() * 80 + 10}%`,
   left: `${Math.random() * 80 + 10}%`,
   zIndex: 10,
   border: '2px solid white',
@@ -136,4 +150,4 @@ const markerStyle = (color) => ({
   color: white !important;
 }
 
-</style>
+</style>ㄷ

@@ -1,25 +1,53 @@
-// src/store/beachStore.js
+// src/stores/beachStore.js
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { beachApi } from '../api/beach'; // beach.js에서 API 로직을 가져옵니다.
-import { useConfirmModal } from '../utils/modalUtils'; // 모달 유틸리티를 사용합니다.
+import { beachApi } from '@/api/beach';
+import { useConfirmModal } from '@/utils/modalUtils';
 
 export const useBeachStore = defineStore('beach', () => {
-    // 현재 선택된 해수욕장 ID (토글식 선택)
+    // --- State ---
     const selectedBeachId = ref(null);
-    // 즐겨찾기 해수욕장 ID 목록
     const favoriteBeachIds = ref([]);
-    // 로딩 상태 및 API 에러
     const isLoading = ref(false);
     const apiError = ref(null);
+    // 현재 상세 정보를 보는 해수욕장 데이터
+    const currentBeachDetail = ref(null);
+    const isDetailLoading = ref(false);
 
     // --- Actions ---
 
     /**
+     * 특정 해수욕장의 상세 정보를 가져옵니다. (날씨, 위험 정보 포함)
+     * @param {number} beachId - 해수욕장 ID
+     */
+    const fetchBeachDetail = async (beachId) => {
+        isDetailLoading.value = true;
+        try {
+            // const result = await beachApi.fetchBeachDetail({ id: beachId });
+
+            // Dummy Data (상세 정보)
+            const result = {
+                id: beachId,
+                name: '속초 해수욕장',
+                description: '맑고 깨끗한 바다와 부드러운 모래사장으로 유명합니다.',
+                weather: { temp: 24, wind: 3.2, visibility: 10, humidity: 65, tide: 1.2 },
+                danger: { rip: '관심', jelly: '주의', wave: 1.8 },
+                reviews: [{ user: '익명사용자', date: '2025.01.15', content: '정말 깨끗하고 아름다운 해수욕장이에요.' }],
+            };
+
+            currentBeachDetail.value = result;
+        } catch (error) {
+            console.error('해수욕장 상세 정보 조회 실패:', error);
+            apiError.value = error;
+            currentBeachDetail.value = null;
+        } finally {
+            isDetailLoading.value = false;
+        }
+    };
+
+    /**
      * 해수욕장 선택/해제 토글 및 DB 저장 (선택은 하나만 가능)
-     * @param {number} beachId - 토글할 해수욕장 ID
-     * @param {string} beachName - 선택된 해수욕장 이름 (UX용)
      */
     const toggleSelectBeach = async (beachId, beachName) => {
         const { showConfirmModal } = useConfirmModal();
@@ -31,23 +59,17 @@ export const useBeachStore = defineStore('beach', () => {
             let message = '';
 
             if (selectedBeachId.value === beachId) {
-                // 선택 해제
                 newSelectedId = null;
-                // API 호출: 선택 해제 (null 또는 특정 해제 API)
                 // await beachApi.unselectBeach();
                 message = `${beachName} 해수욕장의 선택이 해제되었습니다.`;
             } else {
-                // 새로운 해수욕장 선택 (이전 선택 자동 해제)
                 newSelectedId = beachId;
-                // API 호출: 해수욕장 선택 저장
                 // const result = await beachApi.selectBeach(beachId);
                 message = `${beachName} 해수욕장이 현재 활동 해수욕장으로 선택되었습니다.`;
             }
 
-            // 실제 상태 업데이트
             selectedBeachId.value = newSelectedId;
 
-            // 모달 표시
             showConfirmModal({
                 title: '해수욕장 선택 변경',
                 message: message,
@@ -63,7 +85,6 @@ export const useBeachStore = defineStore('beach', () => {
                 message: '해수욕장 선택 중 오류가 발생했습니다.',
                 type: 'error',
             });
-            console.error('해수욕장 선택 중 에러 발생:', error);
         } finally {
             isLoading.value = false;
         }
@@ -71,7 +92,6 @@ export const useBeachStore = defineStore('beach', () => {
 
     /**
      * 즐겨찾기 토글 및 DB 저장
-     * @param {number} beachId - 즐겨찾기 토글할 해수욕장 ID
      */
     const toggleFavoriteBeach = async (beachId) => {
         const { showConfirmModal } = useConfirmModal();
@@ -81,38 +101,17 @@ export const useBeachStore = defineStore('beach', () => {
             const isFavorite = favoriteBeachIds.value.includes(beachId);
 
             if (isFavorite) {
-                // 즐겨찾기 해제
-                // API 호출: 즐겨찾기 해제
                 // await beachApi.removeFavorite(beachId);
                 favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachId);
-                showConfirmModal({
-                    title: '즐겨찾기 해제',
-                    message: '즐겨찾기에서 해제되었습니다.',
-                    type: 'info',
-                    autoHide: true,
-                    duration: 1000
-                });
+                showConfirmModal({ title: '즐겨찾기 해제', message: '즐겨찾기에서 해제되었습니다.', type: 'info', autoHide: true, duration: 1000 });
             } else {
-                // 즐겨찾기 등록
-                // API 호출: 즐겨찾기 등록
                 // await beachApi.addFavorite(beachId);
                 favoriteBeachIds.value.push(beachId);
-                showConfirmModal({
-                    title: '즐겨찾기 등록',
-                    message: '즐겨찾기에 등록되었습니다.',
-                    type: 'success',
-                    autoHide: true,
-                    duration: 1000
-                });
+                showConfirmModal({ title: '즐겨찾기 등록', message: '즐겨찾기에 등록되었습니다.', type: 'success', autoHide: true, duration: 1000 });
             }
         } catch (error) {
             apiError.value = error;
-            showConfirmModal({
-                title: '처리 실패',
-                message: '즐겨찾기 처리 중 오류가 발생했습니다.',
-                type: 'error',
-            });
-            console.error('즐겨찾기 처리 중 에러 발생:', error);
+            showConfirmModal({ title: '처리 실패', message: '즐겨찾기 처리 중 오류가 발생했습니다.', type: 'error' });
         } finally {
             isLoading.value = false;
         }
@@ -120,20 +119,22 @@ export const useBeachStore = defineStore('beach', () => {
 
     // --- Getters ---
 
-    // 현재 선택된 해수욕장 ID를 반환
     const getCurrentSelectedBeachId = computed(() => selectedBeachId.value);
-
-    // 즐겨찾기 ID 목록을 반환
     const getFavoriteBeachIds = computed(() => favoriteBeachIds.value);
+    const getCurrentBeachDetail = computed(() => currentBeachDetail.value);
 
     return {
         selectedBeachId,
         favoriteBeachIds,
         isLoading,
         apiError,
+        currentBeachDetail,
+        isDetailLoading,
+        fetchBeachDetail,
         toggleSelectBeach,
         toggleFavoriteBeach,
         getCurrentSelectedBeachId,
         getFavoriteBeachIds,
+        getCurrentBeachDetail,
     };
 });

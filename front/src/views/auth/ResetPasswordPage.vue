@@ -15,7 +15,7 @@
       <!-- Content -->
       <div v-if="step === 1" class="tab-content">
         <!-- Step 1: 비밀번호 재설정 입력 -->
-        <h6 class="fw-bold mb-3" :style="{ color: darkColor }">새 비밀번호 설정</h6>
+        <h6 class="fw-bold mb-3" :style="{ color: darkColor }">새 비밀번호 설정 (대상: {{ userName }})</h6>
 
         <div class="form-group mb-3">
           <input type="password" class="form-control" placeholder="비밀번호 (영어 + 숫자, 8자 이상)" v-model="password" :class="{'is-invalid': errors.password}">
@@ -53,10 +53,12 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useConfirmModal } from '@/utils/modalUtils'; // 모달 유틸리티 사용
+import { useRouter, useRoute } from 'vue-router'; // useRoute 추가
+import { useConfirmModal } from '@/utils/modalUtils';
+import { authApi } from '@/api/auth'; // authApi 임포트
 
 const router = useRouter();
+const route = useRoute();
 const { showConfirmModal } = useConfirmModal();
 
 // --- Color Definitions ---
@@ -65,14 +67,14 @@ const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
 // --- State ---
-const step = ref(1); // 1: 입력 폼, 2: 성공 메시지
+const step = ref(1);
 const password = ref('');
 const passwordConfirm = ref('');
 const errors = ref({});
 const successMessage = ref('');
 
-// 임시: 인증 성공 시 URL 쿼리 파라미터로 받은 사용자 이름 (FindAccountPage에서 이동 시)
-const userName = computed(() => '김준하');
+// 이전 페이지에서 넘어온 사용자 이름 (query.username 사용)
+const userName = computed(() => route.query.username || '사용자');
 
 // --- Styles ---
 const activeTabStyle = computed(() => ({
@@ -92,12 +94,10 @@ const validate = () => {
     errors.value.password = '비밀번호는 영어와 숫자를 포함하여 8자 이상이어야 합니다.';
     isValid = false;
   }
-
   if (password.value !== passwordConfirm.value) {
     errors.value.passwordConfirm = '비밀번호 확인이 일치하지 않습니다.';
     isValid = false;
   }
-
   return isValid;
 };
 
@@ -113,21 +113,26 @@ const handleResetPassword = async () => {
     return;
   }
 
-  // 1. API 호출: 비밀번호 재설정
-  // try {
-  //   // const response = await authApi.resetPassword({ userId: 'tempId', newPassword: password.value });
+  try {
+    // API 호출: 비밀번호 재설정
+    await authApi.resetPassword({ username: userName.value, newPassword: password.value });
 
-  // 2. 성공 처리
-  successMessage.value = `${userName.value}님의 비밀번호가 재설정되었습니다.`;
-  step.value = 2;
+    // 2. 성공 처리
+    successMessage.value = `${userName.value}님의 비밀번호가 재설정되었습니다.`;
+    step.value = 2;
 
-  // } catch (e) {
-  //   showConfirmModal({ title: '재설정 실패', message: '비밀번호 재설정 중 오류가 발생했습니다.', type: 'error' });
-  // }
+  } catch (e) {
+    showConfirmModal({
+      title: '재설정 실패',
+      message: e.response?.data?.message || '비밀번호 재설정 중 오류가 발생했습니다.',
+      type: 'error'
+    });
+  }
 };
 </script>
 
 <style scoped>
+/* (스타일 유지) */
 .auth-page {
   /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
