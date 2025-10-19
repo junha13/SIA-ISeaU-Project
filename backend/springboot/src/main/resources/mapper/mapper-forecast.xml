@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lx.iseau.feature.forecast.ForecastDAO">
+
+    <!-- ========== 해수욕장 위치 가져오기 ========== -->
+    <select id="selectBeachLocation" resultType="RequestLocation">
+        SELECT beach_number, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon 
+        FROM tb_beach
+    </select>
+    
+    <!-- ========== 기상예보 업데이트 ========== -->
+    <insert id="upsertForecastDB" parameterType="java.util.List">
+    	insert into tb_weather_info (temperature, wind_speed, wind_direction, strong_wind, rainfall_percent, rainfall, uv, wave_height, forecast_time, observed_location)
+    	values 
+	    <foreach collection="list" item="it" separator=",">
+	      (
+	        #{it.temperature},
+	        #{it.windSpeed},
+	        #{it.windDirection},
+	        #{it.strongWind},
+	        #{it.rainfallPercent,jdbcType=DOUBLE},
+	        #{it.rainfall,jdbcType=DOUBLE},
+	        #{it.uv,jdbcType=DOUBLE},
+	        #{it.waveHeight,jdbcType=DOUBLE},
+	        #{it.forecastTime},
+	        ST_SetSRID(ST_MakePoint(#{it.lon}, #{it.lat}), 4326)
+	      )
+	    </foreach>
+    	ON CONFLICT ((ST_Y(observed_location::geometry)), (ST_X(observed_location::geometry)), forecast_time)
+	    DO UPDATE SET
+	    <!-- 방금 insert하려는데 값이 이미 있으면 넣으려던 값으로 update -->
+	      temperature       = EXCLUDED.temperature,
+	      wind_speed        = EXCLUDED.wind_speed,
+	      wind_direction    = EXCLUDED.wind_direction,
+	      strong_wind       = EXCLUDED.strong_wind,
+	      rainfall_percent  = EXCLUDED.rainfall_percent,
+	      rainfall          = EXCLUDED.rainfall,
+	      uv                = EXCLUDED.uv,
+	      wave_height       = EXCLUDED.wave_height,
+	      observed_location = EXCLUDED.observed_location
+    </insert>
+
+
+</mapper>
