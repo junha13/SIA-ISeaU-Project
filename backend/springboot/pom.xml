@@ -101,6 +101,12 @@
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version> <!-- 안정적인 최신 버전으로 설정 -->
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-webflux -->
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-webflux</artifactId>
+		    <version>6.2.11</version>
+		</dependency>
 	</dependencies>
 
 	<build>
