@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BeachDTO {
+public class ResponseBeachPestDTO {
 	private int beachNumber;
 	private String beachName;
     private String beachImage;
