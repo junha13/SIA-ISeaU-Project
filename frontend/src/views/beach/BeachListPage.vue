@@ -68,9 +68,16 @@
       <div v-if="viewMode === 'list'">
         <div v-for="beach in filteredBeachList" :key="beach.beachNumber" class="beach-card card shadow-sm mb-4 rounded-3 border-0" @click="goToDetail(beach.beachNumber)">
           <div class="card-body p-3 d-flex">
-            <div class="beach-image-placeholder me-3 rounded-2"
+           <div class="beach-image-placeholder me-3 rounded-2" 
                  :style="{ border: '1px solid #eee' }">
-              <p class="text-center text-muted fw-bold mb-0 pt-2 fs-7">해변 이미지</p>
+              <img v-if="beach.beachImage" 
+                   :src="beach.beachImage" 
+                   :alt="beach.beachName + ' 이미지'" 
+                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 0.25rem;">
+              
+              <p v-else class="text-center text-muted fw-bold mb-0 pt-2 fs-7">
+                {{ beach.beachImage === null ? '이미지 준비 중' : '이미지 없음' }}
+              </p>
               <div class="rating-badge badge text-white px-2 py-1 rounded-pill" :style="{ backgroundColor: mainColor }">
                 <i class="fas fa-star fs-7"></i> {{ beach.rating.toFixed(1) }}
               </div>
@@ -78,13 +85,13 @@
 
             <div class="beach-info flex-grow-1">
               <div class="d-flex justify-content-between align-items-start">
-                <h5 class="fw-bolder fs-6 mb-1" :style="{ color: darkColor }">{{ beach.name }}</h5>
+                <h5 class="fw-bolder fs-6 mb-1" :style="{ color: darkColor }">{{ beach.beachName }}</h5>
                 <i :class="['fas fa-heart fs-5', { 'text-danger': isFavorite(beach.beachNumber), 'text-muted': !isFavorite(beach.beachNumber) }]"
                    @click.stop="toggleFavorite(beach.beachNumber)"
                    style="cursor: pointer;"></i>
               </div>
 
-              <p class="text-muted fs-7 mb-2">{{ beach.location }}</p>
+              <p class="text-muted fs-7 mb-2">{{ beach.address }}</p>
 
               <div class="d-flex gap-2 mb-3">
                 <span v-for="(tag, index) in beach.tags" :key="index"
@@ -99,12 +106,12 @@
                 <button v-if="isSelected(beach.beachNumber)"
                         class="btn btn-sm fw-bold"
                         :style="{ backgroundColor: mainColor, color: 'white' }"
-                        @click.stop="toggleSelect(beach.beachNumber, beach.name)">
+                        @click.stop="toggleSelect(beach.beachNumber, beach.beachName)">
                   선택됨
                 </button>
                 <button v-else
                         class="btn btn-sm btn-outline-secondary fw-bold"
-                        @click.stop="toggleSelect(beach.beachNumber, beach.name)">
+                        @click.stop="toggleSelect(beach.beachNumber, beach.beachName)">
                   선택하기
                 </button>
               </div>
@@ -265,9 +272,7 @@ const goToDetail = (beachNumber) => {
   router.push({ name: 'BeachDetail', params: { id: beachNumber } });
 }
 
-/**
- * 태그에 따른 배지 클래스 반환 (수정 없음)
- */
+
 const tagClass = (tag) => {
   switch (tag) {
     case '안전':
