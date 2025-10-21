@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 // Firebase Auth 객체를 가져오는 함수 (Firebase 초기화 후)
-import { getAuth } from 'firebase/auth';
+//import { getAuth } from 'firebase/auth';
 
 // API 인스턴스 (BaseURL 설정)
 const api = axios.create({
@@ -10,22 +10,22 @@ const api = axios.create({
 });
 
 // 요청 인터셉터 추가: 모든 요청에 Firebase ID 토큰을 추가
-api.interceptors.request.use(async (config) => {
+//api.interceptors.request.use(async (config) => {
     // 1. Firebase Auth 객체 가져오기
-    const auth = getAuth();
+  //  const auth = getAuth();
     // 2. 현재 사용자 확인
-    const user = auth.currentUser;
+   // const user = auth.currentUser;
 
-    if (user) {
+   // if (user) {
         // 3. ID 토큰 비동기적으로 가져오기
-        const token = await user.getIdToken();
+        //const token = await user.getIdToken();
         // 4. Authorization 헤더에 Bearer 토큰 형식으로 추가
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+        //config.headers.Authorization = `Bearer ${token}`;
+   // }
+   // return config;
+//}, (error) => {
+  //  return Promise.reject(error);
+//});
 
 
 /**

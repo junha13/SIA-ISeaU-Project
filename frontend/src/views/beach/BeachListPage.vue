@@ -65,9 +65,8 @@
     </div>
 
     <div class="mt-3">
-
       <div v-if="viewMode === 'list'">
-        <div v-for="beach in filteredBeachList" :key="beach.id" class="beach-card card shadow-sm mb-4 rounded-3 border-0" @click="goToDetail(beach.id)">
+        <div v-for="beach in filteredBeachList" :key="beach.beachNumber" class="beach-card card shadow-sm mb-4 rounded-3 border-0" @click="goToDetail(beach.beachNumber)">
           <div class="card-body p-3 d-flex">
             <div class="beach-image-placeholder me-3 rounded-2"
                  :style="{ border: '1px solid #eee' }">
@@ -80,35 +79,34 @@
             <div class="beach-info flex-grow-1">
               <div class="d-flex justify-content-between align-items-start">
                 <h5 class="fw-bolder fs-6 mb-1" :style="{ color: darkColor }">{{ beach.name }}</h5>
-                <i :class="['fas fa-heart fs-5', { 'text-danger': isFavorite(beach.id), 'text-muted': !isFavorite(beach.id) }]"
-                   @click.stop="toggleFavorite(beach.id)"
+                <i :class="['fas fa-heart fs-5', { 'text-danger': isFavorite(beach.beachNumber), 'text-muted': !isFavorite(beach.beachNumber) }]"
+                   @click.stop="toggleFavorite(beach.beachNumber)"
                    style="cursor: pointer;"></i>
               </div>
 
               <p class="text-muted fs-7 mb-2">{{ beach.location }}</p>
 
               <div class="d-flex gap-2 mb-3">
-                            <span v-for="(tag, index) in beach.tags" :key="index"
-                                  :class="['badge', 'px-2', 'py-1', 'fw-bold', tagClass(tag)]">
-                                {{ tag }}
-                            </span>
+                <span v-for="(tag, index) in beach.tags" :key="index"
+                      :class="['badge', 'px-2', 'py-1', 'fw-bold', tagClass(tag)]">
+                  {{ tag }}
+                </span>
               </div>
 
               <div class="d-flex justify-content-between align-items-center">
                 <p class="fs-7 mb-0 text-muted">{{ beach.distance }} 거리</p>
 
-                <button v-if="isSelected(beach.id)"
+                <button v-if="isSelected(beach.beachNumber)"
                         class="btn btn-sm fw-bold"
                         :style="{ backgroundColor: mainColor, color: 'white' }"
-                        @click.stop="toggleSelect(beach.id, beach.name)">
+                        @click.stop="toggleSelect(beach.beachNumber, beach.name)">
                   선택됨
                 </button>
                 <button v-else
                         class="btn btn-sm btn-outline-secondary fw-bold"
-                        @click.stop="toggleSelect(beach.id, beach.name)">
+                        @click.stop="toggleSelect(beach.beachNumber, beach.name)">
                   선택하기
                 </button>
-
               </div>
             </div>
           </div>
@@ -127,21 +125,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBeachStore } from '@/stores/beachStore.js';
+import { useApi } from '@/utils/useApi.js';
+import { beachApi } from '@/api/beach.js';
+
 
 const router = useRouter();
 const beachStore = useBeachStore();
 
-// --- Color Definitions ---
+// --- Color Definitions (수정 없음) ---
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const safetyColor = '#8482FF';
 const cautionColor = '#FFB354';
 const dangerColor = '#EB725B';
 
-// --- State ---
+// --- State (수정 없음) ---
 const activeTab = ref('all');
 const viewMode = ref('list');
 const currentSort = ref('distance');
@@ -152,7 +153,7 @@ const sortOptions = [
   { label: '평점순', value: 'rating' },
 ];
 
-// --- Styles (for dynamic binding) ---
+// --- Styles (수정 없음) ---
 const primaryBtnStyle = {
   backgroundColor: mainColor,
   borderColor: mainColor,
@@ -165,29 +166,47 @@ const dropdownBtnStyle = {
 };
 
 // --- Dummy Data (실제로는 API로 가져옴) ---
-const beachList = ref([
-  { id: 1, name: '해운대 해수욕장', location: '부산광역시 해운대구', rating: 4.5, distance: '2.5km', tags: ['안전', '수영', '서핑'], reviewCount: 500 },
-  { id: 2, name: '광안리 해수욕장', location: '부산광역시 수영구', rating: 3.7, distance: '5.1km', tags: ['안전', '수영', '산책'], reviewCount: 300 },
-  { id: 3, name: '송정 해수욕장', location: '부산광역시 기장군', rating: 4.2, distance: '8.0km', tags: ['서핑', '가족'], reviewCount: 150 },
-  { id: 4, name: '다대포 해수욕장', location: '부산광역시 사하구', rating: 4.8, distance: '12.3km', tags: ['산책', '가족', '안전'], reviewCount: 700 },
-]);
+// [수정 7] id -> beachNumber
+const { data: beachList, error, loading, execute: fetchBeaches } = useApi(
+  beachApi.fetchBeachList.method, 
+  beachApi.fetchBeachList.url
+);
+const searchParams = ref({
+  region: '부산',
+  sort: 'rating_desc',
+});
+// 3. 데이터를 불러오는 함수
+async function loadData() {
+  try {
+    // execute 함수(여기서는 fetchBeaches)에 검색 조건을 담아 호출합니다.
+    await fetchBeaches(searchParams.value); 
+    // 성공하면 beachList.value에 자동으로 데이터가 담깁니다.
+  } catch (err) {
+    // 실패하면 error.value에 에러 정보가 담깁니다.
+    console.error("해수욕장 목록 로딩 실패:", err);
+  }
+}
 
+// 4. 컴포넌트가 마운트될 때 데이터를 불러옵니다.
+onMounted(loadData);
 // --- Computed & Methods ---
 
-/**
- * 필터링 및 정렬된 해수욕장 리스트
- */
-const filteredBeachList = computed(() => {
-  let list = beachList.value.slice();
 
-  // 1. 탭 필터링
+const filteredBeachList = computed(() => {
+  // [수정] 
+  // 1. beachList.value?.result : beachList가 null일 때 오류 방지 (Optional Chaining)
+  // 2. || [] : .result가 없거나 null일 경우 빈 배열([])을 기본값으로 사용
+  // 3. .slice() : 원본 배열을 복사
+  let list = (beachList.value?.result || []).slice();
+
+  // 1. 탭 필터링 (이하 로직 동일)
   if (activeTab.value === 'favorite') {
-    list = list.filter(beach => beachStore.getFavoriteBeachIds.includes(beach.id));
+    list = list.filter(beach => beachStore.getFavoriteBeachIds.includes(beach.beachNumber));
   } else if (activeTab.value !== 'all') {
     list = list.filter(beach => beach.tags.includes(activeTab.value.charAt(0).toUpperCase() + activeTab.value.slice(1)));
   }
 
-  // 2. 정렬
+  // 2. 정렬 (이하 로직 동일)
   list.sort((a, b) => {
     if (currentSort.value === 'distance') {
       const distA = parseFloat(a.distance);
@@ -204,44 +223,50 @@ const filteredBeachList = computed(() => {
   return list;
 });
 
-
 /**
  * 해수욕장 선택 상태 확인
  */
-const isSelected = (beachId) => {
-  return beachStore.getCurrentSelectedBeachId === beachId;
+// [수정 9] beachId -> beachNumber
+const isSelected = (beachNumber) => {
+  return beachStore.getCurrentSelectedBeachId === beachNumber;
 };
 
 /**
  * 해수욕장 선택 토글 액션 호출
  */
-const toggleSelect = (beachId, beachName) => {
-  beachStore.toggleSelectBeach(beachId, beachName);
+// [수정 10] beachId -> beachNumber
+const toggleSelect = (beachNumber, beachName) => {
+  beachStore.toggleSelectBeach(beachNumber, beachName);
 };
 
 /**
  * 즐겨찾기 상태 확인
  */
-const isFavorite = (beachId) => {
-  return beachStore.getFavoriteBeachIds.includes(beachId);
+// [수정 11] beachId -> beachNumber
+const isFavorite = (beachNumber) => {
+  return beachStore.getFavoriteBeachIds.includes(beachNumber);
 };
 
 /**
  * 즐겨찾기 토글 액션 호출
  */
-const toggleFavorite = (beachId) => {
-  beachStore.toggleFavoriteBeach(beachId);
+// [수정 12] beachId -> beachNumber
+const toggleFavorite = (beachNumber) => {
+  beachStore.toggleFavoriteBeach(beachNumber);
 };
 
 /**
  * 상세 페이지로 이동
  */
-const goToDetail = (beachId) => {
-  router.push({ name: 'BeachDetail', params: { id: beachId } });
+
+const goToDetail = (beachNumber) => {
+  // [수정 14] params: { id: beachId } -> params: { id: beachNumber }
+  // (참고: 라우터 파라미터 이름이 'id'라면 { id: beachNumber }가 맞습니다)
+  router.push({ name: 'BeachDetail', params: { id: beachNumber } });
 }
 
 /**
- * 태그에 따른 배지 클래스 반환
+ * 태그에 따른 배지 클래스 반환 (수정 없음)
  */
 const tagClass = (tag) => {
   switch (tag) {
@@ -319,5 +344,5 @@ const tagClass = (tag) => {
 }
 .overflow-auto::-webkit-scrollbar {
   display: none;
-}
+} 
 </style>
