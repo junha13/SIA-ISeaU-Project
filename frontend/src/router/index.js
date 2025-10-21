@@ -71,7 +71,7 @@ const routes = [
 
             // 해수욕장
             { path: 'beach-list', name: 'BeachList', component: BeachListPage },
-            { path: 'beach/:id', name: 'BeachDetail', component: BeachDetailPage },
+            { path: '/detail/:id',  name: 'BeachDetail',  component: BeachDetailPage, },
 
             // 그룹
             { path: 'group', name: 'GroupList', component: GroupListPage },

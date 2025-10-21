@@ -5,7 +5,7 @@ import { useApi } from '@/utils/useApi.js';
 const { execute: fetchBeachList } = useApi('post', '/beaches');
 
 // 해수욕장 상세 정보 조회 API (GET)
-const { execute: fetchBeachDetail } = useApi('get', '/beach/detail');
+const { execute: fetchBeachDetail } = useApi('get', 'beach/detail/info');
 
 // 즐겨찾기 추가 API (POST)
 const { execute: addFavorite } = useApi('post', '/favorites/add');
@@ -24,7 +24,10 @@ export const beachApi = {
         method: 'post', 
         url: '/api/beach/beaches' 
     },
-    fetchBeachDetail,
+  fetchBeachDetail: { 
+    method: 'get', 
+    url: '/api/detail/{beachNumber}/info' 
+},
     addFavorite,
     removeFavorite,
     selectBeach,

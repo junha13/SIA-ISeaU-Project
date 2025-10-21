@@ -19,22 +19,12 @@ export const useBeachStore = defineStore('beach', () => {
 
     /**
      * 특정 해수욕장의 상세 정보를 가져옵니다. (날씨, 위험 정보 포함)
-     * @param {number} beachId - 해수욕장 ID
+     * @param {number} beachNumber - 해수욕장 ID
      */
-    const fetchBeachDetail = async (beachId) => {
+    const fetchBeachDetail = async (beachNumber) => {
         isDetailLoading.value = true;
         try {
-            // const result = await beachApi.fetchBeachDetail({ id: beachId });
-
-            // Dummy Data (상세 정보)
-            const result = {
-                id: beachId,
-                name: '속초 해수욕장',
-                description: '맑고 깨끗한 바다와 부드러운 모래사장으로 유명합니다.',
-                weather: { temp: 24, wind: 3.2, visibility: 10, humidity: 65, tide: 1.2 },
-                danger: { rip: '관심', jelly: '주의', wave: 1.8 },
-                reviews: [{ user: '익명사용자', date: '2025.01.15', content: '정말 깨끗하고 아름다운 해수욕장이에요.' }],
-            };
+             const result = await beachApi.fetchBeachDetail({ id: beachNumber });
 
             currentBeachDetail.value = result;
         } catch (error) {

@@ -50,8 +50,7 @@ public class BeachService  {
 	/*
 	 * ========= 하나의 해수욕장의 값을 보내주면 딤 =========
 	 */
-	@Transactional
-	public Map<String, Object> getBeachDetailInfo(int beachNumber) {
+	@Transactional	public Map<String, Object> getBeachDetailInfo(int beachNumber) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
 		ResponseBeachDTO beach = dao.getBeachDetailInfo(beachNumber);
@@ -59,6 +58,7 @@ public class BeachService  {
 		map.put("result", beach);
 		return map;
 	}
+
 	
 	/*
 	 * ========= 하나의 해수욕장에 대한 여러 시간대 danget 상황 보내주기 (이안류, 풍속, 파고) =========
