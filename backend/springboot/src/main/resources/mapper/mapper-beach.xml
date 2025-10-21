@@ -4,8 +4,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="lx.iseau.feature.beach.BeachDAO">
-    
-    <select id="findBeaches" parameterType="lx.iseau.feature.beach.BeachListRequest" resultType="lx.iseau.feature.beach.BeachVO">
+
+    <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
         SELECT
             beach_number,
             beach_name,
@@ -41,4 +41,19 @@
         </choose>
     </select>
     
+
+	<select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
+		select *
+		from tb_beach
+		where beach_number = #{beachNumber}
+	</select>
+	
+	<select id="getBeachDetailDanger" parameterType="int" resultType="ResponseBeachDangerDTO">
+		select temperature, ST_Y(observed_location::geometry) AS lat, ST_X(observed_location::geometry) AS lon
+		from tb_weather_info
+		where observed_location = (select location
+									from tb_beach
+									where beach_number = #{beachNumber})
+	</select>
+
 </mapper>
