@@ -42,12 +42,10 @@
 
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBeachStore } from '@/stores/beachStore.js'
-
 import BeachInfoTab from './tabs/BeachInfoTab.vue'
 import BeachDangerTab from './tabs/BeachDangerTab.vue'
 import BeachWeatherTab from './tabs/BeachWeatherTab.vue'
@@ -61,28 +59,39 @@ const mainColor = '#0092BA'
 const darkColor = '#0B1956'
 
 const tabs = [
-  { key: 'info', label: '상세정보', comp: BeachInfoTab },
-  { key: 'danger', label: '위험정보', comp: BeachDangerTab },
-  { key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
-  { key: 'depth', label: '수심지도', comp: BeachDepthTab },
-  { key: 'cctv', label: 'CCTV', comp: BeachCctvTab }
+	{ key: 'info', label: '상세정보', comp: BeachInfoTab },
+	{ key: 'danger', label: '위험정보', comp: BeachDangerTab },
+	{ key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
+	{ key: 'depth', label: '수심지도', comp: BeachDepthTab },
+	{ key: 'cctv', label: 'CCTV', comp: BeachCctvTab }
 ]
 
 const activeTab = ref('info')
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value).comp)
 
-const beachId = computed(() => parseInt(route.params.id));
+// ✅ 이름 통일: URL 파라미터 ID를 beachNumber로 가져옵니다.
+const beachNumber = computed(() => parseInt(route.params.id)); 
 
 // 상세 정보 로드
 const loadBeachDetail = () => {
-  if (beachId.value) {
-    beachStore.fetchBeachDetail(beachId.value);
-  }
+    // ⭐ beachNumber.value로 수정
+	if (beachNumber.value) { 
+        // ⭐ beachId.value 대신 beachNumber.value 사용
+		beachStore.fetchBeachDetail(beachNumber.value); 
+	}
 }
 
 onMounted(loadBeachDetail);
-watch(beachId, loadBeachDetail); // URL ID가 변경될 경우 다시 로드
+// ⭐ watch 대상도 beachNumber로 수정
+watch(beachNumber, loadBeachDetail); // URL ID가 변경될 경우 다시 로드
 </script>
+
+<style scoped>
+button {
+	transition: 0.2s ease-in-out;
+}
+</style>
+
 
 <style scoped>
 button {

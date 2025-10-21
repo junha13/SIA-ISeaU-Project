@@ -5,42 +5,41 @@
 
 <mapper namespace="lx.iseau.feature.beach.BeachDAO">
 
-    <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
-        SELECT
-            beach_number,
-            beach_name,
-            beach_image,
-            beach_information,
-            rating,
-            approved_by_ministry,
-            address,    
-            ST_Y(LOCATION::geometry) AS latitude,         
-            ST_X(LOCATION::geometry) AS longitude,
-            mobile,
-            open_date,
-            close_date
+   <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
+    SELECT
+        beach_number,
+        beach_name,
+        beach_image,
+        beach_information,
+        rating,
+        approved_by_ministry,
+        address,    
+        ST_Y(LOCATION::geometry) AS latitude,         
+        ST_X(LOCATION::geometry) AS longitude,
+        mobile,
+        open_date,
+        close_date
         FROM
-            tb_beach
-        WHERE
-            1=1
-       <!-- 
-        <if test="region != null and region != ''">
-            AND address LIKE CONCAT(#{region}, '%')
-        </if>
-        - -->
-        <choose>
-            <when test="sort == 'rating_desc'">
-                ORDER BY rating DESC, beach_name ASC
-            </when>
-            <when test="sort == 'name_asc'">
-                ORDER BY beach_name ASC
-            </when>
-            <otherwise>
-                ORDER BY beach_number ASC
-            </otherwise>
-        </choose>
-    </select>
+        tb_beach
+    WHERE
+        1=1
+   
+    <if test="region != null and region != ''">
+        AND address LIKE CONCAT(#{region}, '%')
+    </if>
     
+    <choose>
+        <when test="sort == 'rating_desc'">
+            ORDER BY rating DESC, beach_name ASC
+        </when>
+        <when test="sort == 'name_asc'">
+            ORDER BY beach_name ASC
+        </when>
+        <otherwise>
+            ORDER BY beach_number ASC
+        </otherwise>
+    </choose>
+</select>
 
 	<select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
 		select *
