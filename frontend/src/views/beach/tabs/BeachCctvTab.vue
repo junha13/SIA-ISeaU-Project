@@ -1,40 +1,51 @@
 <template>
-  <div class="cctv-player">
-    <video ref="video" controls autoplay muted playsinline width="100%" height="360"></video>
-  </div>
+  <section class="p-3">
+    <!-- 해수욕장 바뀔 때만 리마운트 -->
+    <YouTubeLive
+      v-if="cctvUrl"
+      :url="cctvUrl"
+      :key="beachKey"
+      :ratio="'16/9'"
+      :autoplay="true"
+      :muted="true"
+      :controlsMinimal="true"
+      :nocookie="true"
+    />
+    <div v-else class="text-muted small">
+      CCTV 정보가 없습니다.
+    </div>
+  </section>
 </template>
 
-<script>
-import Hls from 'hls.js';
+<script setup>
+import { computed } from 'vue'
+import YouTubeLive from '@/components/YouTubeLive.vue'
+import { CCTV_BY_BEACH_NUMBER, CCTV_BY_BEACH_NAME } from '@/constants/cctvMap.js'
+const props = defineProps({
+  beach: { type: Object, required: true }
+})
 
-export default {
-  name: 'BeachCctvTab',
-  props: {
-    src: { type: String, required: true } // m3u8 전체 URL
-  },
-  mounted() {
-    const video = this.$refs.video;
-    const url = this.src;
+/** 백엔드 응답 키 유연 대응 */
+const cctvUrl = computed(() => {
+  const b = props.beach || {}
+  const numberKey = b?.beachNumber != null ? String(b.beachNumber) : ''
+  const nameKey = (b?.beachName || b?.name || '').trim()
+  return (
+    b.cctvUrl ||
+    b?.cctv?.youtubeUrl ||
+    b.cctv_link ||
+    b.youtubeUrl ||
+    (numberKey && CCTV_BY_BEACH_NUMBER[numberKey]) ||
+     (nameKey && CCTV_BY_BEACH_NAME[nameKey]) ||
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
-      this._hls = hls;
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-    } else {
-      console.error('브라우저가 HLS를 지원하지 않습니다.');
-    }
-  },
-  beforeDestroy() {
-    if (this._hls) this._hls.destroy();
-  }
-}
+    ''
+  )
+})
+
+/** key는 해수욕장 단위로만(탭 이동 시 리마운트 방지) */
+const beachKey = computed(() => props.beach?.beachNumber ?? props.beach?.id ?? '')
 </script>
 
 <style scoped>
-.cctv-player { display:flex; justify-content:center; }
-video { background:#000; }
+/* 필요시 스타일 보강 */
 </style>

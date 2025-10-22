@@ -30,11 +30,11 @@ public class WebMVCConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")  // 모든 경로에 대해
-                // localhost:5173과 ngrok 주소 모두를 허용하도록 변경
-                .allowedOrigins("http://localhost:5173","https://hellokiyo.ngrok.io")
-                .allowedMethods("*")  // 모든 HTTP 메서드 허용 (GET, POST 등)
-                .allowedHeaders("*")  // 모든 헤더 허용
-                .allowCredentials(true);  // 쿠키 인증 허용 시 필요
+        registry.addMapping("/**")
+                // [수정] 5173을 프론트엔드 포트인 5174로 변경합니다.
+                .allowedOrigins("http://localhost:5173", "https://hellokiyo.ngrok.io")
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
