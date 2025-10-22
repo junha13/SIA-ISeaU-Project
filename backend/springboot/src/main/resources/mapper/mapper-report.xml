@@ -18,5 +18,5 @@
 		from tb_first_aid
 		where first_aid_case = #{firstAidCase}
 	</select>
-
+ 
 </mapper>
