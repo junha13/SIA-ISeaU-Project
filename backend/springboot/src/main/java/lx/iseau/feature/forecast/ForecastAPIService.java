@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -22,7 +24,6 @@ public class ForecastAPIService {
 	@Autowired
 	private ForecastDAO dao;
 	
-	@Transactional
 	public List<Map<String, Object>> getForecastData() {
 		WebClient webClient = webClientBuilder.build();
 		
@@ -42,7 +43,7 @@ public class ForecastAPIService {
 		String lat = latsb.toString();
 		String lon = lonsb.toString();
 		
-		System.out.println(lat);
+		System.out.println("Requesting latitudes: " + lat);
 		
 		// 다중 좌표 테스트
 		List<Map<String, Object>> result = webClient.get()
@@ -59,45 +60,81 @@ public class ForecastAPIService {
 							.build()
 							)
 					.retrieve()
-					.bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {}) // 4) 정상일 땐 JSON을 Map으로 파싱해서 Mono로 받음              
-					.block(Duration.ofSeconds(10)); // 5) 리액티브 Mono를 10초 안에 동기적으로 결과(Map)로 뽑아냄
+					.bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {}) 
+					.block(Duration.ofSeconds(10));
 		
-		System.out.println(result);
+		System.out.println("API Response received.");
 			return result;
 	}
 	
 	@Transactional
 	public void insertDB(List<Map<String, Object>> result) {
-		List<ResponseWeatherDTO> rows = new ArrayList<ResponseWeatherDTO>();
+		List<ResponseWeatherDTO> allRows = new ArrayList<>();
 		
-		// 각 장소별 기상정보 뽑기
+		// 1. 모든 API 응답을 파싱하여 하나의 리스트로 통합
 		for(Map<String, Object> data : result) {
+            if (data == null || !data.containsKey("latitude") || !data.containsKey("longitude") || !data.containsKey("hourly")) {
+                System.err.println("Warning: Skipping invalid data entry from API response.");
+                continue;
+            }
+
 			double lat = (Double) data.get("latitude");
 			double lon = (Double) data.get("longitude");
 			
 			Map<String, Object> hourly = (Map<String, Object>) data.get("hourly");
+
+            if (hourly == null || !hourly.containsKey("time")) {
+                System.err.println("Warning: Skipping location due to missing hourly data.");
+                continue;
+            }
+			
 			List<String> forecastTime = (List<String>) hourly.get("time");
 			List<Double> temperature = (List<Double>) hourly.get("temperature_2m");
 			List<Double> windSpeed = (List<Double>) hourly.get("wind_speed_10m");
 			List<Integer> windDirection = (List<Integer>) hourly.get("wind_direction_10m");
 			List<Double> rainfall = (List<Double>) hourly.get("rain");
 			
+            // 데이터 배열들의 크기가 일치하는지 확인하여 IndexOutOfBoundsException 방지
+            if (forecastTime == null || temperature == null || windSpeed == null || windDirection == null || rainfall == null ||
+                !(forecastTime.size() == temperature.size() && forecastTime.size() == windSpeed.size() &&
+                  forecastTime.size() == windDirection.size() && forecastTime.size() == rainfall.size())) {
+                System.err.println("Warning: Mismatched hourly data arrays for location " + lat + "," + lon);
+                continue;
+            }
+
 			for (int i=0; i<forecastTime.size(); i++) {
 				ResponseWeatherDTO dto = new ResponseWeatherDTO();
 				dto.setLat(lat);
 				dto.setLon(lon);
-				dto.setForecastTime( LocalDateTime.parse(forecastTime.get(i)));
+				dto.setForecastTime(LocalDateTime.parse(forecastTime.get(i)));
 				dto.setTemperature(temperature.get(i));
 				dto.setWindSpeed(windSpeed.get(i));
 				dto.setWindDirection(windDirection.get(i));
 				dto.setRainfall(rainfall.get(i));
 				
-				rows.add(dto);
-				
+				allRows.add(dto);
 			}
-			
-			if (!rows.isEmpty()) dao.upsertForecastDB(rows);
 		}
+
+        // 2. (위도 + 경도 + 예보 시간)을 키로 사용하여 리스트 전체의 중복을 제거
+        List<ResponseWeatherDTO> distinctRows = allRows.stream()
+            .collect(Collectors.collectingAndThen(
+                Collectors.toMap(
+                    // 유니크 키 생성
+                    dto -> dto.getLat() + ":" + dto.getLon() + ":" + dto.getForecastTime(),
+                    Function.identity(),
+                    // 키가 중복될 경우, 기존 값을 새 값으로 덮어씀
+                    (existing, replacement) -> replacement
+                ),
+                map -> new ArrayList<>(map.values())
+            ));
 		
+		// 3. 반복문이 끝난 후, 중복이 제거된 최종 리스트를 DB에 한 번만 저장
+		if (!distinctRows.isEmpty()) {
+            System.out.println("Upserting " + distinctRows.size() + " unique forecast rows to the database.");
+			dao.upsertForecastDB(distinctRows);
+		} else {
+            System.out.println("No new forecast data to upsert.");
+        }
 	}
 }
