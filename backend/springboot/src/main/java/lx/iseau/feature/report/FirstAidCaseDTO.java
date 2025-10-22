@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FirstAidCaseDTO {
-	private int firstAidNumber; 
-	private String firstAidCase;
+	private int firstAidCaseNum; 
+	private String firstAidCaseName;
 }

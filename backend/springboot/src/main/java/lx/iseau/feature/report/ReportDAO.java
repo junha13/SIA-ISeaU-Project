@@ -10,7 +10,7 @@ import java.util.Map;
 public interface ReportDAO {
 	//public ReportVO getFirstAid(String firstAidCase);
 	
-	public ReportDTO getFirstAidByCase(String firstAidCase);
+	public ReportDTO getFirstAidByCaseNum(int firstAidCaseNum);
 
 	public List<Map<String, Object>> listFirstAidCases();
 } 
