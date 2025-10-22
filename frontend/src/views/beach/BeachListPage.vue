@@ -201,15 +201,56 @@ watch(currentSort, (newSortValue) => {
 });
 
 // --- [로직 수정] Computed 속성 ---
+function normalizeName(s) {
+  return String(s || '')
+    .replace(/\s+/g, '')   // 모든 공백 제거
+    .toLowerCase();
+}
+
+// --- 강한 중복 제거: 1) id, 2) 정규화된 이름 ---
+const dbOnlyList = computed(() => {
+  const byId = new Map();
+  const byName = new Map();
+  const out = [];
+
+  for (const b of (beachStore.beaches || [])) {
+    const id = b.beachNumber ?? b.id;
+    const nkey = normalizeName(b.beachName);
+
+    // 1) id 기준으로 먼저 거르기
+    if (id != null) {
+      if (byId.has(id)) continue;
+      byId.set(id, true);
+    }
+
+    // 2) id가 없거나, 서로 다른 id로 동일 이름이 여러 번 올 때 이름으로 한 번 더 거르기
+    if (nkey) {
+      if (byName.has(nkey)) continue;
+      byName.set(nkey, true);
+    }
+
+    out.push(b);
+  }
+  return out;
+});
+
+// 기존 filteredBeachList가 즐겨찾기 등 UI 필터만 수행
 const filteredBeachList = computed(() => {
-  // 이제 API 호출 결과인 beachList 대신, 스토어의 상태(beachStore.beaches)를 사용
-  let list = (beachStore.beaches || []).slice();
+  let list = dbOnlyList.value.slice();
+
+  // (필요하면 키워드/지역 필터를 여기에서 추가)
+  // const kw = (searchParams.value.keyword || '').trim().toLowerCase();
+  // if (kw) list = list.filter(b =>
+  //   [b.beachName, b.address].some(t => (t || '').toLowerCase().includes(kw))
+  // );
+  // const region = (searchParams.value.region || '').trim();
+  // if (region) list = list.filter(b =>
+  //   (b.address || '').includes(region) || (b.beachName || '').includes(region)
+  // );
 
   if (activeTab.value === 'favorite') {
-    return list.filter(beach => isFavorite(beach.beachNumber));
+    list = list.filter(b => beachStore.favoriteBeachIds.includes(b.beachNumber));
   }
-  // (필요 시 다른 탭 필터링 로직 추가)
-
   return list;
 });
 
@@ -233,6 +274,7 @@ const tagClass = (tag) => {
     default: return 'bg-light text-dark';
   }
 };
+
 </script>
 
 <style scoped>
