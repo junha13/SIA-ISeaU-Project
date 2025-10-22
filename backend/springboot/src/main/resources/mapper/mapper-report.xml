@@ -5,5 +5,18 @@
 
 <mapper namespace="lx.iseau.feature.report.ReportDAO">
 
+	<!-- 상황 버튼 목록 조회 -->
+	<select id="listFirstAidCases" resultType="map">
+	    SELECT first_aid_number, first_aid_case
+	    FROM tb_first_aid
+	    ORDER BY first_aid_number
+	</select>
+ 	 
+    <!--  하나의 응급 대처법 조회 -->
+	<select id="getFirstAidByCase" parameterType="String" resultType="ReportDTO">
+		select *
+		from tb_first_aid
+		where first_aid_case = #{firstAidCase}
+	</select>
 
 </mapper>
