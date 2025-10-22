@@ -20,8 +20,8 @@ public class ReportController {
 	 * ===== 하나의 응급 대처법 =====
 	 */
 	@RequestMapping("/first-aid")
-	public ResponseEntity<?> getFirstAidByCase(@RequestBody String firstAidCase) {
-		Map<String, Object> result = service.getFirstAidByCase(firstAidCase);
+	public ResponseEntity<?> getFirstAidByCaseNum(@RequestBody int firstAidCaseNum) {
+		Map<String, Object> result = service.getFirstAidByCaseNum(firstAidCaseNum);
 		return ResponseEntity
 				.ok()
 				.header("api", "Report/first-aid")

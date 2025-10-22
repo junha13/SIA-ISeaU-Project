@@ -51,6 +51,12 @@
       </button>
     </div>
   </div>
+
+  <FirstAidModal
+    :isVisible="showModal"
+    :type="modalType"
+    @update:isVisible="(v) => (showModal = v)"
+  />
 </template>
 
 <script setup>
@@ -58,6 +64,7 @@
 import { ref, onMounted } from 'vue';
 import { useConfirmModal } from '@/utils/modalUtils.js';
 import { useSOSStore } from '@/stores/sosStore';
+import FirstAidModal from '@/components/FirstAidModal.vue'
 
 // ===== 공통 모달/스토어 =====
 const { showConfirmModal } = useConfirmModal();
@@ -71,10 +78,10 @@ const dangerColor = '#EB725B';
 // ===== API 엔드포인트 어댑터 =====
 // - 목록 API: 상황들(코드/라벨) 내려주는 GET
 // - 신고 로깅 API: 컨트롤러(@RequestMapping("/report/first-aid"))에 맞춰 text/plain POST
-const API_BASE = import.meta.env.VITE_API_BASE || ''; // 예: 'https://api.yourdomain.com'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''; 
 const API = {
-  list:   `${API_BASE}/sos/first-aid/cases`, // ← 네가 만든 목록 엔드포인트로 교체 (예시)
-  report: `${API_BASE}/report/first-aid`,     // ← 너의 컨트롤러 경로에 맞춤
+  list:   `${API_BASE}/api/report/first-aid/cases`, // ← 네가 만든 목록 엔드포인트로 교체 (예시)
+  report: `${API_BASE}/api/report/first-aid`,     // ← 너의 컨트롤러 경로에 맞춤
 };
 
 // ===== 상태 =====
@@ -86,13 +93,34 @@ const situations = ref([]);
 const selected   = ref(null);
 const loading    = ref(false);
 const error      = ref(false);
+const showModal  = ref(false);              
+const modalType  = ref('jellyfish');     
 
 // ===== 유틸 =====
 const isSelected = (item) =>
   !!selected.value && (selected.value.code ?? selected.value.id ?? selected.value.label) === (item.code ?? item.id ?? item.label);
 
+// 상황 클릭 → 선택 + 모달 타입 매핑 + 모달 열기
 const select = (item) => {
   selected.value = item;
+  modalType.value = mapToModalType(item);
+  showModal.value = true;
+};
+
+// 라벨/코드 기준으로 type 매핑 (라벨 한글 포함해도 안전하게)
+const mapToModalType = (item) => {
+  const label = String(item?.label || '').toLowerCase();
+  const code  = String(item?.code || '').toLowerCase();
+  // 1) 라벨 키워드 기반 (가장 안전)
+  if (label.includes('해파리')) return 'jellyfish';
+  if (label.includes('화상') || label.includes('햇빛') || label.includes('일광')) return 'sunburn';
+  if (label.includes('벌레') || label.includes('자벌레') || label.includes('해양 생물')) return 'bugbite';
+  // 2) 코드 숫자/문자 규약이 있으면 여기에 추가 (예시)
+  // if (code === '1' || code === 'jellyfish') return 'jellyfish';
+  // if (code === '2' || code === 'sunburn')   return 'sunburn';
+  // if (code === '3' || code === 'bugbite')   return 'bugbite';
+  // 3) 기본값
+  return 'jellyfish';
 };
 
 // ===== 데이터 로드 =====
@@ -104,14 +132,12 @@ const loadSituations = async () => {
     if (!res.ok) throw new Error('Failed to load list');
     const data = await res.json();
 
-    // ---- 백엔드 응답 형태에 맞춰 어댑트 ----
-    // 예시 1) [{code, label}]
-    // 예시 2) [{id, name}] -> {code:id, label:name}로 변환
-    const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+    const rows = Array.isArray(data?.data?.result)
+      ? data.data.result : Array.isArray(data) ? data : [];
 
     situations.value = rows.map((row) => ({
-      code:  row.code ?? row.id ?? row.value ?? row.key ?? row.name, // 우선순위 매핑
-      label: row.label ?? row.name ?? row.title ?? String(row),
+      code:  row.first_aid_case_num ?? row.code ?? row.id ?? row.value ?? row.key ?? row.name,
+      label: row.first_aid_case_name ?? row.label ?? row.name ?? row.title ?? String(row),
     }));
   } catch (e) {
     error.value = true;

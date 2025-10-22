@@ -18,10 +18,10 @@ public class ReportService {
 	 * ======== 하나의 응급 대처법 =========
 	 */
 	@Transactional
-	public Map<String, Object> getFirstAidByCase(String firstAidCase) {
+	public Map<String, Object> getFirstAidByCaseNum(int firstAidCaseNum) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
-		ReportDTO firstAid = dao.getFirstAidByCase(firstAidCase);
+		ReportDTO firstAid = dao.getFirstAidByCaseNum(firstAidCaseNum);
 		
 		map.put("result", firstAid);
 		

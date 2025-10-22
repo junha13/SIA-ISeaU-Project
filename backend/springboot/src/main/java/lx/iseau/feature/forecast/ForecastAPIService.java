@@ -12,14 +12,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class ForecastAPIService {
 
-	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
-	@Autowired
 	private ForecastDAO dao;
 	
 	@Transactional
@@ -35,8 +36,8 @@ public class ForecastAPIService {
 		for (int i =0; i < list.size(); i++) {
 			RequestLocation loc = list.get(i);
 			if (i > 0) { latsb.append(","); lonsb.append(","); }
-			latsb.append(loc.getLat());
-			lonsb.append(loc.getLon());
+//			latsb.append(loc.getLat());
+//			lonsb.append(loc.getLon());
 		}
 		
 		String lat = latsb.toString();
