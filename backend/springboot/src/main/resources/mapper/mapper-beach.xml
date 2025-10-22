@@ -42,7 +42,18 @@
 </select>
 
 	<select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
-		select *
+		select beach_number,
+		        beach_name,
+		        beach_image,
+		        beach_information,
+		        rating,
+		        approved_by_ministry,
+		        address,    
+		        ST_Y(LOCATION::geometry) AS latitude,         
+		        ST_X(LOCATION::geometry) AS longitude,
+		        mobile,
+		        open_date,
+		        close_date
 		from tb_beach
 		where beach_number = #{beachNumber}
 	</select>
