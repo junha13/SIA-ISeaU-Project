@@ -3,20 +3,15 @@
     <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
       <div class="d-flex align-items-center">
         <i class="fas fa-chevron-left me-2" @click="$router.back()" style="cursor:pointer"></i>
-        <h5 class="fw-bold mb-0">{{ beachStore.currentBeachDetail?.beachName || '해수욕장' }}</h5>
+        <h5 class="fw-bold mb-0">{{ beach.beachName }}</h5>
       </div>
       <div>
         <i class="fas fa-bell me-3 text-danger"></i>
         <i class="fas fa-bars"></i>
       </div>
     </div>
-
-    <div v-if="beachStore.isDetailLoading" class="p-5 text-center text-muted">
-      <i class="fas fa-spinner fa-spin me-2"></i> 상세 정보를 불러오는 중...
-    </div>
-
-    <div v-else-if="beachStore.currentBeachDetail">
-      <img src="/src/public/images/beach/sea1.jpg" class="img-fluid w-100" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
+    <div>
+      <img :src=beach.beachImage class="img-fluid w-100" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
 
       <div class="d-flex justify-content-around border-bottom bg-white sticky-top" style="top:55px; z-index:100;">
         <button
@@ -35,30 +30,28 @@
       </div>
 
       <div class="mt-3">
-        <component :is="currentTab" :detail-data="beachStore.currentBeachDetail" />
+        <component :is="currentTab"/>
       </div>
-    </div>
-
-    <div v-else class="p-5 text-center text-muted">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        해수욕장 정보를 불러오지 못했습니다.
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useBeachStore } from '@/stores/beachStore.js';
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
 import BeachInfoTab from './tabs/BeachInfoTab.vue';
 import BeachDangerTab from './tabs/BeachDangerTab.vue';
 import BeachWeatherTab from './tabs/BeachWeatherTab.vue';
 import BeachDepthTab from './tabs/BeachDepthTab.vue';
 import BeachCctvTab from './tabs/BeachCctvTab.vue';
+import axios from 'axios';
 
 const route = useRoute();
-const beachStore = useBeachStore();
+const store = useStore();
+const { header, beach } = storeToRefs(store)
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -74,38 +67,25 @@ const tabs = [
 const activeTab = ref('info');
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value)?.comp);
 
-const beachNumber = computed(() => {
-    if (route.params.beachNumber) {
-        return parseInt(route.params.beachNumber);
-    }
-    return null;
-});
+onMounted(() => {
+  requestBeachDetail(route.params.beachNumber)
+})
+//==== axios 모음 ====
 
-const loadBeachDetail = () => {
-  if (beachNumber.value !== null) { 
-    beachStore.fetchBeachDetail(beachNumber.value); 
-  }
-};
-watch(() => beachStore.currentBeachDetail, (newData) => {
-  if (newData) {
-    console.log('--- 🚨 스토어 데이터 상세 🚨 ---');
-    
-    // 1. ✅ 이 로그가 가장 중요합니다! 객체 전체를 펼쳐보세요.
-    console.log('스토어에 저장된 객체 전체:', newData); 
-    
-    // 2. ❓ 여기서는 'undefined'가 뜰 것입니다.
-    console.log('beachName 속성 값:', newData.beachName); 
-    
-    console.log('------------------------------');
-  } else {
-    console.log('❌ 스토어 데이터가 null 입니다.');
-  }
-}, { deep: true });
-watch(beachNumber, (newNumber) => {
-    if (newNumber !== null) {
-        loadBeachDetail();
+async function requestBeachDetail(beachNumber) {
+    try {
+      const response = await axios.post(`http://localhost:8080/api/beach/detail/${beachNumber}/info`,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 5000,
+        })
+        console.log('OK', response.data.data.result)
+        beach.value = response.data.data.result
+    } catch (e) {
+      console.error('[Detail] load error:', e)
     }
-}, { immediate: true });
+  }
+
 </script>
 
 <!-- [수정] 중복된 <style> 태그를 하나로 합칩니다. -->
