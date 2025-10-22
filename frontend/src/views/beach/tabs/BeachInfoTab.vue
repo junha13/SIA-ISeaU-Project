@@ -2,17 +2,17 @@
   <div class="p-3">
     <h6 class="fw-bold mb-3">상세 정보</h6>
     <p class="text-secondary small">
-      {{ detailData?.description || '상세 정보가 없습니다.' }}
+      {{ beach.beachInformation }}
     </p>
 
     <div class="rounded shadow-sm overflow-hidden my-3" style="height:200px;">
       <div class="bg-light h-100 w-100 d-flex justify-content-center align-items-center text-muted">
-        지도 표시 영역 ({{ detailData?.name }})
+        지도 표시 영역 ({{  }})
       </div>
     </div>
 
     <div class="mt-4">
-      <h6 class="fw-bold">방문자 리뷰 ({{ detailData?.reviews?.length || 0 }}개)</h6>
+      <h6 class="fw-bold">방문자 리뷰 ({{}}개)</h6>
       <div class="border rounded p-3 mt-2">
         <textarea class="form-control mb-2" placeholder="리뷰를 작성해주세요..." rows="2"></textarea>
         <div class="d-flex justify-content-between">
@@ -33,8 +33,11 @@
 
 <script setup>
 import { defineProps } from 'vue';
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
 
-defineProps({
-  detailData: Object,
-});
+
+
 </script>
