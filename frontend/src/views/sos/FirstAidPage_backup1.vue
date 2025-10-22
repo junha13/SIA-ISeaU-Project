@@ -4,7 +4,7 @@
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
       <div class="d-flex align-items-center">
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">간편 신고</h5>
+        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">응급 대처법</h5>
       </div>
       <div>
         <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
@@ -59,7 +59,7 @@ const situations = ref([
 const selectedSituation = ref(null);
 
 const handle119Report = () => {
-  let message = '선택된 상황 없이 119에 신고를 요청하시겠습니까?';
+  let message = '119에 신고를 요청하시겠습니까?';
   let title = '긴급 신고 확인';
 
   if (selectedSituation.value) {

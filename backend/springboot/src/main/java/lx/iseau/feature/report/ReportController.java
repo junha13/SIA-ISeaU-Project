@@ -16,14 +16,14 @@ public class ReportController {
 	ReportService service;
 
 	/*
-	 * 설명
+	 * ===== 하나의 응급 대처법 =====
 	 */
-	@RequestMapping("/a")
-	public ResponseEntity<?> a(@RequestBody int num) {
-		Map<String, Object> result = service.a(num);
+	@RequestMapping("/first-aid")
+	public ResponseEntity<?> getFirstAidByCase(@RequestBody String firstAidCase) {
+		Map<String, Object> result = service.getFirstAidByCase(firstAidCase);
 		return ResponseEntity
 				.ok()
-				.header("api", "Report/a")
+				.header("api", "Report/first-aid")
 				.body(Map.of("data", result));
 	}
 }

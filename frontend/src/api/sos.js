@@ -5,13 +5,18 @@ import { useApi } from '@/utils/useApi.js';
 const { execute: submitJellyfishReport } = useApi('post', '/report/jellyfish');
 
 // 간편 신고 API (POST)
-const { execute: submitSimpleReport } = useApi('post', '/report/simple');
+//const { execute: submitSimpleReport } = useApi('post', '/report/simple');
+// 간편 신고 -> 응급 대처법 바뀌었기에 주석처리
+
+// 응급 대처법 조회 (GET)
+const { execute: showFirstAid } = useApi('get', '/report/first-aid');
 
 // 119/122 신고 기록 API (POST)
 const { execute: logEmergencyCall } = useApi('post', '/report/emergency');
 
 export const sosApi = {
     submitJellyfishReport,
-    submitSimpleReport,
+    //submitSimpleReport,
+    showFirstAid,
     logEmergencyCall
 };
