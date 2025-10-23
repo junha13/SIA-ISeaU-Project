@@ -11,7 +11,7 @@
       </div>
     </div>
     <div>
-      <img :src=beach.beachImage class="img-fluid w-100" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
+      <img :src="beach?.beachImage" class="img-fluid w-100" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
 
       <div class="d-flex justify-content-around border-bottom bg-white sticky-top" style="top:55px; z-index:100;">
         <button
@@ -30,7 +30,10 @@
       </div>
 
       <div class="mt-3">
-        <component :is="currentTab"/>
+        <component :is="currentTab"
+         :key="`${activeTab}-${route.params.beachNumber}`"
+  :beach="beach"
+/>
       </div>
     </div>
 
@@ -70,16 +73,18 @@ const currentTab = computed(() => tabs.find(t => t.key === activeTab.value)?.com
 onMounted(() => {
   requestBeachDetail(route.params.beachNumber)
 })
+watch(
+  () => route.params.beachNumber,
+  (n) => n && requestBeachDetail(n)
+)
 //==== axios 모음 ====
 
 async function requestBeachDetail(beachNumber) {
     try {
-      const response = await axios.post(`http://localhost:8080/api/beach/detail/${beachNumber}/info`,
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 5000,
-        })
-        console.log('OK', response.data.data.result)
+const response = await axios.get(
+  `http://localhost:8080/api/beach/detail/${beachNumber}/info`,
+   { headers: { Accept: 'application/json' }, timeout: 5000 }
+  )
         beach.value = response.data.data.result
     } catch (e) {
       console.error('[Detail] load error:', e)
