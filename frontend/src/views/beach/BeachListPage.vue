@@ -138,7 +138,10 @@
       <div v-else>
         <div class="map-view d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm"
              style="height: 50vh; border: 1px solid #ccc;">
-          <p class="text-muted fw-bold fs-5 mb-0">내 지역 주변 해수욕장 지도 표시</p>
+            <!-- <NMarker
+           :map="map"
+           :lat="beach.latitude"   
+           :lng="beach.longitude" /> -->
         </div>
       </div>
     </div>
@@ -150,6 +153,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBeachStore } from '@/stores/beachStore.js';
+import NMarker from '@/components/NaverMapMarker.vue'
 // [로직 수정] useApi와 beachApi 직접 import 제거
 // import { useApi } from '@/utils/useApi.js';
 // import { beachApi } from '@/api/beach.js';
@@ -233,6 +237,41 @@ const tagClass = (tag) => {
     default: return 'bg-light text-dark';
   }
 };
+
+//=============================================
+// const mapEl = ref(null)
+// let map // 한 번만 생성
+
+// // init: 네이버 지도 SDK가 로드된 뒤 1회 실행.
+// // Pinia의 beach 좌표로 지도 생성하고 마커 1개 표시합니다.
+// function initMap() {
+//   if (!mapEl.value || !window.naver?.maps) return
+//   if (map) {
+//     // 탭 전환 등으로 숨겼다가 보일 때 크기만 보정
+//     map.setSize(new window.naver.maps.Size(mapEl.value.clientWidth, mapEl.value.clientHeight))
+//     return
+//   }
+//   const center = new window.naver.maps.LatLng(37.5665, 126.9780) // 필요하면 원하는 좌표로
+//   map = new window.naver.maps.Map(mapEl.value, { center, zoom: 12 })
+// }
+
+// // onMounted: 컴포넌트가 DOM에 붙은 직후 1번 실행.
+// onMounted(() => {
+//   // SDK 없으면 로드, 있으면 바로 시도
+//   if (!window.naver?.maps) {
+//     const s = document.createElement('script')
+//     s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_CLIENT_ID}`
+//     s.onload = () => setTimeout(() =>{ if (viewMode.value === 'map') initMap() }, 300)
+//     document.head.appendChild(s)
+//   } else {
+//     if (viewMode.value === 'map') initMap()
+//   }
+// })
+
+// // '지도' 탭으로 바뀌는 순간에만 생성/보정
+// watch(viewMode, v => { if (v === 'map') setTimeout(initMap,150) })
+
+
 </script>
 
 <style scoped>
