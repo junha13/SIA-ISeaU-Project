@@ -105,7 +105,7 @@ const loadSituations = async () => {
   listLoading.value = true; listError.value = false;
   try {
     // useApi(method, url) → execute(params|body)
-    const listApi = useApi('get', '/report/first-aid/cases');
+    const listApi = useApi('get', '/sos/first-aid/cases');
     const data = await listApi.execute();   // ← res.data (배열)
     situations.value = Array.isArray(data) ? data : [];
   } catch (e) {
@@ -127,7 +127,7 @@ const openModal = async (item) => {
   // 2) 상세 스텝 조회
   detailLoading.value = true; detailError.value = false; steps.value = [];
   try {
-    const detailApi = useApi('get', '/report/first-aid');
+    const detailApi = useApi('get', '/sos/first-aid');
     const raw = await detailApi.execute({ firstAidCaseNum: selectedCaseNum.value }); // ← 쿼리스트링
     // 모달에서 쓰는 핵심 필드만 정리
     steps.value = (Array.isArray(raw) ? raw : []).map((s, idx) => ({
