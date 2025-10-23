@@ -34,8 +34,18 @@
     <header class="app-header shadow-sm sticky-top" :style="{ backgroundColor: 'white', color: darkColor }">
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
-          <i class="fas fa-water fs-3 me-2" :style="{ color: mainColor }"></i>
-          <h1 class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">I Sea U</h1>
+          
+          <h1 v-if="header === mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
+            <img class="mt-n2" src="/public/iseau.ico" style="min-width: 30px; max-width: 30px;">
+            {{ header }}
+          </h1>
+          <h1 v-else="header !== mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
+            <i class="ki-duotone ki-arrow-left fs-2" @click="goBack()">
+              <span class="path1"></span>
+              <span class="pat2"></span>
+            </i>
+            {{ header }}
+          </h1>
         </div>
         <div class="d-flex align-items-center">
           <i class="fas fa-bell fs-5 me-3" :style="{ color: dangerColor }"></i>
@@ -88,6 +98,16 @@ import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
 import { useBeachStore } from '@/stores/beachStore'
 import { useGroupStore } from '@/stores/groupStore'
 import { useConfirmModal } from '@/utils/modalUtils'
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+const mainHeaderName = "I Sea U"
+
+function goBack() {
+  router.back();
+}
 
 const router = useRouter()
 const route = useRoute()
