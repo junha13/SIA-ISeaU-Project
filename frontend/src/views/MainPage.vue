@@ -82,7 +82,16 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router'; // useRouter 추가
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = "I Sea U"
+});
 
 // --- Color Definitions ---
 const mainColor = '#0092BA';   // 주 컬러
