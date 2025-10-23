@@ -10,7 +10,6 @@ import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 
 const app = createApp(App)
-
 app.use(createPinia())
 app.use(router)
 app.component('quill-editor', quillEditor)

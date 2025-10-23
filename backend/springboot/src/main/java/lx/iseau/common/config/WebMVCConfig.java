@@ -32,7 +32,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 // [수정] 5173을 프론트엔드 포트인 5174로 변경합니다.
-                .allowedOrigins("http://localhost:5174", "https://hellokiyo.ngrok.io")
+                .allowedOrigins("http://localhost:5173", "https://hellokiyo.ngrok.io")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
