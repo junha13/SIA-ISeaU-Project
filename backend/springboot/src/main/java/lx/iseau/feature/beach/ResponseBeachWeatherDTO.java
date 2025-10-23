@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResponseBeachForecastDTO {
+public class ResponseBeachWeatherDTO {
 	private int beachNumber;
 	private String beachName;
     private String beachImage;

@@ -8,7 +8,7 @@ import java.util.List; // java.util.List 임포트 필요
 @Mapper
 public interface ForecastDAO {
 
-	List<RequestLocation> selectBeachLocation();
+	List<RequestLocationDTO> selectBeachLocation();
 
 	void upsertForecastDB(List<ResponseWeatherDTO> rows);
 }
