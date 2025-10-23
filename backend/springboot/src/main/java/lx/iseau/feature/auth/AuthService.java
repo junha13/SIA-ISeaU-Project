@@ -49,4 +49,13 @@ public class AuthService {
 		return dao.logout(userNumber);
 	}
 
+	/**
+	 * 아이디 찾기
+	 * @param findIdDTO
+	 * @return String (아이디)
+	 */
+	public String findId(FindIdDTO dto) {
+		return dao.findId(dto);
+	}
+
 }

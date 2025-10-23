@@ -35,4 +35,11 @@ public interface AuthDAO {
      */
     int logout(@Param("userNumber") int userNumber);
 
+    /**
+     * 아이디 찾기
+     * @param findIdDTO
+     * @return String (아이디)
+     */
+    String findId(@Param("findIdDTO") FindIdDTO dto);
+
 }

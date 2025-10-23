@@ -71,4 +71,18 @@ public class AuthController {
 				.header("api", "Auth/logout")
 				.body(Map.of("data", result));
 	}
+
+	/**
+	 * 아이디 찾기
+	 * @param findIdDTO
+	 * @return ResponseEntity<?>(data가 아이디)
+	 */
+	@PostMapping("/find-id")
+	public ResponseEntity<?> findId(@RequestBody FindIdDTO dto) {
+		String result = service.findId(dto);
+		return ResponseEntity
+				.ok()
+				.header("api", "Auth/find-id")
+				.body(Map.of("data", result));
+	}
 }
