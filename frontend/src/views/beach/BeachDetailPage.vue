@@ -1,19 +1,9 @@
 <template>
   <div class="container-fluid pb-5">
-    <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-chevron-left me-2" @click="$router.back()" style="cursor:pointer"></i>
-        <h5 class="fw-bold mb-0">{{ beach.beachName }}</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 text-danger"></i>
-        <i class="fas fa-bars"></i>
-      </div>
-    </div>
-    <div>
-      <img :src="beach?.beachImage" class="img-fluid w-100" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
+    <div class="mt-2">
+      <img :src="beach?.beachImage" class="img-fluid w-100 rounded-1" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
 
-      <div class="d-flex justify-content-around border-bottom bg-white sticky-top" style="top:55px; z-index:100;">
+      <div class="d-flex justify-content-around border-bottom bg-white sticky-top mt-2" style="top:55px; z-index:100;">
         <button
             v-for="(tab, i) in tabs"
             :key="i"
@@ -85,7 +75,8 @@ const response = await axios.get(
   `http://localhost:8080/api/beach/detail/${beachNumber}/info`,
    { headers: { Accept: 'application/json' }, timeout: 5000 }
   )
-        beach.value = response.data.data.result
+      beach.value = response.data.data.result
+      header.value = beach.value.beachName
     } catch (e) {
       console.error('[Detail] load error:', e)
     }
