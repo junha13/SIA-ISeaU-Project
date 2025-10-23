@@ -5,7 +5,7 @@ public class RegisterDTO {
 	private String userName;
 	private String email;
 	private String mobile;
-	private String id; // username
+	private String id;
 	private String password;
 	private String checkPassword;
 
