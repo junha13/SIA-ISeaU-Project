@@ -24,9 +24,9 @@ export const useBeachStore = defineStore('beach', () => {
         isLoading.value = true;
         apiError.value = null;
         try {
-            const result = await beachApi.fetchBeachList(params);
-            // 백엔드 응답이 result.result 형태일 수 있으므로 안전하게 접근
-            beaches.value = result?.result || [];
+        const res = await beachApi.fetchBeachList(params);
+        const list = res?.data?.result ?? res?.result ?? res ?? [];
+        beaches.value = Array.isArray(list) ? list : [];
         } catch (error) {
             console.error('해수욕장 목록 조회 실패:', error);
             apiError.value = error;
