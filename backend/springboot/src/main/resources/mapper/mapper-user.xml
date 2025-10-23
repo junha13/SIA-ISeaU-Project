@@ -5,5 +5,24 @@
 
 <mapper namespace="lx.iseau.feature.user.UserDAO">
 
+	<!-- 로그인 -->
+	<!-- id와 비밀번호가 모두 DB에 있다면 결과의 userId 반환 -->
+	<select id="Login" resultType="int">
+		select user_number from tb_user
+		where (username = #{id} or email = #{email}) and password = #{pW}
+	</select>
+	
+	<!-- 회원가입 -->
+	<!-- id 중복확인 -->
+	<!-- 중복이 아니면 0 반환 -->
+	<select id="checkDuplicatedId" resultType="int">
+		select count(*) from tb_user
+		where username = #{id}
+	</select>
+	<!-- 회원정보 저장 -->
+	<insert id="register" parameterType="lx.iseau.feature.user.RegisterDTO">
+		insert into tb_user (user_name, email, mobile, username, password)
+		values (#{name}, #{email}, #{mobile}, #{id}, #{pW})
+	</insert>
 
 </mapper>
