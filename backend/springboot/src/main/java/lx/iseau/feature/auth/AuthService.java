@@ -40,4 +40,13 @@ public class AuthService {
 		return dao.login(dto);
 	}
 
+	/**
+	 * 로그아웃
+	 * @param userNumber
+	 * @return int(성공하면 1)
+	 */
+	public int logout(int userNumber) {
+		return dao.logout(userNumber);
+	}
+
 }

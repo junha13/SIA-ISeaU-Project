@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ public class AuthController {
 	 * @param registerDTO
 	 * @return ResponseEntity<?>(data가 1이면 성공, 0이면 실패)
 	 */
-	@RequestMapping("/register")
+	@PostMapping("/register")
 	public ResponseEntity<?> register(@RequestBody RegisterDTO dto) {
 		int result = service.register(dto);
 		return ResponseEntity
@@ -48,12 +49,26 @@ public class AuthController {
 	 * @param LoginDTO
 	 * @return ResponseEntity<?>(data가 Map(user_number, id)를 포함)
 	 */
-	@RequestMapping("/login")
+	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
 		Map<String, Object> result = service.login(dto);
 		return ResponseEntity
 				.ok()
 				.header("api", "Auth/login")
+				.body(Map.of("data", result));
+	}
+
+	/**
+	 * 로그아웃
+	 * @param userNumber
+	 * @return ResponseEntity<?>(data가 1이면 성공, 0이면 실패)
+	 */
+	@PostMapping("/logout")
+	public ResponseEntity<?> logout(@RequestBody int userNumber) {
+		int result = service.logout(userNumber);
+		return ResponseEntity
+				.ok()
+				.header("api", "Auth/logout")
 				.body(Map.of("data", result));
 	}
 }

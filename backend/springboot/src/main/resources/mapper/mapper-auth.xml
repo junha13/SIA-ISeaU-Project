@@ -21,4 +21,12 @@
         select user_number, id from tb_user where id = #{id} and password = #{password}
 </select>
 
-</mapper>
+<!-- 로그아웃 -->
+<delete id="logout" parameterType="int">
+    DELETE FROM tb_user WHERE user_number = #{userNumber}
+</delete>
+
+<!-- 아이디 찾기 -->
+<select id="findId" parameterMap="lx.iseau.feature.auth.FindIdDTO" resultType="string">
+    select id from tb_user where user_name = #{userName} and mobile = #{mobile}
+</select>
