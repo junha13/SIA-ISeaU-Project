@@ -1,5 +1,7 @@
 package lx.iseau.feature.user;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +12,12 @@ import lombok.NoArgsConstructor;
 public class UserVO {
 	
 	private int userNumber;
-	private String id;
     private String password;
+    private String id; // username
     private String userName; 
+    private String mobile;
+    private String email;
+    private LocalDate birthDate;
+    private String location;
+    private int roleNumber;
 }
