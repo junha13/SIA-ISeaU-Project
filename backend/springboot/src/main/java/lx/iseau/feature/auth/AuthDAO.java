@@ -2,8 +2,7 @@ package lx.iseau.feature.auth;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List; // java.util.List 임포트 필요
+import java.util.Map;
 
 @Mapper
 public interface AuthDAO {
@@ -21,5 +20,12 @@ public interface AuthDAO {
      * @return 1이상: 중복됨 | 0: 중복안됨
      */
     int checkId(@Param("id") String id);
+
+    /**
+     * 로그인
+     * @param LoginDTO
+     * @return Map (user_number, id를 포함)
+     */
+    Map<String, Object> login(@Param("loginDTO") LoginDTO dto);
 
 }

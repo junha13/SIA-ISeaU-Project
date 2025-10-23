@@ -42,4 +42,18 @@ public class AuthController {
 				.header("api", "Auth/check-id")
 				.body(Map.of("data", result));
 	}
+
+	/**
+	 * 로그인
+	 * @param LoginDTO
+	 * @return ResponseEntity<?>(data가 Map(user_number, id)를 포함)
+	 */
+	@RequestMapping("/login")
+	public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
+		Map<String, Object> result = service.login(dto);
+		return ResponseEntity
+				.ok()
+				.header("api", "Auth/login")
+				.body(Map.of("data", result));
+	}
 }

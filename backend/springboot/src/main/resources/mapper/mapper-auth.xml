@@ -8,12 +8,17 @@
 <!-- 회원가입 -->
 <!-- 정보 저장 -->
 <insert id="register" parameterMap="lx.iseau.feature.auth.RegisterDTO">
-	insert into tb_user (user_name, email, mobile, username, password)
+	insert into tb_user (user_name, email, mobile, id, password)
         values (#{userName}, #{email}, #{mobile}, #{id}, #{password})
 </insert>
 <!-- 아이디 중복확인 -->
 <select id="checkId" parameterType="string" resultType="int">
-        select count(*) from tb_user where username = #{id}
+        select count(*) from tb_user where id = #{id}
+</select>
+
+<!-- 로그인 -->
+<select id="login" parameterMap="lx.iseau.feature.auth.LoginDTO" resultType="Map">
+        select user_number, id from tb_user where id = #{id} and password = #{password}
 </select>
 
 </mapper>
