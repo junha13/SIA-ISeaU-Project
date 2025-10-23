@@ -55,5 +55,8 @@ const tabStyle = (tab) => ({
   transition: '0.2s'
 })
 
+if (active === "rip") {
+  
+}
 const dangerData = computed(() => props.detailData?.danger);
 </script>

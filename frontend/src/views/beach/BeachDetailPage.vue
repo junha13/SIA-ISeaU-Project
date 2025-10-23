@@ -22,8 +22,8 @@
       <div class="mt-3">
         <component :is="currentTab"
          :key="`${activeTab}-${route.params.beachNumber}`"
-  :beach="beach"
-/>
+         :beach="beach"
+        />
       </div>
     </div>
 
@@ -40,6 +40,8 @@ import BeachDangerTab from './tabs/BeachDangerTab.vue';
 import BeachWeatherTab from './tabs/BeachWeatherTab.vue';
 import BeachDepthTab from './tabs/BeachDepthTab.vue';
 import BeachCctvTab from './tabs/BeachCctvTab.vue';
+import BeachPestTab from './tabs/BeachPestTab.vue';
+
 import axios from 'axios';
 
 const route = useRoute();
@@ -54,7 +56,8 @@ const tabs = [
   { key: 'danger', label: '위험정보', comp: BeachDangerTab },
   { key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
   { key: 'depth', label: '수심지도', comp: BeachDepthTab },
-  { key: 'cctv', label: 'CCTV', comp: BeachCctvTab }
+  { key: 'cctv', label: 'CCTV', comp: BeachCctvTab },
+  { key: 'pest', label: '유해생물', comp: BeachPestTab }
 ];
 
 const activeTab = ref('info');
