@@ -42,4 +42,18 @@ public interface AuthDAO {
      */
     String findId(@Param("findIdDTO") FindIdDTO dto);
 
+    /**
+     * 비밀번호 찾기(아이디+전화번호로 회원고유번호 조회)
+     * @param findUserNumberDTO
+     * @return int (회원고유번호)
+     */
+    int findUserNumber(@Param("findUserNumberDTO") FindUserNumberDTO dto);
+
+    /**
+     * 비밀번호 재설정
+     * @param resetPasswordDTO
+     * @return int (성공하면 1)
+     */
+    int resetPassword(@Param("resetPasswordDTO") ResetPasswordDTO dto);
+
 }

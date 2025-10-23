@@ -7,7 +7,7 @@
 
 <!-- 회원가입 -->
 <!-- 정보 저장 -->
-<insert id="register" parameterMap="lx.iseau.feature.auth.RegisterDTO">
+<insert id="register" parameterType="lx.iseau.feature.auth.RegisterDTO">
 	insert into tb_user (user_name, email, mobile, id, password)
         values (#{userName}, #{email}, #{mobile}, #{id}, #{password})
 </insert>
@@ -17,7 +17,7 @@
 </select>
 
 <!-- 로그인 -->
-<select id="login" parameterMap="lx.iseau.feature.auth.LoginDTO" resultType="Map">
+<select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
         select user_number, id from tb_user where id = #{id} and password = #{password}
 </select>
 
@@ -27,6 +27,18 @@
 </delete>
 
 <!-- 아이디 찾기 -->
-<select id="findId" parameterMap="lx.iseau.feature.auth.FindIdDTO" resultType="string">
+<select id="findId" parameterType="lx.iseau.feature.auth.FindIdDTO" resultType="string">
     select id from tb_user where user_name = #{userName} and mobile = #{mobile}
 </select>
+
+<!-- 비밀번호 찾기: 아이디+전화번호로 userNumber찾기 -->
+<select id="findUserNumber" parameterType="lx.iseau.feature.auth.FindUserNumberDTO" resultType="int">
+    select user_number from tb_user where id = #{id} and mobile = #{mobile}
+</select>
+
+<!-- 비밀번호 찾기: 비밀번호 재설정 -->
+<select id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO" resultType="int">
+    update tb_user set password = #{newPassword} where user_number = #{userNumber}
+</select>
+
+</mapper>

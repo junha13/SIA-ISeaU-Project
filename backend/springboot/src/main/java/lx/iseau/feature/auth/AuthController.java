@@ -85,4 +85,32 @@ public class AuthController {
 				.header("api", "Auth/find-id")
 				.body(Map.of("data", result));
 	}
+
+	/**
+	 * 비밀번호 찾기(아이디+전화번호로 회원고유번호 조회)
+	 * @param findUserNumberDTO
+	 * @return ResponseEntity<?>(data가 회원고유번호)
+	 */
+	@PostMapping("/find-userNumber")
+	public ResponseEntity<?> findUserNumber(@RequestBody FindUserNumberDTO dto) {
+		int result = service.findUserNumber(dto);
+		return ResponseEntity
+				.ok()
+				.header("api", "Auth/find-userNumber")
+				.body(Map.of("data", result));
+	}
+
+	/**
+	 * 비밀번호 재설정
+	 * @param resetPasswordDTO
+	 * @return ResponseEntity<?>(data가 1이면 성공, 0이면 실패)
+	 */
+	@PostMapping("/reset-password")
+	public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO dto) {
+		int result = service.resetPassword(dto);
+		return ResponseEntity
+				.ok()
+				.header("api", "Auth/reset-password")
+				.body(Map.of("data", result));
+	}
 }
