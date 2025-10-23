@@ -29,13 +29,13 @@ public class ForecastAPIService {
 		WebClient webClient = webClientBuilder.build();
 		
 		// 해수욕장에서 위경도 뽑아와서 넣기
-		List<RequestLocation> list = dao.selectBeachLocation();
+		List<RequestLocationDTO> list = dao.selectBeachLocation();
 		
 		StringBuilder latsb = new StringBuilder();
 		StringBuilder lonsb = new StringBuilder();
 		
 		for (int i =0; i < list.size(); i++) {
-			RequestLocation loc = list.get(i);
+			RequestLocationDTO loc = list.get(i);
 			if (i > 0) { latsb.append(","); lonsb.append(","); }
 			latsb.append(loc.getLat());
 			lonsb.append(loc.getLon());
