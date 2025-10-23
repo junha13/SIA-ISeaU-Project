@@ -37,8 +37,8 @@ public class ForecastAPIService {
 		for (int i =0; i < list.size(); i++) {
 			RequestLocation loc = list.get(i);
 			if (i > 0) { latsb.append(","); lonsb.append(","); }
-//			latsb.append(loc.getLat());
-//			lonsb.append(loc.getLon());
+			latsb.append(loc.getLat());
+			lonsb.append(loc.getLon());
 		}
 		
 		String lat = latsb.toString();
