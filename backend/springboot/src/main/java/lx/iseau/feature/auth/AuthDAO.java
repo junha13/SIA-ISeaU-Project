@@ -28,4 +28,11 @@ public interface AuthDAO {
      */
     Map<String, Object> login(@Param("loginDTO") LoginDTO dto);
 
+    /**
+     * 로그아웃
+     * @param userNumber
+     * @return int(성공하면 1)
+     */
+    int logout(@Param("userNumber") int userNumber);
+
 }
