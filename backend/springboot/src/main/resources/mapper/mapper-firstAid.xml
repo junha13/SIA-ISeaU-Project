@@ -3,17 +3,17 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="lx.iseau.feature.report.ReportDAO">
+<mapper namespace="lx.iseau.feature.sos.firstaid.FirstAidDAO">
 
 	<!-- 상황 버튼 목록 조회 -->
-	<select id="listFirstAidCases" resultType="FirstAidCaseDTO">
+	<select id="listFirstAidCases" resultType="FirstAidCasesDTO">
 	    SELECT first_aid_case_num, first_aid_case_name
 	    FROM tb_first_aid
 	    ORDER BY first_aid_case_num
 	</select>
  	 
     <!--  하나의 응급 대처법 조회 -->
-	<select id="getFirstAidByCaseNum" parameterType="int" resultType="ReportDTO">
+	<select id="getFirstAidByCaseNum" parameterType="int" resultType="FirstAidDTO">
 		select 
 			first_aid_number,
 			first_aid_case_num,
