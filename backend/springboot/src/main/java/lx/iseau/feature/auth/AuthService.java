@@ -31,4 +31,13 @@ public class AuthService {
 		return dao.checkId(id);
 	}
 
+	/**
+	 * 로그인
+	 * @param LoginDTO
+	 * @return Map (user_number, id를 포함)
+	 */
+	public Map<String, Object> login(LoginDTO dto) {
+		return dao.login(dto);
+	}
+
 }
