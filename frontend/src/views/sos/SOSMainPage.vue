@@ -79,7 +79,7 @@
     </div>
 
     <!-- 응급 처치 모달 (FirstAidModal은 컴포넌트로 분리됨) -->
-    <FirstAidModal v-model:isVisible="showFirstAidModal" :type="firstAidType" />
+    <FirstAidModal v-model:isVisible="showFirstAidModal" :caseNum="firstAidCaseNum" />
 
   </div>
 </template>
@@ -102,7 +102,7 @@ const dangerColor = '#EB725B';
 
 // --- State ---
 const showFirstAidModal = ref(false);
-const firstAidType = ref('');
+const firstAidCaseNum = ref('');
 
 // --- Methods ---
 // 신고 타깃: '119' | '122' | 'lifeguard'
@@ -111,7 +111,7 @@ const handleEmergencyCall = async (target) => {
   if (target === 'lifeguard') {
     // 의료소 찾기는 별도 로직 (여기서는 응급 처치 모달로 대체)
     showFirstAidModal.value = true;
-    firstAidType.value = 'jellyfish';
+    firstAidCaseNum.value = '1';
     return;
   }
   

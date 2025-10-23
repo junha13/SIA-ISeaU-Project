@@ -13,7 +13,7 @@ public class ReportDTO {
 	private int firstAidCaseNum;
 	private String firstAidCaseName;
     private String firstAidContent;
-    private String firstAidStep;
+    private int firstAidStep;
     private String firstAidImage;
     private String firstAidDescription;
 }

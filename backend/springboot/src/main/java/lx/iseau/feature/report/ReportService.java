@@ -1,8 +1,6 @@
 package lx.iseau.feature.report;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +15,7 @@ public class ReportService {
 	/*
 	 * ======== 하나의 응급 대처법 =========
 	 */
-	@Transactional
+	@Transactional(readOnly = true)
 	public List<ReportDTO> getFirstAidByCaseNum(int firstAidCaseNum) {
 		return dao.getFirstAidByCaseNum(firstAidCaseNum);
 	}
