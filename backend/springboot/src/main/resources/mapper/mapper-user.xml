@@ -5,5 +5,11 @@
 
 <mapper namespace="lx.iseau.feature.user.UserDAO">
 
+<!-- 사용자 설정 업데이트 -->
+<update id="setting" parameterType="lx.iseau.feature.user.SettingsDTO" resultType="int">
+        update tb_user
+        set id = #{id}, password = #{password}, user_name = #{userName}, mobile = #{mobile}, email = #{email}, birth_date = #{birthDate}, location = #{location}
+        where user_number = #{userNumber}
+</update>
 
 </mapper>
