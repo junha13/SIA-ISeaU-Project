@@ -26,11 +26,15 @@
         등록된 상황이 없습니다.
       </div>
 
+      <!-- FirstAidCaseDTO: { firstAidCaseNum, firstAidCaseName } -->
       <button
         v-for="item in situations"
         :key="item.firstAidCaseNum"
         class="btn btn-block fw-bold py-3 rounded-3 shadow-sm"
-        :class="{ 'btn-secondary-light': selectedCaseNum !== item.firstAidCaseNum, 'btn-info-highlight': selectedCaseNum === item.firstAidCaseNum }"
+        :class="{
+          'btn-secondary-light': selectedCaseNum !== item.firstAidCaseNum,
+          'btn-info-highlight': selectedCaseNum === item.firstAidCaseNum
+        }"
         @click="openModal(item)"
       >
         {{ item.firstAidCaseName }}
@@ -50,6 +54,7 @@
     </div>
   </div>
 
+  <!-- 상세 모달 -->
   <FirstAidModal
     :isVisible="showModal"
     :caseTitle="selectedCaseTitle"
@@ -61,42 +66,50 @@
 </template>
 
 <script setup>
+/**
+ * ✅ 백엔드-프론트 ‘계약’
+ * - 목록: GET /api/report/first-aid/cases  → FirstAidCaseDTO[] (배열)
+ * - 상세: GET /api/report/first-aid?firstAidCaseNum=123 → ReportDTO[] (배열)
+ * ✅ MyBatis map-underscore-to-camel-case=true 덕분에 모두 camelCase 사용
+ * ✅ axios 응답은 res.data가 곧 최종 배열 (중간에 data.data 없음)
+ */
 import { ref, onMounted } from 'vue';
 import FirstAidModal from '@/components/FirstAidModal.vue';
 import { useSOSStore } from '@/stores/sosStore';
 import { useConfirmModal } from '@/utils/modalUtils.js';
-import { sosApi } from '@/api/sos'; // sos.js에서 sosApi 객체 export
+import { useApi } from '@/utils/useApi'; // ← 너의 공통 axios 컴포저블
 
 const { showConfirmModal } = useConfirmModal();
 const sosStore = useSOSStore();
 
+/** 디자인 색상 */
 const mainColor   = '#0092BA';
 const darkColor   = '#0B1956';
 const dangerColor = '#EB725B';
 
-// 목록
-const situations  = ref([]);
+/** 목록/선택/상세 상태 */
+const situations  = ref([]);      // FirstAidCaseDTO[]
 const listLoading = ref(false);
 const listError   = ref(false);
 
-// 선택 + 모달
 const showModal         = ref(false);
 const selectedCaseNum   = ref(null);
 const selectedCaseTitle = ref('');
 
-// 상세(steps)
-const steps         = ref([]);
+const steps         = ref([]);    // ReportDTO[] 중 필요한 필드만 사용
 const detailLoading = ref(false);
 const detailError   = ref(false);
 
-// 목록 로드
+/** 목록 로드: GET /report/first-aid/cases */
 const loadSituations = async () => {
   listLoading.value = true; listError.value = false;
   try {
-    const res = await sosApi.listFirstAidCases();
-    situations.value = Array.isArray(res?.data) ? res.data : [];
+    // useApi(method, url) → execute(params|body)
+    const listApi = useApi('get', '/report/first-aid/cases');
+    const data = await listApi.execute();   // ← res.data (배열)
+    situations.value = Array.isArray(data) ? data : [];
   } catch (e) {
-    console.error(e);
+    console.error('[listFirstAidCases] failed:', e);
     listError.value = true;
   } finally {
     listLoading.value = false;
@@ -104,26 +117,36 @@ const loadSituations = async () => {
 };
 onMounted(loadSituations);
 
-// 모달 열기 + steps 로드
+/** 모달 열기 + 상세 로드: GET /report/first-aid?firstAidCaseNum= */
 const openModal = async (item) => {
+  // 1) 선택값 반영
   selectedCaseNum.value   = item.firstAidCaseNum;
   selectedCaseTitle.value = item.firstAidCaseName ?? '응급 처치';
   showModal.value         = true;
 
+  // 2) 상세 스텝 조회
   detailLoading.value = true; detailError.value = false; steps.value = [];
   try {
-    const res = await sosApi.getFirstAidByCaseNum({ params: { firstAidCaseNum: selectedCaseNum.value } });
-    steps.value = Array.isArray(res?.data) ? res.data : [];
+    const detailApi = useApi('get', '/report/first-aid');
+    const raw = await detailApi.execute({ firstAidCaseNum: selectedCaseNum.value }); // ← 쿼리스트링
+    // 모달에서 쓰는 핵심 필드만 정리
+    steps.value = (Array.isArray(raw) ? raw : []).map((s, idx) => ({
+    firstAidStep:        s.firstAidStep ?? (idx + 1),
+    firstAidContent:     s.firstAidContent ?? '',
+    firstAidImage:       (s.firstAidImage ?? '').trim(),
+    firstAidDescription: s.firstAidDescription ?? '',
+  }));
   } catch (e) {
-    console.error(e);
+    console.error('[getFirstAidByCaseNum] failed:', e);
     detailError.value = true;
   } finally {
     detailLoading.value = false;
   }
 };
 
-// 119 신고 (확인 모달)
+/** 119 신고 흐름 (확인 모달 → 전화앱 연결) */
 const handle119Report = async () => {
+  // 상황 미선택 안내
   if (!selectedCaseNum.value) {
     const go = await showConfirmModal({
       title: '상황 미선택',
@@ -136,6 +159,7 @@ const handle119Report = async () => {
   }
 
   const label = situations.value.find(x => x.firstAidCaseNum === selectedCaseNum.value)?.firstAidCaseName || '상황 미선택';
+
   const confirmed = await showConfirmModal({
     title: '긴급 신고 확인',
     message: `선택된 상황: "${label}"\n정말 119에 신고를 요청하시겠습니까?`,
@@ -147,13 +171,16 @@ const handle119Report = async () => {
 
   sosStore.setLoading(true);
   try {
-    await sosStore.logEmergencyCall('119_simple_report', label);
+    // (선택) 서버 로깅 API가 준비되면 여기에 POST 연동
+    // const logApi = useApi('post', '/sos/log');
+    // await logApi.execute({ target: '119_simple_report', label });
+
     await showConfirmModal({
       title: '신고 요청 완료',
       message: '119 긴급 신고를 요청했습니다.\n잠시 후 전화 앱으로 연결됩니다.',
       type: 'info',
       autoHide: true,
-      duration: 2000,
+      duration: 1400,
     });
     window.location.href = 'tel:119';
   } catch (e) {
