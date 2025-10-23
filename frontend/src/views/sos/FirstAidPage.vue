@@ -64,10 +64,10 @@
 import { ref, onMounted } from 'vue';
 import FirstAidModal from '@/components/FirstAidModal.vue';
 import { useSOSStore } from '@/stores/sosStore';
-import { useConfirmModal } from '@/utils/modalUtils.js'; // ✅ 추가
-import { listFirstAidCases, getFirstAidByCaseNum } from '@/api/sos'; // 목록/상세 API
+import { useConfirmModal } from '@/utils/modalUtils.js';
+import { sosApi } from '@/api/sos'; // sos.js에서 sosApi 객체 export
 
-const { showConfirmModal } = useConfirmModal(); // ✅ 추가
+const { showConfirmModal } = useConfirmModal();
 const sosStore = useSOSStore();
 
 const mainColor   = '#0092BA';
@@ -93,7 +93,7 @@ const detailError   = ref(false);
 const loadSituations = async () => {
   listLoading.value = true; listError.value = false;
   try {
-    const res = await listFirstAidCases();
+    const res = await sosApi.listFirstAidCases();
     situations.value = Array.isArray(res?.data) ? res.data : [];
   } catch (e) {
     console.error(e);
@@ -112,7 +112,7 @@ const openModal = async (item) => {
 
   detailLoading.value = true; detailError.value = false; steps.value = [];
   try {
-    const res = await getFirstAidByCaseNum({ params: { firstAidCaseNum: selectedCaseNum.value } });
+    const res = await sosApi.getFirstAidByCaseNum({ params: { firstAidCaseNum: selectedCaseNum.value } });
     steps.value = Array.isArray(res?.data) ? res.data : [];
   } catch (e) {
     console.error(e);
@@ -122,9 +122,8 @@ const openModal = async (item) => {
   }
 };
 
-// 119 신고 (✅ 확인 모달 흐름 추가)
+// 119 신고 (확인 모달)
 const handle119Report = async () => {
-  // 1) 선택 안 했으면 경고 + 진행 의사 확인
   if (!selectedCaseNum.value) {
     const go = await showConfirmModal({
       title: '상황 미선택',
@@ -136,7 +135,6 @@ const handle119Report = async () => {
     if (!go) return;
   }
 
-  // 2) 선택한 상황 정보로 한 번 더 확인
   const label = situations.value.find(x => x.firstAidCaseNum === selectedCaseNum.value)?.firstAidCaseName || '상황 미선택';
   const confirmed = await showConfirmModal({
     title: '긴급 신고 확인',
@@ -147,7 +145,6 @@ const handle119Report = async () => {
   });
   if (!confirmed) return;
 
-  // 3) 신고 로깅 + 연결
   sosStore.setLoading(true);
   try {
     await sosStore.logEmergencyCall('119_simple_report', label);
