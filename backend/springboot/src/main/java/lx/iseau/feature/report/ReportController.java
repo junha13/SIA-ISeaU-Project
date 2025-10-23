@@ -15,7 +15,7 @@ public class ReportController {
 	ReportService service;
 
 	/*
-	 * ===== 하나의 응급 대처법 ===== 프론트 접근:response.data.firstAidCase 
+	 * ===== 하나의 응급 대처법 =====
 	 */
 	@GetMapping("/first-aid")
 	public ResponseEntity<?> getFirstAidByCaseNum(@RequestParam int firstAidCaseNum) {
@@ -23,7 +23,7 @@ public class ReportController {
 	}
 	
 	/*
-	 * ===== 상황목록 조회 ===== 프론트 접근:response.data.list
+	 * ===== 상황목록 조회 =====
 	 */ 
 	@GetMapping("/first-aid/cases")
 	public ResponseEntity<?> listFirstAidCases() {
