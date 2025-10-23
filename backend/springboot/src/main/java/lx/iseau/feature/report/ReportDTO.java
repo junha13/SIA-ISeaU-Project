@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReportDTO {
 	private int firstAidNumber; 
-	private String firstAidCaseNum;
+	private int firstAidCaseNum;
 	private String firstAidCaseName;
     private String firstAidContent;
     private String firstAidStep;

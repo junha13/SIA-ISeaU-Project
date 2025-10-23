@@ -18,28 +18,16 @@ public class ReportService {
 	 * ======== 하나의 응급 대처법 =========
 	 */
 	@Transactional
-	public Map<String, Object> getFirstAidByCaseNum(int firstAidCaseNum) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		
-		ReportDTO firstAid = dao.getFirstAidByCaseNum(firstAidCaseNum);
-		
-		map.put("result", firstAid);
-		
-		return map;
+	public List<ReportDTO> getFirstAidByCaseNum(int firstAidCaseNum) {
+		return dao.getFirstAidByCaseNum(firstAidCaseNum);
 	}
 	
 	/*
 	 * ======= 상황목록 조회 =======
 	 */
 	@Transactional(readOnly = true)
-	public Map<String, Object> listFirstAidCases() {
-		Map<String, Object> map = new HashMap<>();
-		
-		// DAO에서 상황 목록 리스트 형태로 받아오기
-		List<Map<String, Object>> cases = dao.listFirstAidCases();
-		
-		map.put("result", cases);
-		return map;
+	public List<FirstAidCaseDTO> listFirstAidCases() {
+		return dao.listFirstAidCases();
 	}
 	
 }

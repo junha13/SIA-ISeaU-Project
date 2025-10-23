@@ -14,7 +14,12 @@
  	 
     <!--  하나의 응급 대처법 조회 -->
 	<select id="getFirstAidByCaseNum" parameterType="int" resultType="ReportDTO">
-		select *
+		select 
+			first_aid_case_name,
+			first_aid_content,
+			first_aid_step,
+			first_aid_image,
+			first_aid_description
 		from tb_first_aid
 		where first_aid_case_num = #{firstAidCaseNum}
 	</select>
