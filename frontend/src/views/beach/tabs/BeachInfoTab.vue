@@ -1,12 +1,12 @@
 <template>
   <div class="p-3">
     <h6 class="fw-bold mb-3">소개</h6>
-    <p class="text-secondary small">
+    <p class="text-black small">
       {{ beach.beachInformation }}
     </p>
 
     <h6 class="fw-bold mb-3">상세 주소</h6>
-    <p class="text-secondary small">
+    <p class="text-black small">
       {{ beach.address }}
     </p>
     <div class="rounded shadow-sm overflow-hidden my-3" style="height:200px;">
@@ -41,6 +41,7 @@ import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
 const { header, beach } = storeToRefs(store)
+
 
 let map, marker
 
