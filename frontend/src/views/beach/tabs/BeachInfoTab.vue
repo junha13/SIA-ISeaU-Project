@@ -1,10 +1,14 @@
 <template>
   <div class="p-3">
-    <h6 class="fw-bold mb-3">상세 정보</h6>
+    <h6 class="fw-bold mb-3">소개</h6>
     <p class="text-secondary small">
       {{ beach.beachInformation }}
     </p>
 
+    <h6 class="fw-bold mb-3">상세 주소</h6>
+    <p class="text-secondary small">
+      {{ beach.address }}
+    </p>
     <div class="rounded shadow-sm overflow-hidden my-3" style="height:200px;">
       <div class="bg-light h-100 w-100 d-flex justify-content-center align-items-center text-muted">
         <div id="naver-map" style="width:100%;height:100%;"></div>
