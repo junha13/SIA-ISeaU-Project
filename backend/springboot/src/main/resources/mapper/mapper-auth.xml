@@ -5,5 +5,15 @@
 
 <mapper namespace="lx.iseau.feature.auth.AuthDAO">
 
+<!-- 회원가입 -->
+<!-- 정보 저장 -->
+<insert id="register" parameterMap="lx.iseau.feature.auth.RegisterDTO">
+	insert into tb_user (user_name, email, mobile, username, password)
+        values (#{userName}, #{email}, #{mobile}, #{id}, #{password})
+</insert>
+<!-- 아이디 중복확인 -->
+<select id="checkId" parameterType="string" resultType="int">
+        select count(*) from tb_user where username = #{id}
+</select>
 
 </mapper>

@@ -12,17 +12,23 @@ public class AuthService {
 	
 	@Autowired
 	AuthDAO dao;
-	
-	/*
-	 * 설명
+
+	/**
+	 * 회원가입
+	 * @param registerDTO
+	 * @return int(성공하면 1)
 	 */
-	@Transactional
-	public Map<String, Object> a(int num) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		
-		map.put("result", num);
-		
-		return map;
+	public int register(RegisterDTO dto) {
+		return dao.register(dto);
 	}
-	
+
+	/**
+	 * 아이디 중복확인
+	 * @param id
+	 * @return 1이상: 중복됨 | 0: 중복안됨
+	 */
+	public int checkId(String id) {
+		return dao.checkId(id);
+	}
+
 }
