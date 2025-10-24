@@ -1,9 +1,9 @@
 <template>
   <div class="sos-main-page container-fluid p-0">
-    <!-- Header -->
+    <!-- Header 
     <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
       <div class="d-flex align-items-center">
-        <!-- 뒤로 가기 버튼 -->
+         //뒤로 가기 버튼 
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
         <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">SOS</h5>
       </div>
@@ -12,6 +12,7 @@
         <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
       </div>
     </div>
+    -->
 
     <div class="p-3">
 
