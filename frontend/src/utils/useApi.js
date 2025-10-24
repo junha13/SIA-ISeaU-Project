@@ -45,6 +45,8 @@ export function useApi(method, url) { // 함수 이름도 useAxios 대신 useApi
         error.value = null; // 요청 전 에러 초기화
 
         try {
+            console.log('API 요청:', { method, url, payload }); // 디버깅용 로그
+            
             let response;
             if (method.toLowerCase() === 'get') {
                 // GET 요청은 payload를 params로 사용
@@ -53,9 +55,12 @@ export function useApi(method, url) { // 함수 이름도 useAxios 대신 useApi
                 // POST, PUT 등은 payload를 요청 본문(body)으로 사용
                 response = await api[method.toLowerCase()](url, payload);
             }
+            
+            console.log('API 응답:', response.data); // 디버깅용 로그
             data.value = response.data;
             return response.data; // 데이터를 리턴하여 액션에서 사용할 수 있게 함
         } catch (err) {
+            console.error('API 에러:', err); // 디버깅용 로그
             error.value = err;
             throw err; // 에러를 다시 던져서 스토어에서 처리할 수 있게 함
         } finally {
