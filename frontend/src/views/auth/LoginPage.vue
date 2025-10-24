@@ -48,13 +48,11 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
-import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
 
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
-const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -75,22 +73,26 @@ const handleLogin = async () => {
     return;
   }
 
+  /**
+   * 로그인 처리
+   * @returns {Promise<void>}
+   * @throws {Error}
+   * 
+   * 
+   */
   try {
-    // Store Action 호출 (API 통신 및 상태 업데이트)
-    const result = await axios.post('api/auth/login', {
+    // axios로 직접 백엔드 호출
+    const result = await axios.post('http://localhost:8080/api/auth/login', {
       id: id.value,
       password: password.value
     });
 
-    // 응답 완료 데이터 가져오기
-    const userData = result.data.data // {userNumber, id, userName}
-
-    // Store에 사용자 정보 저장
-    authStore.setUser({
-      userNumber: userData.userNumber,
-      id: userData.id,
-      userName: userData.userName
-    });
+    // 응답 데이터 가져오기
+    const userData = result?.data?.data; // {userNumber, id, userName}
+    
+    if (!userData) {
+      throw new Error('로그인 API 응답이 비어있습니다.');
+    }
 
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
@@ -104,22 +106,21 @@ const handleLogin = async () => {
     router.push({ name: 'Main' });
 
   } catch (e) {
-    // Axios 오류 처리
+    // 에러 처리
     let errorMessage = '알 수 없는 오류가 발생했습니다.';
 
-    // Spring에서 보낸 401 (비밀번호 틀림 등) 오류 메시지
-    if (e.response && e.response.data && e.response.data.message) {
+    // 백엔드에서 보낸 에러 메시지 (401 등)
+    if (e.response?.data?.message) {
       errorMessage = e.response.data.message;
     }
-
-    // 404 (경로 없음) 또는 기타 네트워크 오류
+    // 네트워크 오류 등
     else if (e.message) {
       errorMessage = e.message;
     }
 
     showConfirmModal({
       title: '로그인 실패',
-      message: e.message,
+      message: errorMessage,
       type: 'error'
     });
   }
@@ -132,8 +133,5 @@ const handleLogin = async () => {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
-}
-.auth-page {
-  /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
 </style>
