@@ -51,6 +51,7 @@ import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
 
+
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore();
@@ -61,10 +62,6 @@ const darkColor = '#0B1956';
 const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
-
-// 결과 저장 함수
-const userId = ref('');
-const userName = ref('');
 
 const handleLogin = async () => {
   if (!id.value || !password.value) {
@@ -80,15 +77,25 @@ const handleLogin = async () => {
 
   try {
     // Store Action 호출 (API 통신 및 상태 업데이트)
-    const result = await authStore.login(id.value, password.value);
+    const result = await axios.post('api/auth/login', {
+      id: id.value,
+      password: password.value
+    });
 
-    userName.value = authStore.userInfo.name;
-    userId.value = authStore.userInfo.id;
+    // 응답 완료 데이터 가져오기
+    const userData = result.data.data // {userNumber, id, userName}
+
+    // Store에 사용자 정보 저장
+    authStore.setUser({
+      userNumber: userData.userNumber,
+      id: userData.id,
+      userName: userData.userName
+    });
 
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
       title: '로그인 성공',
-      message: `${userName.value}님 환영합니다!`,
+      message: `${userData.userName}님 환영합니다!`,
       type: 'success',
       autoHide: true,
       duration: 1000,
@@ -97,7 +104,19 @@ const handleLogin = async () => {
     router.push({ name: 'Main' });
 
   } catch (e) {
-    // Store에서 던진 에러 메시지 표시
+    // Axios 오류 처리
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+
+    // Spring에서 보낸 401 (비밀번호 틀림 등) 오류 메시지
+    if (e.response && e.response.data && e.response.data.message) {
+      errorMessage = e.response.data.message;
+    }
+
+    // 404 (경로 없음) 또는 기타 네트워크 오류
+    else if (e.message) {
+      errorMessage = e.message;
+    }
+
     showConfirmModal({
       title: '로그인 실패',
       message: e.message,
