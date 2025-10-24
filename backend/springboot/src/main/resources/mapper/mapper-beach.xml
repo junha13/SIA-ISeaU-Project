@@ -91,6 +91,6 @@
         -- 5. [수정!] 해변 위치와 가장 가까운 순서로 정렬합니다.
         ST_Distance(tb_weather_info.observed_location, beach_location.location), 
         tb_weather_info.forecast_time ASC
-    LIMIT 24;
+    LIMIT 72;
 </select>
 </mapper>

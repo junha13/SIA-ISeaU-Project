@@ -57,6 +57,7 @@ public class ForecastAPIService {
 							.queryParam("models", "kma_seamless")
 							.queryParam("timezone", "Asia/Seoul")
 							.queryParam("forecast_days", 3)
+							.queryParam("windspeed_unit", "ms")
 							.build()
 							)
 					.retrieve()
