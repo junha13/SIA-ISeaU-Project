@@ -18,7 +18,9 @@
 
 <!-- 로그인 -->
 <select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
-        select user_number, id, user_name from tb_user where id = #{id} and password = #{password}
+        select user_number, id, user_name 
+        from tb_user 
+        where id = #{loginDTO.id} and password = #{loginDTO.password}
 </select>
 
 <!-- 회원탈퇴 -->

@@ -24,7 +24,7 @@ public interface AuthDAO {
     /**
      * 로그인
      * @param LoginDTO
-     * @return Map (user_number, id를 포함)
+     * @return Map (id, password)
      */
     Map<String, Object> login(@Param("loginDTO") LoginDTO dto);
 
