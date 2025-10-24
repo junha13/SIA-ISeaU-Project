@@ -13,15 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserVO {
 	
-	private int userNumber;
-    private String password;
-    private String id; // username
-    private String userName; 
-    private String mobile;
-    private String email;
-    private LocalDate birthDate;
-    private String location;
-    private int roleNumber;
 	private int userNumber; // user_number
 	private String id; // username, 아이디
     private String password; // password
