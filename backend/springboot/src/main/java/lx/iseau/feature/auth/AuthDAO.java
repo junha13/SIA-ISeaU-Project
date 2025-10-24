@@ -29,11 +29,11 @@ public interface AuthDAO {
     Map<String, Object> login(@Param("loginDTO") LoginDTO dto);
 
     /**
-     * 로그아웃
+     * 회원탈퇴
      * @param userNumber
      * @return int(성공하면 1)
      */
-    int logout(@Param("userNumber") int userNumber);
+    int withdraw(@Param("userNumber") int userNumber);
 
     /**
      * 아이디 찾기
