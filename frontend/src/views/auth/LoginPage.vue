@@ -48,11 +48,13 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
+import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
 
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
+const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -88,16 +90,25 @@ const handleLogin = async () => {
     });
 
     // 응답 데이터 가져오기
-    const userData = result?.data?.data; // {userNumber, id, userName}
+    const userData = result?.data?.data; // {userNumber, id, userName, mobile}
     
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
     }
 
+    // authStore에 로그인한 사용자 정보 저장
+    authStore.isAuthenticated = true;
+    authStore.userInfo.userNumber = userData.userNumber;
+    authStore.userInfo.id = userData.id;
+    authStore.userInfo.userName = userData.userName;
+    if (userData.mobile) {
+      authStore.userInfo.mobile = userData.mobile;
+    }
+
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
       title: '로그인 성공',
-      message: `${userData.userName}님 환영합니다!`,
+      message: `${authStore.userInfo}님 환영합니다!`,
       type: 'success',
       autoHide: true,
       duration: 1000,
