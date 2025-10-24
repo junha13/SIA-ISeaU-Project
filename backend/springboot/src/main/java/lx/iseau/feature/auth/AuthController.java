@@ -47,15 +47,21 @@ public class AuthController {
 	/**
 	 * 로그인
 	 * @param LoginDTO
-	 * @return ResponseEntity<?>(data가 Map(user_number, id)를 포함)
+	 * @return ResponseEntity<?>(data가 Map(userNumber, id, userName)를 포함)
 	 */
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
-		Map<String, Object> result = service.login(dto);
-		return ResponseEntity
-				.ok()
-				.header("api", "Auth/login")
-				.body(Map.of("data", result));
+		try {
+			Map<String, Object> result = service.login(dto);
+			return ResponseEntity
+					.ok()
+					.header("api", "Auth/login")
+					.body(Map.of("data", result));
+		} catch (RuntimeException e) {
+			return ResponseEntity
+					.status(401)
+					.body(Map.of("message", e.getMessage()));
+		}
 	}
 
 	/**

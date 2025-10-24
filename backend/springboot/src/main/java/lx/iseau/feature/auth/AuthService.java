@@ -32,10 +32,15 @@ public class AuthService {
 	/**
 	 * 로그인
 	 * @param LoginDTO
-	 * @return Map (user_number, id를 포함)
+	 * @return Map (user_number, id, user_name을 포함)
+	 * @throws RuntimeException 아이디 또는 비밀번호가 일치하지 않을 때
 	 */
 	public Map<String, Object> login(LoginDTO dto) {
-		return dao.login(dto);
+		Map<String, Object> user = dao.login(dto);
+		if (user == null || user.isEmpty()) {
+			throw new RuntimeException("아이디 또는 비밀번호가 일치하지 않습니다.");
+		}
+		return user;
 	}
 
 	/**

@@ -9,7 +9,8 @@ export const useAuthStore = defineStore('auth', () => {
     const router = useRouter();
 
     // --- State ---
-    const isAuthenticated = ref(false);
+    
+    const isAuthenticated = ref(false); // 인증 상태(로그인 성공 여부)
     const userInfo = ref({
         id: null,
         name: '김바다',
@@ -27,22 +28,34 @@ export const useAuthStore = defineStore('auth', () => {
 
     /**
      * 로그인 액션: API 호출 및 상태 업데이트
+     * @param {string} id - 사용자 아이디
+     * @param {string} password - 사용자 비밀번호
+     * @return {boolean} 로그인 성공 여부
+     * @throws {Error} 로그인 실패 시 에러 발생
      */
-    const login = async (username, password) => {
+    const login = async (id, password) => {
         try {
-            // const { data } = await authApi.login({ username, password });
+            // API 호출
+            const res = await authApi.login({ id, password });
 
-            // API 성공 시 (Dummy)
+            // API 호출 결과
+            const user = res?.data;
+            if (!user) throw new Error('로그인 API 실행 결과가 비어있습니다.');
+            
+            // 상태 및 정보 업데이트
             isAuthenticated.value = true;
-            // userInfo.value = data.user; // 실제 사용자 정보 업데이트
+            userInfo.value.userNumber = user.userNumber;  // 카멜케이스로 변환됨
+            userInfo.value.id = user.id;
+            userInfo.value.name = user.userName;          // 백엔드는 userName으로 반환
 
             return true;
         } catch (e) {
+            console.error('로그인 실패:', e);
             isAuthenticated.value = false;
-            // 에러를 던져서 컴포넌트가 실패 메시지를 표시하게 함
-            throw new Error(e.response?.data?.message || '로그인에 실패했습니다.');
+            throw new Error(e.response?.data?.message || '아이디 또는 비밀번호가 일치하지 않습니다.');
         }
     };
+    
 
     /**
      * 회원가입 액션: API 호출
