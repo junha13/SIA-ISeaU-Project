@@ -53,7 +53,7 @@ public class ForecastAPIService {
 							.path("/v1/forecast")
 							.queryParam("latitude", lat)
 							.queryParam("longitude", lon)
-							.queryParam("hourly", "temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,rain")
+							.queryParam("hourly", "temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,uv_index_clear_sky,precipitation")
 							.queryParam("models", "kma_seamless")
 							.queryParam("timezone", "Asia/Seoul")
 							.queryParam("forecast_days", 3)
@@ -89,15 +89,20 @@ public class ForecastAPIService {
             }
 			
 			List<String> forecastTime = (List<String>) hourly.get("time");
-			List<Double> temperature = (List<Double>) hourly.get("temperature_2m");
-			List<Double> windSpeed = (List<Double>) hourly.get("wind_speed_10m");
-			List<Integer> windDirection = (List<Integer>) hourly.get("wind_direction_10m");
-			List<Double> rainfall = (List<Double>) hourly.get("rain");
+			List<Double> temperature = (List<Double>) hourly.get("temperature_2m"); // 온도
+			List<Integer> humidity = (List<Integer>) hourly.get("relative_humidity_2m"); // 습도
+			List<Integer> rainProbability = (List<Integer>) hourly.get("precipitation_probability"); // 강수 확률
+			List<Double> rain = (List<Double>) hourly.get("precipitation"); // 강수량
+			List<Double> windGusts = (List<Double>) hourly.get("wind_gusts_10m"); // 돌풍
+			List<Double> windSpeed = (List<Double>) hourly.get("wind_speed_10m"); // 풍속
+			List<Integer> windDirection = (List<Integer>) hourly.get("wind_direction_10m"); // 풍향
+			List<Double> uvIndex = (List<Double>) hourly.get("uv_index");
+			List<Double> uvIndexClearSky = (List<Double>) hourly.get("uv_index_clear_sky");
 			
             // 데이터 배열들의 크기가 일치하는지 확인하여 IndexOutOfBoundsException 방지
-            if (forecastTime == null || temperature == null || windSpeed == null || windDirection == null || rainfall == null ||
+            if (forecastTime == null || temperature == null || windSpeed == null || windDirection == null ||
                 !(forecastTime.size() == temperature.size() && forecastTime.size() == windSpeed.size() &&
-                  forecastTime.size() == windDirection.size() && forecastTime.size() == rainfall.size())) {
+                  forecastTime.size() == windDirection.size())) {
                 System.err.println("Warning: Mismatched hourly data arrays for location " + lat + "," + lon);
                 continue;
             }
@@ -108,9 +113,14 @@ public class ForecastAPIService {
 				dto.setLon(lon);
 				dto.setForecastTime(LocalDateTime.parse(forecastTime.get(i)));
 				dto.setTemperature(temperature.get(i));
+				dto.setHumidity(humidity.get(i));
+				//dto.setRainProbability(rainProbability.get(i));
+				dto.setRain(rain.get(i));
+				dto.setWindGusts(windGusts.get(i));
 				dto.setWindSpeed(windSpeed.get(i));
 				dto.setWindDirection(windDirection.get(i));
-				dto.setRainfall(rainfall.get(i));
+				//dto.setUvIndex(uvIndex.get(i));
+				//dto.setUvIndexClearSky(uvIndexClearSky.get(i));
 				
 				allRows.add(dto);
 			}
