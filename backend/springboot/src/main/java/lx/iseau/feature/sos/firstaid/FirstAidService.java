@@ -1,4 +1,4 @@
-package lx.iseau.feature.report;
+package lx.iseau.feature.sos.firstaid;
 
 import java.util.List;
 
@@ -7,16 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ReportService {
+public class FirstAidService {
 	
 	@Autowired
-	ReportDAO dao;
+	FirstAidDAO dao;
 	
 	/*
 	 * ======== 하나의 응급 대처법 =========
 	 */
 	@Transactional(readOnly = true)
-	public List<ReportDTO> getFirstAidByCaseNum(int firstAidCaseNum) {
+	public List<FirstAidDTO> getFirstAidByCaseNum(int firstAidCaseNum) {
 		return dao.getFirstAidByCaseNum(firstAidCaseNum);
 	}
 	
@@ -24,7 +24,7 @@ public class ReportService {
 	 * ======= 상황목록 조회 =======
 	 */
 	@Transactional(readOnly = true)
-	public List<FirstAidCaseDTO> listFirstAidCases() {
+	public List<FirstAidCasesDTO> listFirstAidCases() {
 		return dao.listFirstAidCases();
 	}
 	

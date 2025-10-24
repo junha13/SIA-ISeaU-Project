@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lx.iseau.feature.sos.jellyfishreport.JellyfishReportDAO">
+
+	<insert id="insertReport" parameterType="lx.iseau.feature.sos.jellyfishreport.JellyfishReportDTO">
+        INSERT INTO tb_jellyfish_report
+            (location, mobile, details, image_url, admin_approval)
+        VALUES (
+            ST_SetSRID(ST_MakePoint(#{lon}, #{lat}), 4326)::geography,
+            #{mobile},
+            #{details},
+            #{imageUrl},
+            COALESCE(#{adminApproval}, 'N')
+        );
+        <!-- PostgreSQL에서 SERIAL/IDENTITY로 생성된 마지막 번호를 가져오는 쿼리 -->
+        <selectKey keyProperty="reportNumber" resultType="int" order="AFTER">
+            SELECT currval(pg_get_serial_sequence('tb_jellyfish_report','report_number'))
+        </selectKey>
+    </insert>
+ 
+</mapper>

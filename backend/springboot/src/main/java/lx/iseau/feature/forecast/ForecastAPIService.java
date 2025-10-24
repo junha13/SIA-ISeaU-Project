@@ -14,14 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class ForecastAPIService {
 
-	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
-	@Autowired
 	private ForecastDAO dao;
 	
 	public List<Map<String, Object>> getForecastData() {
