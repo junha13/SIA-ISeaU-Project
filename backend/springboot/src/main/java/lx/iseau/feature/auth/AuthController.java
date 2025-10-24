@@ -59,16 +59,16 @@ public class AuthController {
 	}
 
 	/**
-	 * 로그아웃
+	 * 회원탈퇴
 	 * @param userNumber
 	 * @return ResponseEntity<?>(data가 1이면 성공, 0이면 실패)
 	 */
-	@PostMapping("/logout")
-	public ResponseEntity<?> logout(@RequestBody int userNumber) {
-		int result = service.logout(userNumber);
+	@PostMapping("/withdraw")
+	public ResponseEntity<?> withdraw(@RequestBody int userNumber) {
+		int result = service.withdraw(userNumber);
 		return ResponseEntity
 				.ok()
-				.header("api", "Auth/logout")
+				.header("api", "Auth/withdraw")
 				.body(Map.of("data", result));
 	}
 

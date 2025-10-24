@@ -39,12 +39,12 @@ public class AuthService {
 	}
 
 	/**
-	 * 로그아웃
+	 * 회원탈퇴
 	 * @param userNumber
 	 * @return int(성공하면 1)
 	 */
-	public int logout(int userNumber) {
-		return dao.logout(userNumber);
+	public int withdraw(int userNumber) {
+		return dao.withdraw(userNumber);
 	}
 
 	/**

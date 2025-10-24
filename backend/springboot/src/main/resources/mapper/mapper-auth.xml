@@ -21,8 +21,8 @@
         select user_number, id from tb_user where id = #{id} and password = #{password}
 </select>
 
-<!-- 로그아웃 -->
-<delete id="logout" parameterType="int">
+<!-- 회원탈퇴 -->
+<delete id="withdraw" parameterType="int">
     DELETE FROM tb_user WHERE user_number = #{userNumber}
 </delete>
 
@@ -37,8 +37,8 @@
 </select>
 
 <!-- 비밀번호 찾기: 비밀번호 재설정 -->
-<select id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO" resultType="int">
+<update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO" resultType="int">
     update tb_user set password = #{newPassword} where user_number = #{userNumber}
-</select>
+</update>
 
 </mapper>

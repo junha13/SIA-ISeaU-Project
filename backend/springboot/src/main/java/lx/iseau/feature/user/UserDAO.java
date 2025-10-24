@@ -1,6 +1,7 @@
 package lx.iseau.feature.user;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserDAO {
@@ -10,5 +11,5 @@ public interface UserDAO {
      * @param settingDTO
      * @return int (성공하면 1)
      */
-    int settings(SettingsDTO dto);
+    int settings(@Param("dto") SettingsDTO dto);
 }
