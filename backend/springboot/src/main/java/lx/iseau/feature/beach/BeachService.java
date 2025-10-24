@@ -72,6 +72,17 @@ public class BeachService  {
 		map.put("result", Danger);
 		return map;
 	}
+	/*
+	 * ========= 하나의 해수욕장에 대한 여러 시간대 Weather 상황 보내주기 (기온, 자외선, 강수량) =========
+	 */
+	@Transactional
+	public Map<String, Object> getBeachDetailWeather(int beachNumber) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		List<ResponseBeachWeatherDTO> Weather = dao.getBeachDetailWeather(beachNumber);
+		
+		map.put("result", Weather);
+		return map;
+	}
     
-  
 }

@@ -55,5 +55,13 @@ public class BeachController {
 				.header("api", "Beach/detail/danger")
 				.body(Map.of("data", result));
 	}
+	@RequestMapping("/detail/{beachNumber}/weather")
+	public ResponseEntity<?> getBeachDetailWeather(@PathVariable int beachNumber) {
+		Map<String, Object> result = service.getBeachDetailWeather(beachNumber);
+		return ResponseEntity
+				.ok()
+				.header("api", "Beach/detail/weather")
+				.body(Map.of("data", result));
+	}
  
 }
