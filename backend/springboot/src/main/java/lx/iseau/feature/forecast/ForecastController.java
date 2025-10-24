@@ -14,14 +14,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class ForecastController {
 	
 	@Autowired
-	ForecastAPIService service;
+	ForecastAPIBeachService BeachService;
+	
+	@Autowired
+	ForecastAPIUVService UVService;
+	
+	@Autowired
+	ForecastAPISeaService SeaService;
 
 	/*
 	 * 설명
 	 */
 	@RequestMapping("/a")
 	public String a() {
-		service.insertDB(service.getForecastData());
+		BeachService.insertFirsttDB(BeachService.getFirstForecastData());
+		UVService.insertSecondDB(UVService.getSecondForecastData());
+		SeaService.insertSecondDB(SeaService.getSecondForecastData());	
 		return "";
 	}
 }

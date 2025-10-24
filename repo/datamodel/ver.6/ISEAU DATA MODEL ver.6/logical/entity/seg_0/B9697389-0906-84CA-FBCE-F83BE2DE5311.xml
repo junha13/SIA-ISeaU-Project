@@ -1,0 +1,206 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="B9697389-0906-84CA-FBCE-F83BE2DE5311" name="해수욕장">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>5FE3D9AF-B34A-76AB-DEBC-065FA20BDCA0</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해수욕장고유번호" id="F51B065A-0B25-9766-2B05-3BA007154112">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>C8F7BBC3-F1F1-6F48-D39D-344E1D62E530</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장이름" id="CDCBC9A2-F95B-26FE-142D-B593E255A82F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>5E64415C-DD11-E68C-7D45-1220633D53F5</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>87A52E97-7C4A-E8D5-BBA9-17ECD65692BE</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장이미지" id="A5EBAD7B-41C7-78F6-5999-4F7FF73C1913">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:36 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>654D9BF5-427B-3EB9-7EF1-20E8FB57C1F9</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장상세정보" id="D0463F60-54A3-1DCD-743B-CACA8D11055F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:15:01 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해양수산부지정여부" id="0093B4F7-C8F8-1CD8-3CD4-32D5012357DC">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>F86E8C17-8146-13DF-2516-50E32EEF0E12</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT025</logicalDatatype>
+<domain>70C99EB1-FB5C-6ACB-159B-C0E97753013E</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="평점" id="CB2D95AD-5A20-0ECA-617A-47EB8573BE0D">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>B1A4FB5E-2B01-E1A3-D14F-60A7F6A5EE83</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT026</logicalDatatype>
+<domain>84A79A5E-C7DD-D826-9D0E-5109F618EAA3</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="주소" id="3BCE6CF8-F4D0-25BD-FA05-BFEF5E1A5091">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>5633840E-6AC2-E016-FD18-2E23ABE281FB</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="위치" id="A5891B92-C9BE-462A-624D-F0E94C646852">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>ACA14CF0-C9B2-6DB2-0EDC-248A09CDB695</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>014E3227-ADD8-A53E-9A6F-C658A2F578BB</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="이용시간" id="F4E337BD-33C8-FAA0-360D-DCCA5B0E9EAD">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>6590330B-AB2D-1E11-D20E-808E52E9856F</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="전화번호" id="D2AE65B5-14CF-D54F-4D35-5D11AFC9DE3B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>D248D3A6-B503-50DA-0C86-B464C12CB047</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>5AAA2867-D761-715F-1EA9-E756743FB09E</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="개장일" id="22EE2065-FC5B-B1C7-BB2A-7FE3CF608079">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>920AFC59-7ECF-47D6-D826-7E582B0D00B4</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="폐장일" id="600C0E45-25A5-D557-1CF2-F11878199032">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>A1082F36-AFA1-9C76-CCF8-ABB9C4649EBB</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="E125AE07-0FAC-2703-825F-73AD43CD1597" name="해수욕장 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<importedID>90B028E0-1144-2C0E-8D22-BD052D06A9CB</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>F51B065A-0B25-9766-2B05-3BA007154112</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

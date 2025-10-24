@@ -15,13 +15,11 @@ public class ResponseWeatherDTO {
 
 	private double temperature;
 	private Integer humidity;
-	private Integer rainProbability;
 	private double rain;
 	private double windGusts;
 	private double windSpeed;
 	private Integer windDirection;
-	private double uvIndex;
-	private double uvIndexClearSky;
+
 
 	
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm") // 응답을 분까지만 보이게

@@ -1,0 +1,90 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="91E6A4FB-38C1-85E1-2BFD-1837C5251644" name="tb_beach_daily_forcast">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>B314793A-F8D9-AC74-B84A-48B2E2E1B18A</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="beach_number" id="42ADBEAE-E37C-B49C-8F0D-68B82AB7EA0E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>7406DE6B-AE92-A55C-2511-8ECCEE55D516</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="70A3B953-F55F-1951-185D-946F6E95DBA9" referredColumn="B8466D4A-6D6D-8C7A-0C0E-6A39C20CFA78"/>
+</associations>
+</Column>
+<Column name="forecast_time" id="66DD920D-7562-533E-40FC-9E174C9673F8">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>03C64623-AF94-A838-DA0E-60ABD4CB8742</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="weather_number" id="DB4B7883-8935-2D96-0CE5-B9B8FF542F2E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>F8A4EE0D-7338-1284-65B4-9CF449D3D3D3</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="C099F59A-4214-BC3B-6ECF-03524951060F" referredColumn="0DF77EA0-2D11-FFF0-7D79-D2FFD742703A"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="1F3EA560-12B8-80E2-86D4-5E48F3A481FB" name="tb_beach_daily_forcast_PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>59BF502D-6731-71F0-06DA-BD2110DA4522</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="42ADBEAE-E37C-B49C-8F0D-68B82AB7EA0E"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="ECDFCFAF-830F-F914-B6B1-3434FA1261B9" name="tb_beach_FK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>4B54DC35-C7F9-FECC-1E36-84EFF421B529</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="42ADBEAE-E37C-B49C-8F0D-68B82AB7EA0E"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="77C6BB65-4893-8281-3DFC-B33B3DB426F3" name="tb_weather_info_FK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>56E2FC00-2456-E926-E4A0-D1AB84EC4F04</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="DB4B7883-8935-2D96-0CE5-B9B8FF542F2E"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>
