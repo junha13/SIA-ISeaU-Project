@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +20,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ForecastAPIService {
 
-	private WebClient.Builder webClientBuilder;
+	private final WebClient.Builder webClientBuilder;
 	
-	private ForecastDAO dao;
+	private final ForecastDAO dao;
 	
 	public List<Map<String, Object>> getForecastData() {
 		WebClient webClient = webClientBuilder.build();
