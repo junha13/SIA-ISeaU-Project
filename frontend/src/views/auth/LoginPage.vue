@@ -10,7 +10,7 @@
       <h5 class="fw-bold mb-4" :style="{ color: mainColor }">로그인</h5>
 
       <div class="form-group mb-3">
-        <input type="text" class="form-control" placeholder="아이디" v-model="username">
+        <input type="text" class="form-control" placeholder="아이디" v-model="id">
       </div>
 
       <div class="form-group mb-4">
@@ -57,12 +57,16 @@ const authStore = useAuthStore();
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-const username = ref('');
+const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 
+// 결과 저장 함수
+const userId = ref('');
+const userName = ref('');
+
 const handleLogin = async () => {
-  if (!username.value || !password.value) {
+  if (!id.value || !password.value) {
     showConfirmModal({
       title: '로그인 오류',
       message: '아이디와 비밀번호를 모두 입력해주세요.',
@@ -75,12 +79,15 @@ const handleLogin = async () => {
 
   try {
     // Store Action 호출 (API 통신 및 상태 업데이트)
-    await authStore.login(username.value, password.value);
+    const result = await authStore.login(id.value, password.value);
+
+    userName.value = authStore.userInfo.name;
+    userId.value = authStore.userInfo.id;
 
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
       title: '로그인 성공',
-      message: `${username.value}님 환영합니다!`,
+      message: `${userName.value}님 환영합니다!`,
       type: 'success',
       autoHide: true,
       duration: 1000,

@@ -18,7 +18,7 @@
 
 <!-- 로그인 -->
 <select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
-        select user_number, id from tb_user where id = #{id} and password = #{password}
+        select user_number, id, user_name from tb_user where id = #{id} and password = #{password}
 </select>
 
 <!-- 회원탈퇴 -->
@@ -37,7 +37,7 @@
 </select>
 
 <!-- 비밀번호 찾기: 비밀번호 재설정 -->
-<update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO" resultType="int">
+<update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO">
     update tb_user set password = #{newPassword} where user_number = #{userNumber}
 </update>
 
