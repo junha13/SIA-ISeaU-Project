@@ -23,4 +23,11 @@ public interface UserDAO {
      */
     int checkDuplicateId(@Param("id") String id);
     
+
+    /**
+     * 사용자 설정 업데이트
+     * @param settingDTO
+     * @return int (성공하면 1)
+     */
+    int settings(@Param("dto") SettingsDTO dto);
 }

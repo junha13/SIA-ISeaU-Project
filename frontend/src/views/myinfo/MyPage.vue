@@ -11,11 +11,11 @@
       <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
       <div class="d-flex justify-content-between py-2 border-bottom">
         <span class="text-muted">이름</span>
-        <span class="fw-bold">{{ authStore.getUserInfo.name }}</span>
+        <span class="fw-bold">{{ authStore.userInfo.userName || '알 수 없음' }}</span>
       </div>
       <div class="d-flex justify-content-between py-2">
         <span class="text-muted">전화번호</span>
-        <span class="fw-bold">{{ authStore.getUserInfo.phone }}</span>
+        <span class="fw-bold">{{ authStore.userInfo.mobile || '알 수 없음' }}</span>
       </div>
     </div>
 
@@ -113,8 +113,8 @@ const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
 // --- State ---
-// 설정 상태를 Store에서 직접 가져오기 위해 구조 분해 할당 대신 전체 settings 객체를 참조
-const settings = authStore.getUserInfo.settings;
+// 설정 상태를 Store의 userInfo.settings에서 가져오기
+const settings = authStore.userInfo.settings;
 
 
 // --- Computed & Methods ---

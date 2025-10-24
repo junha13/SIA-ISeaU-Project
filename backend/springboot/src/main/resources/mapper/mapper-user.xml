@@ -24,5 +24,11 @@
 		insert into tb_user (user_name, email, mobile, username, password)
 		values (#{name}, #{email}, #{mobile}, #{id}, #{pW})
 	</insert>
+<!-- 사용자 설정 업데이트 -->
+<update id="settings" parameterType="lx.iseau.feature.user.SettingsDTO">
+        update tb_user
+        set id = #{id}, password = #{password}, user_name = #{userName}, mobile = #{mobile}, email = #{email}, birth_date = #{birthDate}, location = #{location}
+        where user_number = #{userNumber}
+</update>
 
 </mapper>

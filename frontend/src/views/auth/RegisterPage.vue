@@ -18,6 +18,9 @@
       <div class="form-group mb-3">
         <input type="tel" class="form-control" placeholder="전화번호" v-model="phone">
       </div>
+      <div class="form-group mb-3">
+        <input type="date" class="form-control" placeholder="생년월일" v-model="birthDate">
+      </div>
 
       <!-- 아이디 중복 확인 -->
       <div class="form-group mb-3 d-flex gap-2">
@@ -54,14 +57,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
-import { useAuthStore } from '@/stores/authStore'; // AuthStore 임포트
+import axios from 'axios';
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
-const authStore = useAuthStore();
+// axios를 직접 사용하여 API 호출
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -70,11 +73,19 @@ const dangerColor = '#EB725B';
 const name = ref('');
 const email = ref('');
 const phone = ref('');
+const birthDate = ref('');
 const username = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
 const isUsernameChecked = ref(false);
+const isCheckingUsername = ref(false);
+const isRegistering = ref(false);
 const isPasswordValid = ref(false);
+
+// username이 바뀌면 기존 중복확인 상태 초기화
+watch(username, () => {
+  isUsernameChecked.value = false;
+});
 
 const checkUsername = async () => {
   if (username.value.length < 4) {
@@ -82,11 +93,29 @@ const checkUsername = async () => {
     isUsernameChecked.value = false;
     return;
   }
-  // API 호출: 중복 확인 (더미 로직)
-  // try { await authApi.checkUsername(username.value); } catch { ... }
+  isCheckingUsername.value = true;
+  try {
+    // spring 컨트롤러는 @RequestBody String id 형태로 받으므로
+    // 요청 바디를 JSON 문자열로 보냅니다 (예: "myid").
+    const res = await axios.post('http://localhost:8080/api/auth/check-id', JSON.stringify(username.value), {
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-  isUsernameChecked.value = true;
-  showConfirmModal({ title: '확인', message: '사용 가능한 아이디입니다.', type: 'success', autoHide: true });
+    const result = res?.data?.data; // 컨트롤러가 Map.of("data", result) 형태로 반환
+    if (result === 0) {
+      isUsernameChecked.value = true;
+      showConfirmModal({ title: '확인', message: '사용 가능한 아이디입니다.', type: 'success', autoHide: true });
+    } else {
+      isUsernameChecked.value = false;
+      showConfirmModal({ title: '오류', message: '이미 사용 중인 아이디입니다.', type: 'error', autoHide: true });
+    }
+  } catch (err) {
+    console.error('아이디 중복확인 오류', err);
+    isUsernameChecked.value = false;
+    showConfirmModal({ title: '오류', message: err.response?.data?.message || '아이디 중복확인에 실패했습니다.', type: 'error', autoHide: true });
+  } finally {
+    isCheckingUsername.value = false;
+  }
 };
 
 const handleCheckPassword = () => {
@@ -114,36 +143,35 @@ const handleRegister = async () => {
     return;
   }
 
+  // 백엔드 RegisterDTO 필드명에 맞게 매핑
   const userData = {
-    name: name.value,
+    userName: name.value,
     email: email.value,
-    phone: phone.value,
-    username: username.value,
+    mobile: phone.value,
+    birthDate: birthDate.value,
+    id: username.value,
     password: password.value,
+    checkPassword: passwordConfirm.value,
   };
 
+  isRegistering.value = true;
   try {
-    // Store Action 호출 (API 통신)
-    await authStore.register(userData);
-
-    // 성공 시
-    showConfirmModal({
-      title: '회원가입 성공',
-      message: '회원가입이 완료되었습니다. 로그인해주세요.',
-      type: 'success',
-      autoHide: false,
+    const res = await axios.post('http://localhost:8080/api/auth/register', userData, {
+      headers: { 'Content-Type': 'application/json' }
     });
 
-    router.push({ name: 'Login' });
-
+    const result = res?.data?.data;
+    if (result === 1) {
+      showConfirmModal({ title: '회원가입 성공', message: '회원가입이 완료되었습니다. 로그인해주세요.', type: 'success', autoHide: false });
+      router.push({ name: 'Login' });
+    } else {
+      throw new Error('회원가입에 실패했습니다.');
+    }
   } catch (e) {
-    // 실패 시
-    showConfirmModal({
-      title: '회원가입 실패',
-      message: e.message,
-      type: 'error',
-      autoHide: false
-    });
+    console.error('회원가입 오류', e);
+    showConfirmModal({ title: '회원가입 실패', message: e.response?.data?.message || e.message || '회원가입 중 오류가 발생했습니다.', type: 'error', autoHide: false });
+  } finally {
+    isRegistering.value = false;
   }
 };
 </script>
@@ -154,8 +182,5 @@ const handleRegister = async () => {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
-}
-.auth-page {
-  /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
 </style>
