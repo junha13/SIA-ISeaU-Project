@@ -1,4 +1,4 @@
-package lx.iseau.feature.report;
+package lx.iseau.feature.sos.firstaid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/report")
+@RequestMapping("/api/sos")
 @RestController
-public class ReportController {
+public class FirstAidController {
 	
 	@Autowired
-	ReportService service;
+	FirstAidService service;
 
 	/*
 	 * ===== 하나의 응급 대처법 =====
