@@ -5,8 +5,9 @@ import axios from 'axios';
 //import { getAuth } from 'firebase/auth';
 
 // API 인스턴스 (BaseURL 설정)
+// VITE_API_BASE_URL이 설정되지 않았다면 '/api'로 기본값 지정하여 Vite 프록시를 사용
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api'
 });
 
 // 요청 인터셉터 추가: 모든 요청에 Firebase ID 토큰을 추가

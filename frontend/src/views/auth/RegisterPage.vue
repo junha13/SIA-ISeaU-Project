@@ -118,13 +118,15 @@ const handleRegister = async () => {
     return;
   }
 
+  // 백엔드 RegisterDTO 필드명에 맞게 매핑
   const userData = {
-    name: name.value,
+    userName: name.value,
     email: email.value,
-    phone: phone.value,
+    mobile: phone.value,
     birthDate: birthDate.value,
-    username: username.value,
+    id: username.value,
     password: password.value,
+    checkPassword: passwordConfirm.value,
   };
 
   try {
