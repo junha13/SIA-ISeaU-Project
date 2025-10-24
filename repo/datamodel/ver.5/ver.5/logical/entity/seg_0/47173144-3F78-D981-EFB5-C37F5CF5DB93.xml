@@ -1,0 +1,100 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="47173144-3F78-D981-EFB5-C37F5CF5DB93" name="해파리제보목록">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>11E42445-782F-3C6A-252E-5EA172C2F930</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해파리제보고유번호" id="A5B7901C-32A7-9ACB-DA19-F26198CD463E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>F2FF9F1B-BA3C-3ED6-7FBD-B7F3274F8255</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="위치" id="CA69897D-4BE5-D222-708F-893DA4334BB7">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>CB5A2C50-2993-ABD8-7C4E-5A84D1BC91EA</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="전화번호" id="C9AD59B4-EE55-0217-9CCF-6B7989FFEA6D">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>814CB975-7AF6-8991-0208-4DD22BF6C63F</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="상세정보" id="2EC39597-0E86-5A12-A73F-B9CC023530BB">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>383317A2-63E4-105E-17D5-95DD6D861940</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="관리자승인" id="B8DFEA7C-5007-07F9-2593-980837F2F97B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>F60A3A25-7FF7-5321-8889-3C167F0315E9</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="48C1DD48-BA1B-6D1F-583B-F056C4420C49" name="해파리 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ver.5</ownerDesignName>
+<importedID>C577B4FF-F21F-AA96-573E-B05C77D6206A</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>A5B7901C-32A7-9ACB-DA19-F26198CD463E</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

@@ -1,0 +1,66 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="8087AFFE-4622-CD98-82EC-B528D55B7C04" name="역할">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>FB24E73B-BA20-90E4-B5DF-C2A019310D4C</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="역할고유번호" id="C24C7E8A-A6CE-420E-F5EA-B4EEE053B685">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>1F3FD1DC-C0C6-D762-2739-F5516FFACCD1</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="역할명" id="7504D165-979C-6A2C-A9BD-143F5288DE6C">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>7BB7C777-EE78-5DAD-95F6-26033DCDCA45</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>87A52E97-7C4A-E8D5-BBA9-17ECD65692BE</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="EDA196A9-F8FD-C7EC-BF56-CE77A340BA5C" name="역할 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<importedID>92A8786C-192B-2A5F-EF8F-A5E5D3C1CAF2</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>C24C7E8A-A6CE-420E-F5EA-B4EEE053B685</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

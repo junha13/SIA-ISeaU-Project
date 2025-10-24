@@ -1,0 +1,123 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="639EFDD2-F37A-02C6-7101-A8D3A7AB4409" name="tb_post_comment">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>C57854E2-EA5E-466E-4F08-7E71C77C39FD</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="comment_number" id="A4A09919-EB11-0F8C-0C77-01E20A8D1252">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>03C05398-303F-220B-32DF-F7377B324119</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="comment_content" id="A2AC5D30-0AA4-58F6-EF61-12518EF9BEDC">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>51B08A4A-6589-83A7-BFE1-5CA002183A91</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="like_count" id="49C4C77C-C685-5ADC-DCEB-55401D50721E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>D2E3BC63-DAD9-60D6-4E9C-45393C50E84B</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="created_at" id="C4936041-2FCC-D53B-C35E-BA57283D81D0">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>0F63CDE8-9CBC-7968-530B-03D69D54A39E</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT015</logicalDatatype>
+<domain>B3FC7006-6D50-12C2-6291-20A18657D48A</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="post_number" id="FCD68D80-5907-E324-E23F-4760F6590249">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>91A8F912-9265-B778-CD73-3BC09144CD8B</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="6C39E3A5-4047-137F-042F-2A6FF64ABD00" referredColumn="62C612EA-E057-98E1-0688-CBC8661F55BA"/>
+</associations>
+</Column>
+<Column name="user_number" id="74461543-F6A3-F435-F42F-A019F25F3F99">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>33B10060-8B33-0E36-8874-1F11E8925CD3</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="C243FCA6-C387-2BF0-5EC8-64FA81F99BC6" referredColumn="5135D290-0D04-BEEA-7AF0-F075AB7305A9"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="FDE5B028-9979-62E5-F5A5-5214CD2F9547" name="tb_post_comment_PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>F34563C9-CDEC-233F-6BEC-4EE59EC9A848</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="A4A09919-EB11-0F8C-0C77-01E20A8D1252"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="B8159497-71B9-E324-FAA4-8F4BA9458AB9" name="tb_post_FK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>9755B09E-81D9-5C5C-ABF1-A32B1E24675F</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="FCD68D80-5907-E324-E23F-4760F6590249"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="DEE30AA7-D7C3-27EE-7935-C2CBB7344531" name="tb_user_FKv7">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>EBC021F0-F573-A7FF-7A5F-BFBDB2ED6D36</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="74461543-F6A3-F435-F42F-A019F25F3F99"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

@@ -1,7 +1,8 @@
 package lx.iseau.feature.forecast;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+
+import lx.iseau.feature.beach.ResponseBeachDTO;
 
 import java.util.List; // java.util.List 임포트 필요
 
@@ -10,5 +11,7 @@ public interface ForecastDAO {
 
 	List<RequestLocationDTO> selectBeachLocation();
 
-	void upsertForecastDB(List<ResponseWeatherDTO> rows);
+	void upsertWeatherDB(List<ResponseWeatherDTO> rows);
+	void upsertBeachWeatherDB(List<ResponseSeaWeatherDTO> rows);
+	void upsertUVDB(List<ResponseUVDTO> rows);
 }
