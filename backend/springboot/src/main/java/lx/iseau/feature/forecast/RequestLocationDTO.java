@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RequestLocation {
+public class RequestLocationDTO {
 
 	private int beachNumber;
 	private double lat;

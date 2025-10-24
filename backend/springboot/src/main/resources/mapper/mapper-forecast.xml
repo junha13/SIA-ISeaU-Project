@@ -6,7 +6,7 @@
 <mapper namespace="lx.iseau.feature.forecast.ForecastDAO">
 
     <!-- ========== 해수욕장 위치 가져오기 ========== -->
-    <select id="selectBeachLocation" resultType="RequestLocation">
+    <select id="selectBeachLocation" resultType="RequestLocationDTO">
         SELECT beach_number, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon 
         FROM tb_beach
     </select>

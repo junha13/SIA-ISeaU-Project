@@ -6,6 +6,10 @@
 .vscode
 .package-lock.json
 
+### firebase ###
+service-account.json
+firebase-messaging-sw.js
+
 ###env###
 .env
 
