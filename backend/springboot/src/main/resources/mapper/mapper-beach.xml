@@ -65,5 +65,32 @@
 									from tb_beach
 									where beach_number = #{beachNumber})
 	</select>
-
+<select id="getBeachDetailWeather" parameterType="int" resultType="ResponseBeachWeatherDTO">
+    WITH beach_location AS (
+        SELECT location FROM tb_beach WHERE beach_number = #{beachNumber}
+    )
+    
+    SELECT
+        tb_weather_info.temperature,
+        tb_weather_info.wind_speed,
+        tb_weather_info.forecast_time,
+         tb_weather_info.humidity,
+          tb_weather_info.wind_speed
+    FROM
+        tb_weather_info, beach_location
+    WHERE
+      
+        ST_DWithin(
+            tb_weather_info.observed_location,
+            beach_location.location,
+            3000  -- (반경 1000미터)
+        )
+        -- 4. 현재 시간 이후의 예보만 가져옵니다.
+        AND tb_weather_info.forecast_time >= NOW()
+    ORDER BY
+        -- 5. [수정!] 해변 위치와 가장 가까운 순서로 정렬합니다.
+        ST_Distance(tb_weather_info.observed_location, beach_location.location), 
+        tb_weather_info.forecast_time ASC
+    LIMIT 24;
+</select>
 </mapper>

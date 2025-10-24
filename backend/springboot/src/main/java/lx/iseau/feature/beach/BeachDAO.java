@@ -15,7 +15,7 @@ public interface BeachDAO {
 	public List<ResponseBeachDangerDTO> getBeachDetailDanger(int beachNumber);
 	
 	
-	//public ResponseBeachForecastDTO getBeachDetailForecast(int beachNumber);
+	public List<ResponseBeachWeatherDTO> getBeachDetailWeather(int beachNumber);
 
 	// 위경도 위치 보내주는걸로
 	//public ResponseBeachDeptDTO getBeachDetailDept(int beachNumber);
