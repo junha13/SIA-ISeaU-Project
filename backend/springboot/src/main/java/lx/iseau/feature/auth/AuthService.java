@@ -36,7 +36,7 @@ public class AuthService {
 	 * @throws RuntimeException 아이디 또는 비밀번호가 일치하지 않을 때
 	 */
 	public Map<String, Object> login(LoginDTO dto) {
-		Map<String, Object> user = dao.login(dto.getId(), dto.getPassword());
+		Map<String, Object> user = dao.login(dto);
 		if (user == null || user.isEmpty()) {
 			throw new RuntimeException("아이디 또는 비밀번호가 일치하지 않습니다.");
 		}
