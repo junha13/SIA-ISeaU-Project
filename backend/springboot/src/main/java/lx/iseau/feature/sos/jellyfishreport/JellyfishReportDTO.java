@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JellyFishReportDTO {
+public class JellyfishReportDTO {
 	private int reportNumber;
 	
 	private Double lat;

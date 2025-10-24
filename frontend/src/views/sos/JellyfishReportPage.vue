@@ -1,6 +1,7 @@
 <template>
   <div class="jellyfish-report-page container-fluid p-3">
-    <!-- Header -->
+    
+    <!-- Header 
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
       <div class="d-flex align-items-center">
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
@@ -11,6 +12,7 @@
         <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
       </div>
     </div>
+    -->
 
     <!-- 사진 등록 -->
     <div class="text-center mb-4 p-5 rounded-3 border" style="background-color: #f8f9fa; cursor: pointer;" @click="triggerFileUpload">
@@ -24,8 +26,14 @@
     <!-- 제보 양식 -->
     <div class="mb-3">
       <label class="fw-bold mb-2" :style="{ color: darkColor }">위치 (필수)</label>
-      <input type="text" class="form-control rounded-3" placeholder="발견 위치를 입력하세요"
+      <input type="text" class="form-control rounded-3 mb-2" placeholder="위도"
              :value="sosStore.reportData.location" @input="updateLocation">
+      <input type="text" class="form-control rounded-3" placeholder="경도"
+             :value="sosStore.reportData.location" @input="updateLocation">
+      <button class="btn py-3 fs-6 rounded-3"
+              :style="{ borderColor: black, backgroundColor: white }">
+          내 위치 새로고침
+      </button>
     </div>
 
     <div class="mb-3">
