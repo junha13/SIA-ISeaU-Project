@@ -5,42 +5,61 @@
 
 <mapper namespace="lx.iseau.feature.auth.AuthDAO">
 
-<!-- 회원가입 -->
-<!-- 정보 저장 -->
-<insert id="register" parameterType="lx.iseau.feature.auth.RegisterDTO">
-	insert into tb_user (user_name, email, mobile, birth_date, id, password)
-        values (#{userName}, #{email}, #{mobile}, #{birthDate}, #{id}, #{password})
-</insert>
-<!-- 아이디 중복확인 -->
-<select id="checkId" parameterType="string" resultType="int">
-        select count(*) from tb_user where id = #{id}
-</select>
+    <!-- 회원가입 -->
+    <insert id="register" parameterType="lx.iseau.feature.auth.RegisterDTO">
+        INSERT INTO tb_user (user_name, email, mobile, birth_date, id, password)
+        VALUES (
+            #{registerDTO.userName},
+            #{registerDTO.email},
+            #{registerDTO.mobile},
+            #{registerDTO.birthDate},
+            #{registerDTO.id},
+            #{registerDTO.password}
+        )
+    </insert>
 
-<!-- 로그인 -->
-<select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
-        select user_number, id, user_name 
-        from tb_user 
-        where id = #{loginDTO.id} and password = #{loginDTO.password}
-</select>
+    <!-- 아이디 중복확인 -->
+    <select id="checkId" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_user
+        WHERE id = #{id}
+    </select>
 
-<!-- 회원탈퇴 -->
-<delete id="withdraw" parameterType="int">
-    DELETE FROM tb_user WHERE user_number = #{userNumber}
-</delete>
+    <!-- 로그인 -->
+    <select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
+        SELECT user_number, id, user_name
+        FROM tb_user
+        WHERE id = #{loginDTO.id}
+          AND password = #{loginDTO.password}
+    </select>
 
-<!-- 아이디 찾기 -->
-<select id="findId" parameterType="lx.iseau.feature.auth.FindIdDTO" resultType="string">
-    select id from tb_user where user_name = #{userName} and mobile = #{mobile}
-</select>
+    <!-- 회원탈퇴 -->
+    <delete id="withdraw" parameterType="int">
+        DELETE FROM tb_user
+        WHERE user_number = #{userNumber}
+    </delete>
 
-<!-- 비밀번호 찾기: 아이디+전화번호로 userNumber찾기 -->
-<select id="findUserNumber" parameterType="lx.iseau.feature.auth.FindUserNumberDTO" resultType="int">
-    select user_number from tb_user where id = #{id} and mobile = #{mobile}
-</select>
+    <!-- 아이디 찾기 -->
+    <select id="findId" parameterType="lx.iseau.feature.auth.FindIdDTO" resultType="string">
+        SELECT id
+        FROM tb_user
+        WHERE user_name = #{findIdDTO.userName}
+          AND mobile = #{findIdDTO.mobile}
+    </select>
 
-<!-- 비밀번호 찾기: 비밀번호 재설정 -->
-<update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO">
-    update tb_user set password = #{newPassword} where user_number = #{userNumber}
-</update>
+    <!-- 비밀번호 찾기: 아이디+전화번호로 userNumber 조회 -->
+    <select id="findUserNumber" parameterType="lx.iseau.feature.auth.FindUserNumberDTO" resultType="int">
+        SELECT user_number
+        FROM tb_user
+        WHERE id = #{findUserNumberDTO.id}
+          AND mobile = #{findUserNumberDTO.mobile}
+    </select>
+
+    <!-- 비밀번호 재설정 -->
+    <update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO">
+        UPDATE tb_user
+        SET password = #{resetPasswordDTO.newPassword}
+        WHERE user_number = #{resetPasswordDTO.userNumber}
+    </update>
 
 </mapper>
