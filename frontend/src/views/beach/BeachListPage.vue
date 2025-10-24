@@ -198,6 +198,12 @@ import NMarker from '@/components/NaverMapMarker.vue'
 // import { useApi } from '@/utils/useApi.js';
 // import { beachApi } from '@/api/beach.js';
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+
+
 const router = useRouter();
 const beachStore = useBeachStore();
 
@@ -235,10 +241,15 @@ function selectSort(sortValue) {
 }
 
 // 최초/정렬 변경
-onMounted(loadData);
+onMounted(() => {
+  loadData()
+  header.value = "해수욕장 리스트"
+});
+
 watch(currentSort, (newSortValue) => {
   searchParams.value.sort = newSortValue;
   loadData();
+  
 });
 
 // === 리스트 정리 로직 ===
