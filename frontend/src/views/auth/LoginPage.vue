@@ -49,6 +49,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
+import axios from 'axios';
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
