@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
      */
     const register = async (userData) => {
         try {
-            // await authApi.register(userData);
+            await authApi.register(userData);
             return true;
         } catch (e) {
             throw new Error(e.response?.data?.message || '회원가입에 실패했습니다.');

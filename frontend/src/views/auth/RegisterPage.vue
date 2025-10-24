@@ -18,6 +18,9 @@
       <div class="form-group mb-3">
         <input type="tel" class="form-control" placeholder="전화번호" v-model="phone">
       </div>
+      <div class="form-group mb-3">
+        <input type="date" class="form-control" placeholder="생년월일" v-model="birthDate">
+      </div>
 
       <!-- 아이디 중복 확인 -->
       <div class="form-group mb-3 d-flex gap-2">
@@ -70,6 +73,7 @@ const dangerColor = '#EB725B';
 const name = ref('');
 const email = ref('');
 const phone = ref('');
+const birthDate = ref('');
 const username = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
@@ -118,6 +122,7 @@ const handleRegister = async () => {
     name: name.value,
     email: email.value,
     phone: phone.value,
+    birthDate: birthDate.value,
     username: username.value,
     password: password.value,
   };
@@ -154,8 +159,5 @@ const handleRegister = async () => {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
-}
-.auth-page {
-  /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
 </style>
