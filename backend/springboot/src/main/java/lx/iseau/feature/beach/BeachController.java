@@ -6,7 +6,9 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,7 +65,7 @@ public class BeachController {
 				.body(Map.of("data", result));
 	}
 	@RequestMapping("/favorites")
-    public ResponseEntity<?> addFavorite(
+    public ResponseEntity<?> insertFavorite(
             @RequestBody ResponseFavoritesDTO dto
     ) {
         // 1. 로그인/인증 로직 우회: userNumber를 1로 고정하여 테스트합니다.
@@ -78,7 +80,7 @@ public class BeachController {
             // 4. 성공 응답 반환
             return ResponseEntity
                     .ok()
-                    .header("api", "Favorites/insert")
+                    .header("api", "favorites")
                     .body(Map.of("success", result > 0));
 
         } catch (Exception e) {
@@ -86,6 +88,27 @@ public class BeachController {
              return ResponseEntity
                      .status(409) 
                      .body(Map.of("error", "즐겨찾기 추가 중 오류 발생: " + e.getMessage()));
+        }
+    }
+	@DeleteMapping("/favorites/{beachNumber}")
+    public ResponseEntity<?> removeFavorite( @PathVariable int beachNumber
+            // @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        int userNumber = 1; // 임시 userNumber
+
+        try {
+     
+            int result = service.removeFavorite(userNumber, beachNumber);
+
+            return ResponseEntity
+                    .ok()
+                    .header("api", "favorites/remove")
+                    .body(Map.of("success", result > 0)); 
+
+        } catch (Exception e) {
+             return ResponseEntity
+                     .status(500) 
+                     .body(Map.of("error", "즐겨찾기 제거 중 오류 발생: " + e.getMessage()));
         }
     }
 

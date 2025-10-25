@@ -1,32 +1,28 @@
-import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { defineStore } from 'pinia';
+import axios from 'axios';
 import { beachApi } from '@/api/beach';
 import { useConfirmModal } from '@/utils/modalUtils';
-// [추가] useApi 유틸리티를 직접 import 합니다.
-import { useApi } from '@/utils/useApi.js';
+
+const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
 
 export const useBeachStore = defineStore('beach', () => {
-    // --- State ---
-    const beaches = ref([]); // [추가] 해수욕장 '목록' 상태
+    const beaches = ref([]);
     const selectedBeachId = ref(null);
     const favoriteBeachIds = ref([]);
-    const isLoading = ref(false); // 목록 로딩 상태
+    const isLoading = ref(false);
     const apiError = ref(null);
     const currentBeachDetail = ref(null);
-    const isDetailLoading = ref(false); // 상세 정보 로딩 상태
+    const isDetailLoading = ref(false);
 
     // --- Actions ---
-
-    /**
-     * [추가] 전체 해수욕장 목록을 가져오는 Action
-     */
     const fetchBeaches = async (params = {}) => {
         isLoading.value = true;
         apiError.value = null;
         try {
-        const res = await beachApi.fetchBeachList(params);
-        const list = res?.data?.result ?? res?.result ?? res ?? [];
-        beaches.value = Array.isArray(list) ? list : [];
+            const res = await beachApi.fetchBeachList(params);
+            const list = res?.data?.result ?? res?.result ?? res ?? [];
+            beaches.value = Array.isArray(list) ? list : [];
         } catch (error) {
             console.error('해수욕장 목록 조회 실패:', error);
             apiError.value = error;
@@ -36,25 +32,14 @@ export const useBeachStore = defineStore('beach', () => {
         }
     };
 
-    /**
-     * [수정] 특정 해수욕장의 상세 정보를 가져오는 Action
-     */
     const fetchBeachDetail = async (beachNumber) => {
         isDetailLoading.value = true;
         currentBeachDetail.value = null;
         try {
-            // 백엔드 컨트롤러와 정확히 일치하는 동적 URL 경로를 만듭니다.
             const url = `/api/beach/detail/${beachNumber}/info`;
-            
-            // useApi를 action 함수 안에서 직접 호출합니다.
             const { execute: callDetailApi } = useApi('get', url);
-
-            // 생성된 함수를 호출하여 API 요청을 보냅니다.
             const result = await callDetailApi();
-            
-            // 백엔드 응답이 { data: { ... } } 형태이므로, result.data를 할당합니다.
             currentBeachDetail.value = result.data.result;
-
         } catch (error) {
             console.error('해수욕장 상세 정보 조회 실패:', error);
             apiError.value = error;
@@ -63,9 +48,19 @@ export const useBeachStore = defineStore('beach', () => {
         }
     };
 
-    /**
-     * (기존 코드 유지) 해수욕장 선택/해제 토글
-     */
+    const fetchFavoriteIds = async () => {
+        try {
+            const MY_FAVORITES_API = FAVORITES_API_URL + '/my';
+            const response = await axios.get(MY_FAVORITES_API);
+            const favoritesList = response.data?.result ?? response.data?.data;
+            if (Array.isArray(favoritesList)) {
+                favoriteBeachIds.value = favoritesList.map(fav => fav.beachNumber).filter(id => id != null);
+            }
+        } catch (error) {
+            console.error('즐겨찾기 초기 로딩 실패:', error);
+        }
+    };
+
     const toggleSelectBeach = (beachId, beachName) => {
         const { showConfirmModal } = useConfirmModal();
         let message = '';
@@ -85,27 +80,68 @@ export const useBeachStore = defineStore('beach', () => {
         });
     };
 
-    /**
-     * (기존 코드 유지) 즐겨찾기 토글
-     */
-    const toggleFavoriteBeach = (beachId) => {
-        const { showConfirmModal } = useConfirmModal();
-        const isFavorite = favoriteBeachIds.value.includes(beachId);
-        if (isFavorite) {
-            favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachId);
-            showConfirmModal({ title: '즐겨찾기 해제', message: '즐겨찾기에서 해제되었습니다.', type: 'info', autoHide: true, duration: 1000 });
-        } else {
-            favoriteBeachIds.value.push(beachId);
-            showConfirmModal({ title: '즐겨찾기 등록', message: '즐겨찾기에 등록되었습니다.', type: 'success', autoHide: true, duration: 1000 });
-        }
-    };
+    const toggleFavoriteBeach = async (beachNumber) => {
+  const { showConfirmModal } = useConfirmModal();
+  const isFav = favoriteBeachIds.value.includes(beachNumber);
 
-    // --- Getters (기존 코드 유지) ---
+  try {
+    if (isFav) {
+      // 삭제
+      await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
+      favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+      showConfirmModal({
+        title: '즐겨찾기 해제',
+        message: '즐겨찾기에서 해제되었습니다.',
+        type: 'info',
+        autoHide: true,
+        duration: 1000
+      });
+    } else {
+      // 추가
+      await axios.post(FAVORITES_API_URL, { beachNumber });
+      // 중복 409는 catch에서 처리
+      if (!favoriteBeachIds.value.includes(beachNumber)) {
+        favoriteBeachIds.value.push(beachNumber);
+      }
+      showConfirmModal({
+        title: '즐겨찾기 등록',
+        message: '등록되었습니다.',
+        type: 'success',
+        autoHide: true,
+        duration: 1000
+      });
+    }
+  } catch (error) {
+    if (error.response?.status === 409) {
+      // 이미 등록됨 → UI만 반영
+      if (!favoriteBeachIds.value.includes(beachNumber)) {
+        favoriteBeachIds.value.push(beachNumber);
+      }
+      showConfirmModal({
+        title: '이미 등록됨',
+        message: '이미 즐겨찾기에 등록되어 있습니다.',
+        type: 'info',
+        autoHide: true,
+        duration: 1000
+      });
+    } else {
+      console.error('즐겨찾기 API 오류:', error);
+      showConfirmModal({
+        title: '처리 실패',
+        message: '즐겨찾기 처리 중 오류가 발생했습니다.',
+        type: 'error',
+        autoHide: false,
+        duration: 2000
+      });
+    }
+  }
+};
+
+    // --- Getters ---
     const getCurrentSelectedBeachId = computed(() => selectedBeachId.value);
     const getFavoriteBeachIds = computed(() => favoriteBeachIds.value);
     const getCurrentBeachDetail = computed(() => currentBeachDetail.value);
 
-    // --- Return (수정한 내용 포함하여 반환) ---
     return {
         beaches,
         selectedBeachId,
@@ -116,6 +152,7 @@ export const useBeachStore = defineStore('beach', () => {
         isDetailLoading,
         fetchBeaches,
         fetchBeachDetail,
+        fetchFavoriteIds,
         toggleSelectBeach,
         toggleFavoriteBeach,
         getCurrentSelectedBeachId,
@@ -123,4 +160,3 @@ export const useBeachStore = defineStore('beach', () => {
         getCurrentBeachDetail,
     };
 });
-
