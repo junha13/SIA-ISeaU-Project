@@ -35,9 +35,21 @@ public class AuthController {
 	 * @param id
 	 * @return ResponseEntity<?>(data가 0이면 중복안됨, 1이상이면 중복됨)
 	 */
-	@RequestMapping("/check-id")
+	@PostMapping("/check-id")
 	public ResponseEntity<?> checkId(@RequestBody String id) {
-		int result = service.checkId(id);
+		// 디버깅용 로그
+		System.out.println("받은 아이디 원본: [" + id + "]");
+		System.out.println("아이디 길이: " + id.length());
+		
+		// JSON.stringify()로 전송된 경우 따옴표가 포함되므로 제거
+		// 예: "testid" → testid
+		String cleanId = id.replace("\"", "").trim();
+		System.out.println("정제된 아이디: [" + cleanId + "]");
+		
+		// DB에서 중복 확인
+		int result = service.checkId(cleanId);
+		System.out.println("중복확인 결과: " + result);
+		
 		return ResponseEntity
 				.ok()
 				.header("api", "Auth/check-id")
