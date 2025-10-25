@@ -74,7 +74,6 @@
         tb_weather_info.temperature,
         tb_weather_info.wind_speed,
         tb_weather_info.forecast_time,
-         tb_weather_info.humidity,
           tb_weather_info.wind_speed
     FROM
         tb_weather_info, beach_location

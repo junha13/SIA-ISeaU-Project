@@ -193,7 +193,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBeachStore } from '@/stores/beachStore.js';
-import NMarker from '@/components/NaverMapMarker.vue'
 // [로직 수정] useApi와 beachApi 직접 import 제거
 // import { useApi } from '@/utils/useApi.js';
 // import { beachApi } from '@/api/beach.js';
