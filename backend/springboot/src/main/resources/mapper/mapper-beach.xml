@@ -93,6 +93,31 @@
         tb_weather_info.forecast_time ASC
     LIMIT 72;
 </select>
+
+<!-- BeachDAO.xml 파일 내부 -->
+<select id="getBeachFavorites" parameterType="int" resultType="ResponseFavoritesDTO">
+    SELECT
+        b.beach_number AS beachNumber,
+        b.beach_name AS beachName,
+        b.beach_image AS beachImage,
+        b.beach_information AS beachInformation,
+        b.rating AS rating,
+        b.approved_by_ministry AS approvedByMinistry,
+        b.address AS address,    
+        ST_Y(b.LOCATION::geometry) AS latitude,         
+        ST_X(b.LOCATION::geometry) AS longitude,
+        b.mobile AS mobile,
+        b.open_date AS openDate,
+        b.close_date AS closeDate
+    FROM
+        tb_beach_saved bs
+    JOIN
+        tb_beach b ON bs.beach_number = b.beach_number
+    WHERE
+        bs.user_number = #{userNumber}
+    ORDER BY
+        b.beach_name ASC
+</select>
     <insert id="insertFavorite" parameterType="BeachFavoritesVO">
         INSERT INTO tb_beach_saved (user_number, beach_number)
         VALUES (#{userNumber}, #{beachNumber})

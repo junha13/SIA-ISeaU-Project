@@ -101,10 +101,12 @@
 
     <div class="mt-3">
       <div v-if="viewMode === 'list'">
-        <div v-if="beachStore.isLoading" class="text-center p-5">
+        <!-- Pinia 상태에서 로드 상태 가져옴 -->
+        <div v-if="beachStore.isLoading" class="text-center p-5"> 
           <i class="fas fa-spinner fa-spin me-2"></i> 목록을 불러오는 중...
         </div>
-        <div v-else-if="beachStore.apiError" class="text-center text-danger p-5">
+        <!-- Pinia 상태에서 에러 상태 가져옴 -->
+        <div v-else-if="beachStore.apiError" class="text-center text-danger p-5"> 
           목록을 불러오는 중 오류가 발생했습니다.
         </div>
         <div v-else-if="!filteredBeachList.length" class="text-center text-muted p-5">
@@ -138,7 +140,7 @@
                   <h5 class="fw-bolder fs-6 mb-1" :style="{ color: darkColor }">{{ beach.beachName }}</h5>
                   <i
                     :class="['fas fa-heart fs-5', { 'text-danger': isFavorite(beach.beachNumber), 'text-muted': !isFavorite(beach.beachNumber) }]"
-                    @click.stop="toggleFavorite(beach.beachNumber)"
+                    @click.stop="toggleFavoriteLogic(beach.beachNumber)"
                     style="cursor: pointer;"
                   ></i>
                 </div>
@@ -178,36 +180,33 @@
 
       <div v-else>
         <div class="map-view d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm"
-             style="height: 50vh; border: 1px solid #ccc;">
-            <!-- <NMarker
-           :map="map"
-           :lat="beach.latitude"   
-           :lng="beach.longitude" /> -->
+          style="height: 50vh; border: 1px solid #ccc;">
+          <!-- <NMarker
+          :map="map"
+          :lat="beach.latitude" 
+          :lng="beach.longitude" /> -->
         </div>
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useBeachStore } from '@/stores/beachStore.js';
+import { useBeachStore } from '@/stores/beachStore.js'; 
 import NMarker from '@/components/NaverMapMarker.vue'
-// [로직 수정] useApi와 beachApi 직접 import 제거
-// import { useApi } from '@/utils/useApi.js';
-// import { beachApi } from '@/api/beach.js';
+import axios from 'axios';
 
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
 const { header, beach } = storeToRefs(store)
 
-
 const router = useRouter();
 const beachStore = useBeachStore();
 
-// 디자인
+const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
+
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const activeTab = ref('all');
@@ -218,17 +217,16 @@ const sortOptions = [
   { label: '리뷰순', value: 'review' },
   { label: '평점순', value: 'rating' },
 ];
+
 const primaryBtnStyle = { backgroundColor: mainColor, borderColor: mainColor, color: 'white' };
 const dropdownBtnStyle = { backgroundColor: '#f8f9fa', borderColor: '#ced4da', color: darkColor };
 
-// 검색 파라미터
 const searchParams = ref({
   region: '',
   keyword: '',
   sort: currentSort.value,
 });
 
-// 로드
 async function loadData() {
   await beachStore.fetchBeaches(searchParams.value);
 }
@@ -240,24 +238,17 @@ function selectSort(sortValue) {
   currentSort.value = sortValue;
 }
 
-// 최초/정렬 변경
 onMounted(() => {
-  loadData()
+  loadData();
+  beachStore.fetchFavoriteIds(); 
   header.value = "해수욕장 리스트"
 });
 
 watch(currentSort, (newSortValue) => {
   searchParams.value.sort = newSortValue;
   loadData();
-  
 });
 
-// === 리스트 정리 로직 ===
-function normalizeName(s) {
-  return String(s || '').replace(/\s+/g, '').toLowerCase();
-}
-
-// 최신우선 uniq(id)
 function uniqueByIdNewest(list) {
   if (!Array.isArray(list)) return [];
   const sorted = [...list].sort((a, b) => {
@@ -267,57 +258,80 @@ function uniqueByIdNewest(list) {
   });
   const map = new Map();
   for (const item of sorted) {
-    const id = item?.beachNumber ?? item?.beach_number ?? null;
+    const id = item?.beachNumber ?? item?.beach_number ?? item?.id ?? null;
     if (id == null) continue;
-    if (!map.has(id)) map.set(id, item); // 최신이 먼저 들어오므로 첫 값 유지
+    if (!map.has(id)) map.set(id, item);
   }
   return Array.from(map.values());
 }
 
-// 표준화된 목록
 const dbOnlyList = computed(() => {
   const raw = Array.isArray(beachStore.beaches) ? beachStore.beaches : [];
   const uniq = uniqueByIdNewest(raw);
   return uniq.map(b => ({
-    beachNumber:  b.beachNumber ?? b.beach_number ?? b.id ?? null,
-    beachName:    b.beachName   ?? b.beach_name ?? '',
-    beachImage:   b.beachImage  ?? b.beach_image ?? null,
-    address:      b.address     ?? b.addr ?? '',
-    rating:       Number(b.rating ?? b.rating_score ?? 0),
-    updatedAt:    b.updatedAt   ?? b.updated_at ?? null,
-    tags:         Array.isArray(b.tags) ? b.tags : [],
-    distance:     b.distance ?? ''
+    beachNumber: b.beachNumber ?? b.beach_number ?? b.id ?? null,
+    beachName: b.beachName ?? b.beach_name ?? '',
+    beachImage: b.beachImage ?? b.beach_image ?? null,
+    address: b.address ?? b.addr ?? '',
+    rating: Number(b.rating ?? b.rating_score ?? 0),
+    updatedAt: b.updatedAt ?? b.updated_at ?? null,
+    tags: Array.isArray(b.tags) ? b.tags : [],
+    distance: b.distance ?? ''
   }));
 });
 
-// UI 필터(즐겨찾기 등)
 const filteredBeachList = computed(() => {
   let list = dbOnlyList.value.slice();
-
-  // 키워드/지역 필터 사용하려면 주석 해제
-  // const kw = (searchParams.value.keyword || '').trim().toLowerCase();
-  // if (kw) list = list.filter(b =>
-  //   [b.beachName, b.address].some(t => (t || '').toLowerCase().includes(kw))
-  // );
-  // const region = (searchParams.value.region || '').trim();
-  // if (region) list = list.filter(b =>
-  //   (b.address || '').includes(region) || (b.beachName || '').includes(region)
-  // );
-
   if (activeTab.value === 'favorite') {
     list = list.filter(b => beachStore.favoriteBeachIds.includes(b.beachNumber));
   }
   return list;
 });
 
-// 스토어 연동
+// ✅ 즐겨찾기 토글 (console.log 포함)
+async function toggleFavoriteLogic(beachNumber) {
+  const userNumber = store.userInfo?.userNumber || localStorage.getItem("userNumber") || null;
+
+  console.log("⭐ CLICK FAVORITE → userNumber:", userNumber);
+  console.log("➡ beachNumber:", beachNumber);
+
+  //if (!userNumber) {
+  //  alert("로그인이 필요합니다.");
+  //  return;
+  //}
+
+  await toggleFavorite(beachNumber, userNumber);
+}
+
+async function toggleFavorite(beachNumber, userNumber) {
+  const isFavorited = beachStore.favoriteBeachIds.includes(beachNumber);
+  try {
+    let response;
+    if (isFavorited) {
+      response = await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
+    } else {
+      response = await axios.post(FAVORITES_API_URL, { beachNumber, userNumber });
+    }
+
+    if (response.data?.success) {
+      if (isFavorited) {
+        beachStore.favoriteBeachIds = beachStore.favoriteBeachIds.filter(id => id !== beachNumber);
+      } else {
+        beachStore.favoriteBeachIds.push(beachNumber);
+      }
+    }
+  } catch (err) {
+    console.error("❗ 즐겨찾기 처리 오류:", err);
+  }
+}
+
 const isSelected = (beachNumber) => beachStore.selectedBeachId === beachNumber;
-const toggleSelect = (beachNumber, beachName) => beachStore.toggleSelectBeach(beachNumber, beachName);
+const toggleSelect = (beachNumber, beachName) => {
+  beachStore.selectedBeachId = (beachStore.selectedBeachId === beachNumber) ? null : beachNumber;
+};
 const isFavorite = (beachNumber) => beachStore.favoriteBeachIds.includes(beachNumber);
-const toggleFavorite = (beachNumber) => beachStore.toggleFavoriteBeach(beachNumber);
 const goToDetail = (beachNumber) => router.push(`/beach/${beachNumber}`);
 
-// 태그 스타일
 const tagClass = (tag) => {
   switch (tag) {
     case '안전': return 'bg-secondary';
@@ -328,41 +342,6 @@ const tagClass = (tag) => {
     default: return 'bg-light text-dark';
   }
 };
-
-//=============================================
-// const mapEl = ref(null)
-// let map // 한 번만 생성
-
-// // init: 네이버 지도 SDK가 로드된 뒤 1회 실행.
-// // Pinia의 beach 좌표로 지도 생성하고 마커 1개 표시합니다.
-// function initMap() {
-//   if (!mapEl.value || !window.naver?.maps) return
-//   if (map) {
-//     // 탭 전환 등으로 숨겼다가 보일 때 크기만 보정
-//     map.setSize(new window.naver.maps.Size(mapEl.value.clientWidth, mapEl.value.clientHeight))
-//     return
-//   }
-//   const center = new window.naver.maps.LatLng(37.5665, 126.9780) // 필요하면 원하는 좌표로
-//   map = new window.naver.maps.Map(mapEl.value, { center, zoom: 12 })
-// }
-
-// // onMounted: 컴포넌트가 DOM에 붙은 직후 1번 실행.
-// onMounted(() => {
-//   // SDK 없으면 로드, 있으면 바로 시도
-//   if (!window.naver?.maps) {
-//     const s = document.createElement('script')
-//     s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_CLIENT_ID}`
-//     s.onload = () => setTimeout(() =>{ if (viewMode.value === 'map') initMap() }, 300)
-//     document.head.appendChild(s)
-//   } else {
-//     if (viewMode.value === 'map') initMap()
-//   }
-// })
-
-// // '지도' 탭으로 바뀌는 순간에만 생성/보정
-// watch(viewMode, v => { if (v === 'map') setTimeout(initMap,150) })
-
-
 </script>
 
 <style scoped>
