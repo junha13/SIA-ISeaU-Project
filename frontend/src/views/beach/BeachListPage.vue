@@ -1,5 +1,5 @@
 <template>
-  <div class="beach-list-page p-3">
+  <div v-if="viewMode === 'list'" class="beach-list-page p-3">
     <div class="sticky-top bg-white pt-1 pb-3" style="z-index: 900;">
       <div class="d-flex align-items-center mb-3">
         <div class="dropdown me-2">
@@ -177,24 +177,36 @@
           </div>
         </div>
       </div>
-
-      <div v-else>
-        <div class="map-view d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm"
-          style="height: 50vh; border: 1px solid #ccc;">
-          <!-- <NMarker
-          :map="map"
-          :lat="beach.latitude" 
-          :lng="beach.longitude" /> -->
+    </div>
+  </div>
+  <div v-else>
+    <div>
+      <div class="map-view d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm"
+            style="height: 100vh; border: 1px solid #ccc;">
+        <div ref="beachMap" style="width:100%;height:100%; z-index: 1;">
+          <div class="btn-group p-1" role="group" style="z-index: 2;">
+            <button
+              type="button"
+              :class="['btn', viewMode === 'list' ? 'btn-primary' : 'btn-light-secondary']"
+              @click="viewMode = 'list'"
+              :style="viewMode === 'list' ? primaryBtnStyle : {}"
+            >리스트</button>
+            <button
+              type="button"
+              :class="['btn', viewMode === 'map' ? 'btn-primary' : 'btn-light-secondary']"
+              @click="viewMode = 'map'"
+              :style="viewMode === 'map' ? primaryBtnStyle : {}"
+            >지도</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBeachStore } from '@/stores/beachStore.js'; 
-import NMarker from '@/components/NaverMapMarker.vue'
 import axios from 'axios';
 
 import { useStore } from '@/stores/store.js';
@@ -242,6 +254,7 @@ onMounted(() => {
   loadData();
   beachStore.fetchFavoriteIds(); 
   header.value = "해수욕장 리스트"
+  getLocation()
 });
 
 watch(currentSort, (newSortValue) => {
@@ -342,20 +355,146 @@ const tagClass = (tag) => {
     default: return 'bg-light text-dark';
   }
 };
+
+//=============================================
+const beachMap = ref(null)
+let map
+let markers = []
+
+const latitude = ref('')
+const longitude = ref('')
+
+watch(viewMode, (mode) => {
+  if (mode !== 'map') {
+    map = null
+    markers = []
+  }
+})
+
+// 관련된(함수 내부) 반응형 값들이 바뀌면 이 콜백을 다시 실행해주는 함수
+watchEffect(() => {
+
+  const lat = latitude.value
+  const lng = longitude.value
+
+  // 지도 모드일 때만 돌리기 (리스트 모드일 땐 굳이 안 그림)
+  if (viewMode.value !== 'map') return
+
+  // 아직 준비 안 된 경우 바로 종료
+  if (!lat || !lng || !beachMap.value || !window.naver?.maps) return
+
+  const list = beachStore.beaches
+
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
+  if (!map) {
+    // 내위치로 센터 맞춤
+    const center = new window.naver.maps.LatLng(lat, lng)
+    map = new window.naver.maps.Map(beachMap.value, {
+      center,
+      zoom: 15
+    })
+  }
+
+  // 기존 마커 있었으면 지도에서 지우고 배열 초기화
+  markers.forEach(m => m.setMap(null)) // marker.setMap(null) 이 지도에서 마커 지우는거임
+  markers = []
+
+// 전체 해수욕장 목록 마커 다시 그림
+  list.forEach(b => {
+    if (!b.latitude || !b.longitude) return
+    const pos = new window.naver.maps.LatLng(b.latitude, b.longitude)
+    const m = new window.naver.maps.Marker({
+      position: pos,
+      map,
+      title: b.beachName
+    })
+    markers.push(m)
+  })
+})
+
+// ========== Geolocation API ==========
+function getLocation() {
+  if (!navigator.geolocation) {
+    //error.value = '이 브라우저는 Geolocation을 지원하지 않아요.'
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
+    },
+    (err) => { err.value = '위치 실패: ' + err.message },
+    { enableHighAccuracy: true }
+  )
+}
+
+
 </script>
 
 <style scoped>
-.beach-list-page { padding-top: 10px; }
-.beach-card { transition: transform 0.2s; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; }
-.beach-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; }
-.beach-image-placeholder { width: 100px; height: 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; }
-.beach-image-placeholder > p { line-height: 1.2; padding: .2rem; font-size: .65rem !important; }
-.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; border-radius: .25rem; }
-.rating-badge { position: absolute; bottom: 5px; right: 5px; font-size: .75rem; z-index: 10; }
-.badge { font-size: .65rem; padding: .3em .6em; }
-.btn-primary { background-color: v-bind(mainColor) !important; border-color: v-bind(mainColor) !important; }
-.btn-outline-secondary { border-color: #ced4da !important; color: #6c757d !important; }
-.dropdown-toggle { box-shadow: none !important; }
-.overflow-auto { -ms-overflow-style: none; scrollbar-width: none; }
-.overflow-auto::-webkit-scrollbar { display: none; }
+.beach-list-page { 
+  padding-top: 10px; 
+}
+.beach-card { 
+  transition: transform 0.2s; 
+  cursor: pointer; 
+  box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; 
+}
+.beach-card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; 
+}
+.beach-image-placeholder { 
+  width: 100px; 
+  height: 100px; 
+  background-color: #f8f9fa; 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: .25rem; }
+
+.beach-image-placeholder > p { 
+  line-height: 1.2; 
+  padding: .2rem; 
+  font-size: .65rem !important; 
+}
+.beach-image-placeholder > img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  border-radius: .25rem; 
+}
+.rating-badge { 
+  position: absolute; 
+  bottom: 5px; 
+  right: 5px; 
+  font-size: .75rem; 
+  z-index: 10; 
+}
+.badge { 
+  font-size: .65rem; 
+  padding: .3em .6em; 
+}
+.btn-primary { 
+  background-color: v-bind(mainColor) !important; 
+  border-color: v-bind(mainColor) !important; 
+}
+.btn-outline-secondary { 
+  border-color: #ced4da !important; 
+  color: #6c757d !important; 
+}
+.dropdown-toggle { 
+  box-shadow: none !important; 
+}
+.overflow-auto { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+.overflow-auto::-webkit-scrollbar { 
+  display: none; 
+}
 </style>
