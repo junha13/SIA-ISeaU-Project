@@ -84,13 +84,13 @@ public class BeachService  {
 		map.put("result", Weather);
 		return map;
 	}
-	@Transactional
-	public Map<String, Object> getBeachFavorites(int beachNumber) {
+	@Transactional(readOnly = true)
+	public Map<String, Object> getBeachFavorites(int userNumber) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
-		List<ResponseFavoritesDTO> Favorites = dao.getBeachFavorietes(beachNumber);
+		List<ResponseFavoritesDTO> favoritesList = dao.getBeachFavorites(userNumber);
 		
-		map.put("result", Favorites);
+		map.put("result", userNumber);
 		return map;
 	}
 	
