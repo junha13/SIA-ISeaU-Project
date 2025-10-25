@@ -93,4 +93,27 @@
         tb_weather_info.forecast_time ASC
     LIMIT 72;
 </select>
+    <insert id="insertFavorite" parameterType="BeachFavoritesVO">
+        INSERT INTO tb_beach_saved (user_number, beach_number)
+        VALUES (#{userNumber}, #{beachNumber})
+    </insert>
+
+    <delete id="removeFavorite" parameterType="BeachFavoritesVO">
+        DELETE FROM tb_beach_saved
+        WHERE user_number = #{userNumber}
+          AND beach_number = #{beachNumber}
+    </delete>
+
+    <select id="findFavoriteBeachByUser" parameterType="int" resultType="int">
+        SELECT beach_number
+        FROM tb_beach_saved
+        WHERE user_number = #{userNumber}
+    </select>
+
+    <select id="checkFavoriteExists" parameterType="BeachFavoritesVO" resultType="int">
+        SELECT COUNT(*)
+        FROM tb_beach_saved
+        WHERE user_number = #{userNumber}
+          AND beach_number = #{beachNumber}
+    </select>
 </mapper>
