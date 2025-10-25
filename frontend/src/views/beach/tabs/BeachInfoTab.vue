@@ -11,7 +11,7 @@
     </p>
     <div class="rounded shadow-sm overflow-hidden my-3" style="height:200px;">
       <div class="bg-light h-100 w-100 d-flex justify-content-center align-items-center text-muted">
-        <div id="naver-map" style="width:100%;height:100%;"></div>
+       <div ref="mapEl" style="width:100%;height:200px;"></div>
       </div>
     </div>
 
@@ -36,36 +36,42 @@
 </template>
 
 <script setup>
-import { defineProps, onMounted, watch } from 'vue';
+import { defineProps, onMounted, watch, ref, watchEffect} from 'vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
 const { header, beach } = storeToRefs(store)
 
-
+const mapEl = ref(null)
 let map, marker
 
-// init: 네이버 지도 SDK가 로드된 뒤 1회 실행.
-// Pinia의 beach 좌표로 지도 생성하고 마커 1개 표시합니다.
-function init() {
-  const center = new window.naver.maps.LatLng(beach.value.latitude, beach.value.longitude)
-  map = new window.naver.maps.Map(document.getElementById('naver-map'), { center, zoom: 15 })
-  marker = new window.naver.maps.Marker({ position: center, map })  // 맵 중심에 마커 생성
-}
+// 관련된(함수 내부) 반응형 값들이 바뀌면 이 콜백을 다시 실행해주는 함수
+watchEffect(() => {
+  // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
+  const lat = beach.value.latitude
+  const lng = beach.value.longitude
 
-// onMounted: 컴포넌트가 DOM에 붙은 직후 1번 실행.
-onMounted(() => {
-  const s = document.createElement('script')
-  s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_CLIENT_ID}`
-  s.onload = init
-  document.head.appendChild(s)
-})
+  // 아직 준비 안 된 경우 바로 종료
+  if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
 
-// watch: Pinia의 beach.latitude/longitude 값이 변경될 때마다 실행. (새로고침, 다른라우트도 막았음)
-watch(() => [beach.value.latitude, beach.value.longitude], ([lat, lng]) => {
-  if (!map) return
+  // 네이버 지도에서 쓰는 좌표 객체 생성
   const pos = new window.naver.maps.LatLng(lat, lng)
-  map.setCenter(pos)
-  marker.setPosition(pos)
+
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
+  if (!map) {
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 15
+    })
+    marker = new window.naver.maps.Marker({
+      position: pos,
+      map
+    })
+
+    // 이미 map이 만들어져 있으면 새로 안 만들고 중심 좌표와 마커 위치만 업데이트
+  } else {
+    map.setCenter(pos)
+    marker.setPosition(pos)
+  }
 })
 </script>
