@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,21 +57,19 @@ public class BeachController {
 				.body(Map.of("data", result));
 	}
 
-	@RequestMapping("/beachs/{beachNumber}/favorites")
-	public ResponseEntity<?> getBeachFavorites(@PathVariable int beachNumber) {
-		Map<String, Object> result = service.getBeachFavorites(beachNumber);
-		return ResponseEntity
-				.ok()
-				.header("api", "Beach/beachs/favorites")
-				.body(Map.of("data", result));
+	@GetMapping("/favorites/my")
+	public ResponseEntity<?> getBeachFavorites() {
+	    int userNumber = 1; 
+	    Map<String, Object> favoritesMap = service.getBeachFavorites(userNumber);
+	    // result 안에 이미 List<Integer>가 들어 있음
+	    return ResponseEntity
+	            .ok()
+	            .header("api", "Beach/beachs/favorites")
+	            .body(Map.of("data", favoritesMap));
 	}
 	@RequestMapping("/favorites")
-    public ResponseEntity<?> insertFavorite(
-            @RequestBody ResponseFavoritesDTO dto
-    ) {
-        // 1. 로그인/인증 로직 우회: userNumber를 1로 고정하여 테스트합니다.
-        int userNumber = 1; 
-
+	public ResponseEntity<?> insertFavorite(@RequestBody ResponseFavoritesDTO dto) {
+	    int userNumber = 1; // 테스트용
         // 2. DTO에서 beachNumber 가져오기
         int beachNumber = dto.getBeachNumber();
         try {
