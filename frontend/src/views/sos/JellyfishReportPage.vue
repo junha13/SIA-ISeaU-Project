@@ -63,12 +63,12 @@
                 :value="sosStore.reportData.description" @input="updateDescription"></textarea>
     </div>
 
-    <!-- 제보 완료 버튼 (고정 하단) -->
+    <!-- 제보 버튼 (고정 하단) -->
     <div class="fixed-action-bottom p-3">
       <button class="btn w-100 fw-bolder py-3 fs-5 text-white rounded-3 shadow"
               :style="{ backgroundColor: dangerColor }"
               @click="submitReport">
-        제보 완료
+        제보하기
       </button>
     </div>
 
