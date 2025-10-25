@@ -77,10 +77,11 @@ const handleLogin = async () => {
 
   /**
    * 로그인 처리
-   * @returns {Promise<void>}
-   * @throws {Error}
-   * 
-   * 
+   * POST /api/auth/login
+   * @param {string} id - 로그인 아이디
+   * @param {string} password - 비밀번호
+   * @returns {Object} userData - { userNumber, id, userName, mobile }
+   * @throws {Error} 로그인 실패 시
    */
   try {
     // axios로 직접 백엔드 호출
@@ -101,14 +102,14 @@ const handleLogin = async () => {
     authStore.userInfo.userNumber = userData.userNumber;
     authStore.userInfo.id = userData.id;
     authStore.userInfo.userName = userData.userName;
-    if (userData.mobile) {
-      authStore.userInfo.mobile = userData.mobile;
-    }
+    authStore.userInfo.mobile = userData.mobile || null;
+
+    console.log('로그인 후 저장된 정보:', authStore.userInfo);
 
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
       title: '로그인 성공',
-      message: `${authStore.userInfo}님 환영합니다!`,
+      message: `${userData.userName}님 환영합니다!`,
       type: 'success',
       autoHide: true,
       duration: 1000,

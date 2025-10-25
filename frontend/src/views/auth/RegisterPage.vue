@@ -24,16 +24,24 @@
 
       <!-- 아이디 중복 확인 -->
       <div class="form-group mb-3 d-flex gap-2">
-        <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="username">
-        <button class="btn fw-bold text-white" :style="{ backgroundColor: mainColor, minWidth: '100px' }" @click="checkUsername">
-          중복확인
+        <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="id">
+        <button 
+          class="btn fw-bold text-white" 
+          :style="{ backgroundColor: isIdChecked ? '#28a745' : mainColor, minWidth: '100px' }" 
+          @click="checkId"
+          :disabled="isIdChecked">
+          {{ isIdChecked ? '완료됨' : '중복확인' }}
         </button>
       </div>
 
       <div class="form-group mb-3 d-flex gap-2">
         <input type="password" class="form-control" placeholder="비밀번호 (영어 + 숫자, 8자 이상)" v-model="password">
-        <button class="btn fw-bold text-white" :style="{ backgroundColor: mainColor, minWidth: '100px' }" @click="handleCheckPassword">
-          확인
+        <button 
+          class="btn fw-bold text-white" 
+          :style="{ backgroundColor: isPasswordValid ? '#28a745' : mainColor, minWidth: '100px' }" 
+          @click="handleCheckPassword"
+          :disabled="isPasswordValid">
+          {{ isPasswordValid ? '완료됨' : '확인' }}
         </button>
       </div>
 
@@ -74,50 +82,74 @@ const name = ref('');
 const email = ref('');
 const phone = ref('');
 const birthDate = ref('');
-const username = ref('');
+const id = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
-const isUsernameChecked = ref(false);
-const isCheckingUsername = ref(false);
+const isIdChecked = ref(false);
+const isCheckingId = ref(false);
 const isRegistering = ref(false);
 const isPasswordValid = ref(false);
 
-// username이 바뀌면 기존 중복확인 상태 초기화
-watch(username, () => {
-  isUsernameChecked.value = false;
+// id이 바뀌면 기존 중복확인 상태 초기화
+watch(id, () => {
+  isIdChecked.value = false;
 });
 
-const checkUsername = async () => {
-  if (username.value.length < 4) {
+// password가 바뀌면 기존 비밀번호 확인 상태 초기화
+watch(password, () => {
+  isPasswordValid.value = false;
+});
+
+const checkId = async () => {
+  console.log('중복확인 버튼 클릭됨');
+  console.log('입력된 아이디:', id.value);
+  
+  // 아이디 형식 검사
+  if (id.value.length < 4) {
+    console.log('아이디 길이 부족:', id.value.length);
     showConfirmModal({ title: '오류', message: '아이디는 4자 이상이어야 합니다.', type: 'error', autoHide: true });
-    isUsernameChecked.value = false;
+    isIdChecked.value = false;
     return;
   }
-  isCheckingUsername.value = true;
+  
+  isCheckingId.value = true;
+  console.log('API 호출 시작...');
+
+  // 중복확인 API 호출
   try {
-    // spring 컨트롤러는 @RequestBody String id 형태로 받으므로
-    // 요청 바디를 JSON 문자열로 보냅니다 (예: "myid").
-    const res = await axios.post('http://localhost:8080/api/auth/check-id', JSON.stringify(username.value), {
+    /**
+     * POST /api/auth/check-id
+     * @param String id - 중복 확인할 아이디
+     * @returns {number} 0: 사용 가능(중복 안됨), 1 이상: 이미 사용 중(중복됨)
+     */
+    const res = await axios.post('http://localhost:8080/api/auth/check-id', JSON.stringify(id.value), {
       headers: { 'Content-Type': 'application/json' }
     });
-
-    const result = res?.data?.data; // 컨트롤러가 Map.of("data", result) 형태로 반환
+    console.log('API 응답:', res);
+    console.log('응답 데이터:', res?.data);
+    
+    const result = res?.data?.data;
+    console.log('중복확인 결과:', result);
+    
     if (result === 0) {
-      isUsernameChecked.value = true;
+      isIdChecked.value = true;
       showConfirmModal({ title: '확인', message: '사용 가능한 아이디입니다.', type: 'success', autoHide: true });
     } else {
-      isUsernameChecked.value = false;
-      showConfirmModal({ title: '오류', message: '이미 사용 중인 아이디입니다.', type: 'error', autoHide: true });
+      isIdChecked.value = false;
+      showConfirmModal({ title: '중복된 아이디', message: '이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.', type: 'error', autoHide: false });
     }
   } catch (err) {
-    console.error('아이디 중복확인 오류', err);
-    isUsernameChecked.value = false;
-    showConfirmModal({ title: '오류', message: err.response?.data?.message || '아이디 중복확인에 실패했습니다.', type: 'error', autoHide: true });
+    console.error('아이디 중복확인 오류:', err);
+    console.error('오류 상세:', err.response);
+    isIdChecked.value = false;
+    showConfirmModal({ title: '오류', message: err.response?.data?.message || '아이디 중복확인에 실패했습니다.', type: 'error' });
   } finally {
-    isCheckingUsername.value = false;
+    isCheckingId.value = false;
+    console.log('API 호출 종료');
   }
 };
 
+// 비밀번호 유효성 검사
 const handleCheckPassword = () => {
   if (password.value.length < 8 || !/[a-zA-Z]/.test(password.value) || !/[0-9]/.test(password.value)) {
     showConfirmModal({ title: '오류', message: '비밀번호는 영어, 숫자를 포함하여 8자 이상이어야 합니다.', type: 'error', autoHide: true });
@@ -130,7 +162,37 @@ const handleCheckPassword = () => {
 
 
 const handleRegister = async () => {
-  if (!isUsernameChecked.value) {
+  // 필수 입력값 검증 추가
+  if (!name.value || !email.value || !phone.value || !birthDate.value) {
+    showConfirmModal({ 
+      title: '필수', 
+      message: '모든 정보를 입력해주세요.', 
+      type: 'error' 
+    });
+    return;
+  }
+  
+  // 이메일 형식 검증
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    showConfirmModal({ 
+      title: '오류', 
+      message: '올바른 이메일 형식이 아닙니다.', 
+      type: 'error' 
+    });
+    return;
+  }
+  
+  // 전화번호 형식 검증 (010-XXXX-XXXX)
+  if (!/^010-\d{4}-\d{4}$/.test(phone.value)) {
+    showConfirmModal({ 
+      title: '오류', 
+      message: '전화번호는 010-XXXX-XXXX 형식이어야 합니다.', 
+      type: 'error' 
+    });
+    return;
+  }
+  
+  if (!isIdChecked.value) {
     showConfirmModal({ title: '필수', message: '아이디 중복 확인이 필요합니다.', type: 'error', autoHide: false });
     return;
   }
@@ -149,18 +211,23 @@ const handleRegister = async () => {
     email: email.value,
     mobile: phone.value,
     birthDate: birthDate.value,
-    id: username.value,
+    id: id.value,
     password: password.value,
     checkPassword: passwordConfirm.value,
   };
 
   isRegistering.value = true;
   try {
+    /**
+     * POST /api/auth/register
+     * @param {Object} userData - 회원가입 정보 (userName, email, mobile, birthDate, id, password, checkPassword)
+     * @returns {number} 1: 회원가입 성공, 0 또는 그 외: 실패
+     */
     const res = await axios.post('http://localhost:8080/api/auth/register', userData, {
       headers: { 'Content-Type': 'application/json' }
     });
-
     const result = res?.data?.data;
+
     if (result === 1) {
       showConfirmModal({ title: '회원가입 성공', message: '회원가입이 완료되었습니다. 로그인해주세요.', type: 'success', autoHide: false });
       router.push({ name: 'Login' });
