@@ -2,7 +2,7 @@
 import { useApi } from '@/utils/useApi.js';
 
 // 해파리 제보 API (POST)
-const { execute: submitJellyfishReport } = useApi('post', '/api/report/jellyfish');
+const { execute: submitJellyfishReport } = useApi('post', '/api/sos/jellyfish-report');
 
 // 응급 대처법 조회 (GET)
 const { execute: getFirstAidByCaseNum } = useApi('get', '/api/sos/first-aid');
