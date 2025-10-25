@@ -1,6 +1,6 @@
 <template>
   <div class="simple-report-page container-fluid p-3">
-    <!-- Header -->
+    <!-- Header 
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
       <div class="d-flex align-items-center">
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
@@ -11,6 +11,7 @@
         <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
       </div>
     </div>
+    -->
 
     <h6 class="fw-bold mb-3" :style="{ color: darkColor }">상황 설명</h6>
 
