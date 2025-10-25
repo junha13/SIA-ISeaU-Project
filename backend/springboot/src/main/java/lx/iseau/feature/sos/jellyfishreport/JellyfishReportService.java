@@ -25,7 +25,7 @@ public class JellyfishReportService {
         if (dto.getAdminApproval() == null)
             dto.setAdminApproval("N");
 
-        dao.insertReport(dto);
-        return dto.getReportNumber();
+        Integer id = dao.insertReport(dto);     // ← RETURNING 값 받기
+        return id;
     }
 }

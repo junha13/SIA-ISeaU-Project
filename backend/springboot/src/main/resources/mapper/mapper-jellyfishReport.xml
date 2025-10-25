@@ -5,20 +5,17 @@
 
 <mapper namespace="lx.iseau.feature.sos.jellyfishreport.JellyfishReportDAO">
 
-	<insert id="insertReport" parameterType="lx.iseau.feature.sos.jellyfishreport.JellyfishReportDTO">
-        INSERT INTO tb_jellyfish_report
-            (location, mobile, details, image_url, admin_approval)
-        VALUES (
-            ST_SetSRID(ST_MakePoint(#{lon}, #{lat}), 4326)::geography,
-            #{mobile},
-            #{details},
-            #{imageUrl},
-            COALESCE(#{adminApproval}, 'N')
-        );
-        <!-- PostgreSQL에서 SERIAL/IDENTITY로 생성된 마지막 번호를 가져오는 쿼리 -->
-        <selectKey keyProperty="reportNumber" resultType="int" order="AFTER">
-            SELECT currval(pg_get_serial_sequence('tb_jellyfish_report','report_number'))
-        </selectKey>
-    </insert>
+	<insert id="insertReport" parameterType="JellyfishReportDTO" useGeneratedKeys="false">
+	  INSERT INTO tb_jellyfish_report
+	    (location, mobile, details, image_url, admin_approval)
+	  VALUES (
+	    ST_SetSRID(ST_MakePoint(#{lon}, #{lat}), 4326)::geography,
+	    #{mobile},
+	    #{details},
+	    #{imageUrl},             
+	    COALESCE(#{adminApproval}, 'N')
+	  )
+	  RETURNING report_number
+	</insert>
  
 </mapper>
