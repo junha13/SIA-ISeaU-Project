@@ -12,7 +12,7 @@
             #{registerDTO.userName},
             #{registerDTO.email},
             #{registerDTO.mobile},
-            #{registerDTO.birthDate},
+            to_date(#{registerDTO.birthDate}, 'YYYY-MM-DD'),
             #{registerDTO.id},
             #{registerDTO.password},
             2
