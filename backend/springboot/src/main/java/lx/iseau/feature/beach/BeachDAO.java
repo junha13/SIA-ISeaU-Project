@@ -18,7 +18,6 @@ public interface BeachDAO {
 	public List<ResponseBeachWeatherDTO> getBeachDetailWeather(int beachNumber);
 	// 즐겨찾기 리스트 조회
 	public List<ResponseFavoritesDTO> getBeachFavorites(int userNumber);
-	
 	// 즐겨찾기 추가
 	int insertFavorite(BeachFavoritesVO beachFavorite);
     //삭제

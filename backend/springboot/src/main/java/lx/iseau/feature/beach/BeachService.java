@@ -86,14 +86,18 @@ public class BeachService  {
 	}
 	@Transactional(readOnly = true)
 	public Map<String, Object> getBeachFavorites(int userNumber) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		
-		List<ResponseFavoritesDTO> favoritesList = dao.getBeachFavorites(userNumber);
-		
-		map.put("result", userNumber);
-		return map;
+	    Map<String, Object> map = new HashMap<>();
+
+	    // DB에서 즐겨찾기 목록 가져오기
+	    List<ResponseFavoritesDTO> favoritesList = dao.getBeachFavorites(userNumber);
+
+	    List<Integer> beachNumbers = new ArrayList<>();
+	    favoritesList.forEach(fav -> beachNumbers.add(fav.getBeachNumber()));
+
+	    map.put("result", beachNumbers);
+	    return map;
 	}
-	
+
 	@Transactional // 데이터를 변경하므로 readOnly=false (기본값)
     public int insertFavorite(int userNumber, int beachNumber) {
         // DB에 전달할 VO 객체 생성
