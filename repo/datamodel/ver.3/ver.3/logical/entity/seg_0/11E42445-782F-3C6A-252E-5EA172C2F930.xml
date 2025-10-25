@@ -1,0 +1,114 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="11E42445-782F-3C6A-252E-5EA172C2F930" name="해파리제보목록">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>AA8C089B-FAF2-05EC-F4DE-3335299910F8</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해파리제보고유번호" id="F2FF9F1B-BA3C-3ED6-7FBD-B7F3274F8255">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>E54FBCC8-0834-CA5B-75F6-219B2AC86DC3</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="위치" id="CB5A2C50-2993-ABD8-7C4E-5A84D1BC91EA">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>FA32CD85-5CA9-0D7F-99DB-E74435B4A83F</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="전화번호" id="814CB975-7AF6-8991-0208-4DD22BF6C63F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>031A34F4-132B-6B68-8D0C-46FA53950F3E</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="상세정보" id="383317A2-63E4-105E-17D5-95DD6D861940">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>0EC2CB20-BABE-9391-5931-C7DDC7DF19A6</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="관리자승인" id="F60A3A25-7FF7-5321-8889-3C167F0315E9">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>0EE51AF9-BAF5-0EB0-079E-7061BC567A53</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="C577B4FF-F21F-AA96-573E-B05C77D6206A" name="해파리 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>BFE620AD-C49E-635A-8FBC-73359C5321AF</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>F2FF9F1B-BA3C-3ED6-7FBD-B7F3274F8255</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

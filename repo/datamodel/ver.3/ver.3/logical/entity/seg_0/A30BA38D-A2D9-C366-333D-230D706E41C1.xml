@@ -1,0 +1,102 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="A30BA38D-A2D9-C366-333D-230D706E41C1" name="그룹">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>9E39A88C-7DA7-6E07-5057-FB9812B1DCDE</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="그룹장" id="7971D482-A1C4-1A16-D5A5-2AF36FF73EFA">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<generatorID>061CF943-B8F3-7537-DE8F-79D028A8CF6E</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>81D50A7C-C3FC-92AC-7B55-F14367E5B7B4</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<referedAttribute>8DEB3F6F-C3C5-26DC-A9D9-C40C1BD6694F</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹원" id="F02B535A-8E84-C99C-A432-A860E249F0CB">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<generatorID>54236BD1-C51C-DD74-C96D-F5434CC780C2</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>FF53FD33-F7B2-2951-0E0E-0504BA33E47B</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<referedAttribute>8DEB3F6F-C3C5-26DC-A9D9-C40C1BD6694F</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹수락여부" id="68CE21CA-D1EB-14E3-C2C7-9CB3228FDF9C">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>667D7E66-7405-9E48-998A-3E9F5A4545FE</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="마커색깔" id="97A16FC0-70CC-EBCD-B850-DD6802A704B6">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 11:30:50 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="63C95BBB-6239-4F75-FB1B-16E48FFEBFC8" name="일행 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>1D379C52-9BA5-1B0B-C220-34CE86F769E6</importedID>
+<engineerTo>
+<item key="11E4BFD7-3CFA-696F-D34D-C13B14022F11" value="true"/>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+<item key="0BF599AA-AAE7-C9C5-B137-6A421C774BFD" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>7971D482-A1C4-1A16-D5A5-2AF36FF73EFA</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

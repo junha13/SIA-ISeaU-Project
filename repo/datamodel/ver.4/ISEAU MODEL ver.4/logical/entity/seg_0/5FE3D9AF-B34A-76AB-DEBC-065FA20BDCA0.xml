@@ -1,0 +1,196 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="5FE3D9AF-B34A-76AB-DEBC-065FA20BDCA0" name="해수욕장">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>AEAA4063-35CD-E563-937B-F377395045E5</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해수욕장고유번호" id="C8F7BBC3-F1F1-6F48-D39D-344E1D62E530">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>77C7ADD5-5F7A-0BD6-6CD0-9BDA35DDE40A</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장이름" id="5E64415C-DD11-E68C-7D45-1220633D53F5">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>3787C891-1646-B7B2-1F63-245D494B07C0</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해양수산부지정여부" id="F86E8C17-8146-13DF-2516-50E32EEF0E12">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 02:38:20 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="평점" id="B1A4FB5E-2B01-E1A3-D14F-60A7F6A5EE83">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>E6E8814A-B385-C86A-DDE4-1E26E6C02D39</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="주소" id="5633840E-6AC2-E016-FD18-2E23ABE281FB">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>524A96F4-EAAD-8DD6-8D29-2F89182F93AF</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="위치" id="ACA14CF0-C9B2-6DB2-0EDC-248A09CDB695">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>C09A018A-9A85-58F2-F0C3-E86F68BD2DD9</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="이용시간" id="6590330B-AB2D-1E11-D20E-808E52E9856F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>EA5001FD-1D1F-982F-FE30-383E21BD9C2B</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="전화번호" id="D248D3A6-B503-50DA-0C86-B464C12CB047">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>E2FFA092-B230-8DA8-F8A6-F38DDEBF1D79</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="개장일" id="920AFC59-7ECF-47D6-D826-7E582B0D00B4">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>19231D0C-02C4-4743-B934-9F02098F70F9</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="폐장일" id="A1082F36-AFA1-9C76-CCF8-ABB9C4649EBB">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>A7389108-4A11-624D-BB1C-E81BA91362D7</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="위험정보고유번호" id="4FE83F33-54E6-8EA0-F7B1-81174E64DFBC">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<generatorID>D32539A8-A299-AC6B-ADFC-144B9DC65D9B</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>37EB5F6A-1BB8-EB7B-E20E-3C69A6938D80</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>4A5CD3EF-A1DF-363C-38F1-9B65AE31F69C</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="자외선관측고유번호" id="373F5A53-D2DD-3CA4-6F9B-D0175C585EC9">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 02:45:13 UTC</createdTime>
+<generatorID>830B446B-73F1-520C-B075-AEF1570CB4E4</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>2A9A9F3F-CB0D-32E8-15EB-FF54BD91A4B0</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="이안류정보번호" id="8C95D403-8037-FEA6-0988-5BDE76B7B6D1">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 12:12:37 UTC</createdTime>
+<generatorID>F4B66BFB-4131-91B3-430E-CFCCA25C10B4</generatorID>
+<ownerDesignName>ISEAU MODEL ver.4</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>0D787DE6-2996-BC52-16FE-8A57FE75C7BD</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="90B028E0-1144-2C0E-8D22-BD052D06A9CB" name="해수욕장 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>8BB39215-E53F-EDE0-184C-B812BC4F83EC</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>C8F7BBC3-F1F1-6F48-D39D-344E1D62E530</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

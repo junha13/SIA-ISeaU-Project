@@ -1,0 +1,62 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="EA590885-C8FD-194C-9F37-E827B6F81187" name="해수욕장저장목록">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 11:31:52 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="회원고유번호" id="2F5E5874-9B81-03F9-6C11-094E67E42359">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 11:32:40 UTC</createdTime>
+<generatorID>7A10AED8-203A-8A56-5D9B-16124866A773</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>8DEB3F6F-C3C5-26DC-A9D9-C40C1BD6694F</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장고유번호" id="B33325E4-7719-9FBB-38A7-FFFC4501E1D8">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 11:32:44 UTC</createdTime>
+<generatorID>A0F3FA2B-658A-D919-C301-6703F4AC81BF</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>C8F7BBC3-F1F1-6F48-D39D-344E1D62E530</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="9A0721CF-A1D0-9B75-EB1A-35A259EA0711" name="회원 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 11:31:52 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>2F5E5874-9B81-03F9-6C11-094E67E42359</attributeRef>
+<attributeRef>B33325E4-7719-9FBB-38A7-FFFC4501E1D8</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

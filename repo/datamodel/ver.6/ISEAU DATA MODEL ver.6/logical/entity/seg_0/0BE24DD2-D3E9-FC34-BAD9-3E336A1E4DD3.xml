@@ -1,0 +1,82 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="0BE24DD2-D3E9-FC34-BAD9-3E336A1E4DD3" name="응급처치">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>C68C80C3-E1DC-80BB-92AF-B595FF53CB3C</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="응급처치고유번호" id="6B4CE011-3EC9-F39B-1640-DC8011DF64BE">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>7D10AAD8-286C-2205-22CF-F9017E3287E3</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="응급처치상황" id="80D92FFF-E06B-2203-48F0-A47A4DA4A09B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>DF4CE1F8-174B-FC50-8217-55B8143BFFFB</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="응급처치내용" id="DE405E54-08A3-3AAE-A3AD-2F5BDEC4544B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>2B94C22C-FC69-432F-C74C-6475C681E65D</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="C65D5041-B686-EE97-D97E-5493391F4EA7" name="응급처치 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<importedID>55674845-BA4B-FE9A-3DB6-54B2EB2DD91C</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>6B4CE011-3EC9-F39B-1640-DC8011DF64BE</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>
