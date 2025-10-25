@@ -1,0 +1,98 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="41CCD8FF-6163-A8EB-D20F-F51D5FD6E67A" name="해수욕장댓글목록">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:31:48 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해수욕장댓글고유번호" id="B3F87755-682B-D960-7D3B-6E1CF5013A04">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 16:21:27 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="댓글내용" id="4D3132CE-9B4E-F1C0-1C38-91469BC5D612">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:35:30 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="작성시간" id="DE4C2776-801E-0D9A-7539-4B02C8FD75F9">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:35:41 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="별점" id="8F2CDE46-8BFE-EA3E-CF02-3EDFD8708872">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 13:19:17 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="해수욕장고유번호" id="AA6194D5-E5A5-15F6-2E54-DBFF9952375E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:37:42 UTC</createdTime>
+<generatorID>633EB317-050B-32BD-78B0-4AD1718FE0DC</generatorID>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<referedAttribute>77C7ADD5-5F7A-0BD6-6CD0-9BDA35DDE40A</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="회원고유번호" id="9470DA98-ABB6-1762-284A-294B751A4AE7">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:37:34 UTC</createdTime>
+<generatorID>4F5D2765-3066-84FE-91CE-EE95BCB0C13C</generatorID>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<referedAttribute>CE48A676-709E-CFB2-21EE-D07706D93BEE</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="58A3D3FF-0156-6023-8184-99D82A5C1CC3" name="댓글 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:35:02 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<newElementsIDs>B3F87755-682B-D960-7D3B-6E1CF5013A04</newElementsIDs>
+<usedAttributes>
+<attributeRef>B3F87755-682B-D960-7D3B-6E1CF5013A04</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

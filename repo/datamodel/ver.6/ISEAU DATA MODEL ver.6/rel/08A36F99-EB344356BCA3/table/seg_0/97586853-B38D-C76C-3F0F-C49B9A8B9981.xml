@@ -1,0 +1,122 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="97586853-B38D-C76C-3F0F-C49B9A8B9981" name="tb_beach_comment_list">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>A8E288DC-42C1-CFEF-1CFE-7D170F81432A</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="beach_comment_number" id="791FE425-7DDA-FF36-0A45-5F30FDB4CC69">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>483A2061-44B4-BF99-B67A-B95B8AC8882D</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="comment_content" id="1C891C7A-482F-1821-26ED-07268BAF0AD3">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>7BF4B35B-2B9C-A85C-9BFD-3EDB82DA383A</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="created_time" id="3F6B7FD5-796C-1D2B-4BBD-47F7D7D679F6">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>D81E2526-BFE0-0FEC-844B-EFE1A8D23C60</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT015</logicalDatatype>
+<domain>B3FC7006-6D50-12C2-6291-20A18657D48A</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="rating" id="DA338C22-7EBB-4C35-5D25-7B630D99DBCD">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>0EFCFE71-B4C6-8BE2-A854-C772B7AD0086</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="beach_number" id="44E92163-4645-8258-226E-B470EA1BAC4A">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>0D7EBB3C-AF53-2DD9-534B-27DF889A183E</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="32800D52-B3D3-EDA6-D1E8-75E645BC55A6" referredColumn="B8466D4A-6D6D-8C7A-0C0E-6A39C20CFA78"/>
+</associations>
+</Column>
+<Column name="user_number" id="B01D1D32-5B07-2CD5-CCAA-C4EAFA3BF356">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>7E125646-8388-8CAF-D97D-148B9C7F3C5C</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="528B60E8-38FE-E4D8-D844-13A41FA50DE8" referredColumn="5135D290-0D04-BEEA-7AF0-F075AB7305A9"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="86D16337-5DC6-57FD-17CD-288D489E0B1C" name="tb_beach_comment_list_PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>EE588EB2-1890-C6FF-6A12-AD9FE83AAC2C</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="791FE425-7DDA-FF36-0A45-5F30FDB4CC69"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="05D20B0B-67A9-B009-4740-FB08525FF306" name="tb_user_FK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>18F41920-083F-824C-4436-E1C7E09C2C3F</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="B01D1D32-5B07-2CD5-CCAA-C4EAFA3BF356"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="27FDE4F9-61B8-E46B-1313-60836BA6DCEE" name="tb_beach_FKv4">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>0D910277-F29E-7B78-0CDD-6B30DA45432F</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="44E92163-4645-8258-226E-B470EA1BAC4A"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

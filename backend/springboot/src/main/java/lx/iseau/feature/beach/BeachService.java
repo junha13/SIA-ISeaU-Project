@@ -72,6 +72,63 @@ public class BeachService  {
 		map.put("result", Danger);
 		return map;
 	}
+	/*
+	 * ========= 하나의 해수욕장에 대한 여러 시간대 Weather 상황 보내주기 (기온, 자외선, 강수량) =========
+	 */
+	@Transactional
+	public Map<String, Object> getBeachDetailWeather(int beachNumber) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		List<ResponseBeachWeatherDTO> Weather = dao.getBeachDetailWeather(beachNumber);
+		
+		map.put("result", Weather);
+		return map;
+	}
+	@Transactional
+	public Map<String, Object> getBeachFavorites(int beachNumber) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		List<ResponseFavoritesDTO> Favorites = dao.getBeachFavorietes(beachNumber);
+		
+		map.put("result", Favorites);
+		return map;
+	}
+	
+	@Transactional // 데이터를 변경하므로 readOnly=false (기본값)
+    public int insertFavorite(int userNumber, int beachNumber) {
+        // DB에 전달할 VO 객체 생성
+        BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
+        beachFavorite.setUserNumber(userNumber);
+        beachFavorite.setBeachNumber(beachNumber);
+        
+        // DAO 호출하여 INSERT 실행
+        // (주의: 이미 즐겨찾기된 경우 DB 제약조건 위반 예외 발생 가능)
+        return dao.insertFavorite(beachFavorite);
+    }
+
     
-  
+    @Transactional
+    public int removeFavorite(int userNumber, int beachNumber) {
+        // DB에 전달할 VO 객체 생성
+        BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
+        beachFavorite.setUserNumber(userNumber);
+        beachFavorite.setBeachNumber(beachNumber);
+        
+        // DAO 호출하여 DELETE 실행
+        return  dao.removeFavorite(beachFavorite);
+    }
+    
+    @Transactional(readOnly = true)
+    public boolean checkFavoriteExists(int userNumber, int beachNumber) {
+        BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
+        beachFavorite.setUserNumber(userNumber);
+        beachFavorite.setBeachNumber(beachNumber);
+        
+        // DAO 호출하여 COUNT 쿼리 실행
+        int count = dao.checkFavoriteExists(beachFavorite);
+        
+        // 결과가 0보다 크면 true 반환
+        return count > 0;
+    }
+    
 }

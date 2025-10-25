@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ResponseWeatherDTO {
 
-	private Double temperature;
-	private Double windSpeed;
+	private double temperature;
+	private Integer humidity;
+	private double rain;
+	private double windGusts;
+	private double windSpeed;
 	private Integer windDirection;
-	private Double strongWind;
-	private Double rainfallPercent;
-	private Double rainfall;
-	private Double uv;
-	private Double waveHeight;
+
+
 	
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm") // 응답을 분까지만 보이게
 	private LocalDateTime forecastTime;
@@ -28,3 +28,4 @@ public class ResponseWeatherDTO {
 	private double lat;
 	private double lon;
 }
+

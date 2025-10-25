@@ -1,0 +1,91 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="B356FE93-C257-6756-0B23-B90D20FA7F76" name="해수욕장일별기상정보">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>9D9B8A73-DA65-AFC5-0C68-4482E98892D7</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="해수욕장고유번호" id="C8F0E202-0E5D-A3D1-3426-92A0167AB68F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<generatorID>A7368922-42FB-6DFD-5EF1-A4F486653F28</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>26477E2D-6D03-30C6-D264-B60F40628FAA</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>C8F7BBC3-F1F1-6F48-D39D-344E1D62E530</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="일차(0,1,2)" id="51796190-6118-3D81-A8EA-9D480F89D0CF">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>2A136C08-3D43-C8D5-9AE6-4A03B42AF910</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="취득시간" id="CCF60A5B-FC52-BDBD-5AAF-E880E37B5732">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>C8FDAF8F-EA37-C22C-BBBE-2A6F57A5D87F</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="기상정보고유번호" id="1D654715-6466-F5EF-4586-AD35DA583700">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<generatorID>01381F5E-68E5-B262-6DD2-2552C5B1AC27</generatorID>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>97608EBC-A72B-CC06-0BBE-6D015D2A8C0E</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<referedAttribute>E7BB4AFE-CFAC-7D87-0103-EE0C3ACC92DA</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="0389386F-7246-A863-614A-4D496ADB8D5A" name="기상정보 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:19:08 UTC</createdTime>
+<ownerDesignName>ver.3</ownerDesignName>
+<importedID>8F466A52-F5DD-648D-F712-7CF567B2435C</importedID>
+<engineerTo>
+<item key="F2D00E6B-C9C8-6451-57E5-A368A6B8AC8F" value="true"/>
+<item key="B62DC324-AC06-9212-38E6-68E3D03FB22B" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>C8F0E202-0E5D-A3D1-3426-92A0167AB68F</attributeRef>
+<attributeRef>51796190-6118-3D81-A8EA-9D480F89D0CF</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

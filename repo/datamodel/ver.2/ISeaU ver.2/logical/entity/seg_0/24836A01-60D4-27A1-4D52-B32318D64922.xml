@@ -1,0 +1,115 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="24836A01-60D4-27A1-4D52-B32318D64922" name="회원">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:25:30 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="회원고유번호" id="CE48A676-709E-CFB2-21EE-D07706D93BEE">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:25:45 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="아이디" id="E1220C76-56FF-4843-C0FE-9F79E1FC2EB9">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:25:51 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="비밀번호" id="66CE3900-1551-7641-C07E-134EB167356E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:25:55 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="회원이름" id="A7F7F5A2-149D-9504-75F8-FBA6CE759FA8">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:26:00 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="전화번호" id="140041DE-1D91-8B9A-186A-5542F01BF263">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:26:10 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="이메일" id="6480BDA3-77B9-82F8-2CF0-FE8DD938FFD7">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:26:51 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="생일" id="B5B85C03-EE8B-2933-A09A-2FA9A6EE169A">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:28:46 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="역할고유번호" id="C2686510-B53D-57D0-E56D-67EAFE93F4BF">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 16:15:35 UTC</createdTime>
+<generatorID>D172920F-8E14-FFE0-912E-7112D37C933A</generatorID>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<referedAttribute>FAD7C77C-6054-54CF-E074-55B1C225AAA9</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="BBF436D4-4575-6A09-4096-E9EB70665249" name="회원 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-15 13:25:50 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>CE48A676-709E-CFB2-21EE-D07706D93BEE</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

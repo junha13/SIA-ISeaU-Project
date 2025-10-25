@@ -1,0 +1,106 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="207ECE1A-D667-4A6F-DC94-4B9FA8B76158" name="tb_jellyfish">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>2651453D-43AD-8301-605E-BB80C36DF40B</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="year" id="53987B70-A181-5C7C-12AC-97E56F21B6BE">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>75A3A486-712E-872E-DA1D-0CC85E83459D</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="month" id="ADC4D612-E462-E6B2-38E9-9B01BBB9D8EB">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>4B741BCA-FD16-B4F5-1F08-29CD0FF7D6F9</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<domain>F2D495A2-06CD-F7B0-8969-13C4D5F2B225</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="week" id="D051F8F0-DB47-3410-6675-1AF9B4E3A223">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>73AF47DD-DE70-E7EE-064D-F18F0D8488B8</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="region" id="17543004-B422-8DCA-7B3B-1006CDFD8F6C">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>0CAC4190-0444-B736-1336-79B1CF181AC5</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="nomura_jellyfish" id="1DA3F115-CBD3-5B9A-72FF-32F5CE37CFEA">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>84872B0D-F083-C285-71C2-544BD8D37F61</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="moon_jellyfish" id="062069FE-1C13-FBEC-C2EA-135630761F62">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>3ABCD75B-635B-E618-442B-7FEBB2EA16CD</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="blue_umbrella_jellyfish" id="726E774E-08FB-F1C6-51B9-B96A9956B12B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>9953D52E-AF04-576C-1040-3ABA90016D7E</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="5562F51B-96B8-DC2D-B8BC-E291C19C836E" name="tb_jellyfish_PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>7F81118B-075C-F831-9840-EEBEE299C6FE</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="53987B70-A181-5C7C-12AC-97E56F21B6BE"/>
+<colUsage columnID="ADC4D612-E462-E6B2-38E9-9B01BBB9D8EB"/>
+<colUsage columnID="D051F8F0-DB47-3410-6675-1AF9B4E3A223"/>
+<colUsage columnID="17543004-B422-8DCA-7B3B-1006CDFD8F6C"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

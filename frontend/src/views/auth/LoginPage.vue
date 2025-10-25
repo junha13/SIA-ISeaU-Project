@@ -10,7 +10,7 @@
       <h5 class="fw-bold mb-4" :style="{ color: mainColor }">로그인</h5>
 
       <div class="form-group mb-3">
-        <input type="text" class="form-control" placeholder="아이디" v-model="username">
+        <input type="text" class="form-control" placeholder="아이디" v-model="id">
       </div>
 
       <div class="form-group mb-4">
@@ -49,6 +49,8 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
+import axios from 'axios';
+
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
@@ -57,12 +59,12 @@ const authStore = useAuthStore();
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-const username = ref('');
+const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 
 const handleLogin = async () => {
-  if (!username.value || !password.value) {
+  if (!id.value || !password.value) {
     showConfirmModal({
       title: '로그인 오류',
       message: '아이디와 비밀번호를 모두 입력해주세요.',
@@ -73,14 +75,40 @@ const handleLogin = async () => {
     return;
   }
 
+  /**
+   * 로그인 처리
+   * @returns {Promise<void>}
+   * @throws {Error}
+   * 
+   * 
+   */
   try {
-    // Store Action 호출 (API 통신 및 상태 업데이트)
-    await authStore.login(username.value, password.value);
+    // axios로 직접 백엔드 호출
+    const result = await axios.post('http://localhost:8080/api/auth/login', {
+      id: id.value,
+      password: password.value
+    });
+
+    // 응답 데이터 가져오기
+    const userData = result?.data?.data; // {userNumber, id, userName, mobile}
+    
+    if (!userData) {
+      throw new Error('로그인 API 응답이 비어있습니다.');
+    }
+
+    // authStore에 로그인한 사용자 정보 저장
+    authStore.isAuthenticated = true;
+    authStore.userInfo.userNumber = userData.userNumber;
+    authStore.userInfo.id = userData.id;
+    authStore.userInfo.userName = userData.userName;
+    if (userData.mobile) {
+      authStore.userInfo.mobile = userData.mobile;
+    }
 
     // 성공 시 모달 표시 후 페이지 이동
     showConfirmModal({
       title: '로그인 성공',
-      message: `${username.value}님 환영합니다!`,
+      message: `${authStore.userInfo}님 환영합니다!`,
       type: 'success',
       autoHide: true,
       duration: 1000,
@@ -89,10 +117,21 @@ const handleLogin = async () => {
     router.push({ name: 'Main' });
 
   } catch (e) {
-    // Store에서 던진 에러 메시지 표시
+    // 에러 처리
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+
+    // 백엔드에서 보낸 에러 메시지 (401 등)
+    if (e.response?.data?.message) {
+      errorMessage = e.response.data.message;
+    }
+    // 네트워크 오류 등
+    else if (e.message) {
+      errorMessage = e.message;
+    }
+
     showConfirmModal({
       title: '로그인 실패',
-      message: e.message,
+      message: errorMessage,
       type: 'error'
     });
   }
@@ -105,8 +144,5 @@ const handleLogin = async () => {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
-}
-.auth-page {
-  /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
 </style>

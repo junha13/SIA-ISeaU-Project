@@ -1,0 +1,126 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="C57854E2-EA5E-466E-4F08-7E71C77C39FD" name="게시글당댓글목록">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>13886E1D-1461-5D03-DEB5-85A87C1131BD</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="게시글댓글고유번호" id="03C05398-303F-220B-32DF-F7377B324119">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>AA662CF5-093B-44D3-BA1F-8B29C5EB08DA</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="게시글댓글내용" id="51B08A4A-6589-83A7-BFE1-5CA002183A91">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>4E1CAEB8-8C79-F1AA-76AA-F5986F305A69</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT040</logicalDatatype>
+<domain>E663EAAB-3965-4AA9-CB51-1144DC2637FD</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="좋아요" id="D2E3BC63-DAD9-60D6-4E9C-45393C50E84B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:32:40 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>9020166D-DEE9-2582-780B-0A6AB6521C61</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="게시시간" id="0F63CDE8-9CBC-7968-530B-03D69D54A39E">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>11243357-7306-F7F9-7C1E-5C8B79C0C4AE</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT015</logicalDatatype>
+<domain>B3FC7006-6D50-12C2-6291-20A18657D48A</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="게시글고유번호" id="91A8F912-9265-B778-CD73-3BC09144CD8B">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<generatorID>9755B09E-81D9-5C5C-ABF1-A32B1E24675F</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>1E6773F4-CC17-FBA9-5CB8-D36796BA47BE</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<referedAttribute>DDD92183-DCDA-9192-4930-CBEAE9225400</referedAttribute>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="회원고유번호" id="33B10060-8B33-0E36-8874-1F11E8925CD3">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<generatorID>EBC021F0-F573-A7FF-7A5F-BFBDB2ED6D36</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<importedID>17AB7755-EC93-0628-FAC9-FA23A331B46C</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="true"/>
+</engineerTo>
+<referedAttribute>A1D744D2-12B3-7304-9790-81BDFB3E64B5</referedAttribute>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>2D4D3BD7-F723-F97C-5AE7-6CC19ADB5D27</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="F34563C9-CDEC-233F-6BEC-4EE59EC9A848" name="댓글목록 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 07:12:31 UTC</createdTime>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<shouldEngineer>false</shouldEngineer>
+<importedID>A006C980-BE09-5E01-FE94-13F4ECB32991</importedID>
+<engineerTo>
+<item key="19DE1009-E12F-9CAE-3168-356CA8F3E611" value="true"/>
+<item key="08A36F99-3916-AEB3-26DE-EB344356BCA3" value="false"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>03C05398-303F-220B-32DF-F7377B324119</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>
