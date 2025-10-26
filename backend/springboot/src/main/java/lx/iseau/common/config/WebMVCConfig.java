@@ -1,5 +1,7 @@
 package lx.iseau.common.config;
 
+import java.nio.file.Paths;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -26,6 +28,8 @@ public class WebMVCConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/resources/**").addResourceLocations("classpath:/resources/");
+        // 업로드된 파일 서빙: http://localhost:8080/files/** -> 프로젝트 실행 디렉토리의 uploads/** (해파리 제보 쪽임)
+        registry.addResourceHandler("/files/**").addResourceLocations("file:" + Paths.get("uploads").toAbsolutePath().toString() + "/");
     }
 
     @Override

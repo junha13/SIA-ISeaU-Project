@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="FA0BD285-0555-56C9-27A0-02A164AECE7E" containerWithKeyObject="5C90CAB3-7CAA-C14E-B893-95468A43892A" localFKIndex="A66A5884-B9C4-5EA9-39ED-AF94264B0BE3" name="tb_rip_current_info_FK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>41EFC652-FECF-79DA-EACC-BED90C6FA0F5</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<referredTableLongName>tb_rip_current_info</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>39F851FD-9E0C-28F7-E72B-C8040A5E1784</referredTableID>
+<keyObject>F79443E8-67CF-1BA0-5CBF-EEF106B8894E</keyObject>
+<referredKeyID>F79443E8-67CF-1BA0-5CBF-EEF106B8894E</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>rip_current_number</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>

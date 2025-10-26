@@ -1,6 +1,7 @@
 <template>
   <div class="jellyfish-report-page container-fluid p-3">
-    <!-- Header -->
+    
+    <!-- Header 
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
       <div class="d-flex align-items-center">
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
@@ -11,6 +12,7 @@
         <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
       </div>
     </div>
+    -->
 
     <!-- 사진 등록 -->
     <div class="text-center mb-4 p-5 rounded-3 border" style="background-color: #f8f9fa; cursor: pointer;" @click="triggerFileUpload">
@@ -24,8 +26,29 @@
     <!-- 제보 양식 -->
     <div class="mb-3">
       <label class="fw-bold mb-2" :style="{ color: darkColor }">위치 (필수)</label>
-      <input type="text" class="form-control rounded-3" placeholder="발견 위치를 입력하세요"
-             :value="sosStore.reportData.location" @input="updateLocation">
+      <!-- 위도 / 경도 분리 입력 -->
+      <input
+        type="text"
+        class="form-control rounded-3 mb-2"
+        placeholder="위도"
+        :value="sosStore.reportData.lat ?? ''"
+        @input="updateLat"
+      />
+      <input
+        type="text"
+        class="form-control rounded-3"
+        placeholder="경도"
+        :value="sosStore.reportData.lng ?? ''"
+        @input="updateLng"
+      />
+      <button
+        class="btn py-3 fs-6 rounded-3 mt-2 w-100"
+        :disabled="sosStore.isLoading"
+        @click="refreshLocation"
+        :style="{ borderColor: '#000', backgroundColor: '#fff' }"
+      >
+        {{ sosStore.isLoading ? '위치 가져오는 중...' : '내 위치 새로고침' }}
+      </button>
     </div>
 
     <div class="mb-3">
@@ -40,12 +63,12 @@
                 :value="sosStore.reportData.description" @input="updateDescription"></textarea>
     </div>
 
-    <!-- 제보 완료 버튼 (고정 하단) -->
+    <!-- 제보 버튼 (고정 하단) -->
     <div class="fixed-action-bottom p-3">
       <button class="btn w-100 fw-bolder py-3 fs-5 text-white rounded-3 shadow"
               :style="{ backgroundColor: dangerColor }"
               @click="submitReport">
-        제보 완료
+        제보하기
       </button>
     </div>
 
@@ -55,7 +78,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useConfirmModal } from '@/utils/modalUtils.js';
-import { useSOSStore } from '@/stores/sosStore'; // SOS Store 임포트
+import { useSOSStore } from '@/stores/sosStore';
 
 const { showConfirmModal } = useConfirmModal();
 const sosStore = useSOSStore(); // Store 인스턴스
@@ -66,7 +89,19 @@ const dangerColor = '#EB725B';
 const fileInput = ref(null);
 
 // --- Form Update Handlers (Store Action 호출)
-const updateLocation = (e) => sosStore.updateReportData('location', e.target.value);
+const updateLat = (e) => {
+  sosStore.updateReportData('lat', e.target.value);
+  // 필요 시 location 문자열도 갱신
+  if (sosStore.reportData.lng) {
+    sosStore.updateReportData('location', `${e.target.value},${sosStore.reportData.lng}`);
+  }
+};
+const updateLng = (e) => {
+  sosStore.updateReportData('lng', e.target.value);
+  if (sosStore.reportData.lat) {
+    sosStore.updateReportData('location', `${sosStore.reportData.lat},${e.target.value}`);
+  }
+};
 const updatePhone = (e) => sosStore.updateReportData('phone', e.target.value);
 const updateDescription = (e) => sosStore.updateReportData('description', e.target.value);
 
@@ -89,16 +124,67 @@ const handleFileUpload = (event) => {
   }
 };
 
+// 내 위치 새로고침
+const refreshLocation = () => {
+  if (!('geolocation' in navigator)) {
+    showConfirmModal({
+      title: '위치 사용 불가',
+      message: '이 브라우저에서는 위치 기능을 사용할 수 없습니다.',
+      type: 'error'
+    });
+    return;
+  }
+
+  
+  sosStore.setLoading(true);
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      const lat = latitude.toFixed(6);
+      const lng = longitude.toFixed(6);
+
+      sosStore.updateReportData('lat', lat);
+      sosStore.updateReportData('lng', lng);
+      // 백엔드가 문자열(예: "lat,lng")을 받는 경우 대비해서 함께 저장
+      sosStore.updateReportData('location', `${lat},${lng}`);
+
+      sosStore.setLoading(false);
+      showConfirmModal({
+        title: '위치 업데이트',
+        message: `위도 ${lat}, 경도 ${lng}`,
+        type: 'success',
+        autoHide: true,
+        duration: 1500
+      });
+    },
+    (err) => {
+      sosStore.setLoading(false);
+      const messages = {
+        1: '위치 권한이 거부되었습니다.',
+        2: '위치를 가져오지 못했습니다(위치 정보 없음).',
+        3: '요청 시간이 초과되었습니다.'
+      };
+      showConfirmModal({
+        title: '가져오기 실패',
+        message: messages[err.code] || '위치를 가져오는 중 오류가 발생했습니다.',
+        type: 'error'
+      });
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+// 신고 제출
 const submitReport = async () => {
-  if (!sosStore.reportData.location) {
-    showConfirmModal({ title: '필수 입력', message: '발견 위치를 입력해주세요.', type: 'error' });
+  // lat/lng 기준으로 필수 체크
+  if (!sosStore.reportData.lat || !sosStore.reportData.lng) {
+    showConfirmModal({ title: '필수 입력', message: '발견 위치(위도/경도)를 입력해주세요.', type: 'error' });
     return;
   }
 
   try {
-    // Store Action 호출 (API 전송 및 폼 초기화)
     await sosStore.submitJellyfishReport();
-
     showConfirmModal({
       title: '제보 완료',
       message: '해파리 제보가 성공적으로 접수되었습니다. 감사합니다.',
@@ -106,7 +192,6 @@ const submitReport = async () => {
       autoHide: true,
       duration: 2000
     });
-
   } catch (e) {
     showConfirmModal({ title: '제보 실패', message: e.message, type: 'error' });
   }

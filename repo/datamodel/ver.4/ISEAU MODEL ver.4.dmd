@@ -1,0 +1,13 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<OSDM_Design class="oracle.dbtools.crest.model.design.Design" name="ISEAU MODEL ver.4" id="F150C919-0CF0-512E-3BBB-B22EF64B1F62" version="3.5">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-17 00:18:29 UTC</createdTime>
+<ownerDesignName>ISEAU MODEL ver.4</ownerDesignName>
+<capitalNames>false</capitalNames>
+<designId>F150C919-0CF0-512E-3BBB-B22EF64B1F62</designId>
+<usedDesignStorageDescriptors>
+<designDescr class="oracle.dbtools.crest.model.design.Design$DesignStorageDesc" id="B060D6B8-4159-017A-8512-5F1EA9815DC1">
+<designStoragePath>C:\Users\ASUS\Documents\ISEAUdatamodeler\ver.2\ISeaU ver.2</designStoragePath>
+</designDescr>
+</usedDesignStorageDescriptors>
+</OSDM_Design>
