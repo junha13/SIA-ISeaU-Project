@@ -68,7 +68,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
-import axios from 'axios';
+import { authApi } from '@/api/auth';
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
@@ -115,20 +115,17 @@ const checkId = async () => {
   isCheckingId.value = true;
   console.log('API 호출 시작...');
 
-  // 중복확인 API 호출
+  // 중복확인 API 호출 (공통 API 사용)
   try {
     /**
      * POST /api/auth/check-id
-     * @param String id - 중복 확인할 아이디
+     * @param String id - 중복 확인할 아이디 (백엔드에서 String body 기대 → JSON.stringify로 전달)
      * @returns {number} 0: 사용 가능(중복 안됨), 1 이상: 이미 사용 중(중복됨)
      */
-    const res = await axios.post('http://localhost:8080/api/auth/check-id', JSON.stringify(id.value), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const res = await authApi.checkId(JSON.stringify(id.value));
     console.log('API 응답:', res);
-    console.log('응답 데이터:', res?.data);
     
-    const result = res?.data?.data;
+    const result = res?.data;
     console.log('중복확인 결과:', result);
     
     if (result === 0) {
@@ -223,10 +220,8 @@ const handleRegister = async () => {
      * @param {Object} userData - 회원가입 정보 (userName, email, mobile, birthDate, id, password, checkPassword)
      * @returns {number} 1: 회원가입 성공, 0 또는 그 외: 실패
      */
-    const res = await axios.post('http://localhost:8080/api/auth/register', userData, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const result = res?.data?.data;
+    const res = await authApi.register(userData);
+    const result = res?.data;
 
     if (result === 1) {
       showConfirmModal({ title: '회원가입 성공', message: '회원가입이 완료되었습니다. 로그인해주세요.', type: 'success', autoHide: false });

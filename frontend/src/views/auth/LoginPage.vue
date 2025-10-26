@@ -49,7 +49,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
-import axios from 'axios';
+import { authApi } from '@/api/auth';
 
 
 const router = useRouter();
@@ -84,14 +84,14 @@ const handleLogin = async () => {
    * @throws {Error} 로그인 실패 시
    */
   try {
-    // axios로 직접 백엔드 호출
-    const result = await axios.post('http://localhost:8080/api/auth/login', {
+    // 공통 API 컴포저블 사용 (VITE_API_BASE_URL 적용)
+    const result = await authApi.login({
       id: id.value,
       password: password.value
     });
 
-    // 응답 데이터 가져오기
-    const userData = result?.data?.data; // {userNumber, id, userName, mobile}
+    // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
+    const userData = result?.data; // {userNumber, id, userName, mobile}
     
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
