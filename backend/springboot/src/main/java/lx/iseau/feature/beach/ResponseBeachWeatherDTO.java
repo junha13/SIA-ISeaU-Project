@@ -1,7 +1,6 @@
-package lx.iseau.feature.beach;
+package lx.iseau.feature.beach; // (패키지는 실제 경로에 맞게 수정하세요)
 
-import java.time.LocalDate;
-
+import java.time.LocalDateTime; // timestamp는 LocalDateTime이 더 적합합니다.
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,16 +9,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResponseBeachWeatherDTO {
-	private int beachNumber;
-	private String beachName;
-    private String beachImage;
-    private String beachInformation; 
-    private double rating;
-    private boolean isApprovedByMinistry;
-    private String address;
-    private double latitude;
-    private double longitude; 
-    private String mobile;
-    private LocalDate openDate;
-    private LocalDate closeDate;
+
+
+    private int weatherNumber;
+    private double temperature;        // temperature (double precision)
+    private int humidity;              // humidity (integer)
+    private int rainProbability;       // rain_probability (integer)
+    private double rain;               // rain (double precision) -> (JSON에서는 precipitation)
+    private double windGusts;          // wind_gusts (double precision)
+    private double windSpeed;          // wind_speed (double precision)
+    private int windDirection;         // wind_direction (integer)
+    private double uvIndex;            // uv_index (double precision)
+    private double uvIndexClearSky;    // uv_index_clear_sky (double precision)
+    private LocalDateTime forecastTime; // forecast_time (timestamp)
+    // private double latitude;
+    // private double longitude;
+
+    // ForecastAPIService에서 파싱 시 사용했던 위경도 필드 (필요시 추가)
+    // private double lat;
+    // private double lon;
+
 }
