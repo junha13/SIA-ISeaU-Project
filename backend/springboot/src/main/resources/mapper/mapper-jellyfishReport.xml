@@ -5,7 +5,8 @@
 
 <mapper namespace="lx.iseau.feature.sos.jellyfishreport.JellyfishReportDAO">
 
-	<insert id="insertReport" parameterType="JellyfishReportDTO" useGeneratedKeys="false">
+	<insert id="insertReport" parameterType="JellyfishReportDTO"
+		useGeneratedKeys="true" keyProperty="reportNumber" keyColumn="report_number">
 	  INSERT INTO tb_jellyfish_report
 	    (location, mobile, details, image_url, admin_approval)
 	  VALUES (

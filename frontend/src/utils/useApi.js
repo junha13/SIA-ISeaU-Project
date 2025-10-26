@@ -41,7 +41,7 @@ export function useApi(method, url) { // 함수 이름도 useAxios 대신 useApi
     const loading = ref(false); // 초기값은 false로 설정하여 명시적으로 호출될 때만 true로 변경
 
     // 실제 API 요청을 수행하는 함수를 반환
-    const execute = async (payload = null) => { // 페이로드는 POST/PUT 시 데이터로 사용됨
+    const execute = async (payload = null, isFormData = false) => { // 페이로드는 POST/PUT 시 데이터로 사용됨
         loading.value = true;
         error.value = null; // 요청 전 에러 초기화
 
@@ -53,8 +53,13 @@ export function useApi(method, url) { // 함수 이름도 useAxios 대신 useApi
                 // GET 요청은 payload를 params로 사용
                 response = await api.get(url, { params: payload });
             } else {
-                // POST, PUT 등은 payload를 요청 본문(body)으로 사용
-                response = await api[method.toLowerCase()](url, payload);
+                //formData 받기위해 추가
+                if (isFormData && payload instanceof FormData) {
+                    response = await api[method.toLowerCase()](url, payload);
+                } else {
+                    // POST, PUT 등은 payload를 요청 본문(body)으로 사용
+                    response = await api[method.toLowerCase()](url, payload);
+                }
             }
             
             console.log('API 응답:', response.data); // 디버깅용 로그
