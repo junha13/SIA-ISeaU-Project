@@ -1,0 +1,133 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="14EB4046-F8A7-64D4-9A85-F8E734621584" name="회원설정사항">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:10:56 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="회원고유번호" id="450C612A-82E8-3E86-717D-EC168EEAF022">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:11:39 UTC</createdTime>
+<generatorID>B97311B0-192C-E053-605F-69C36EAE0DE5</generatorID>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<referedAttribute>CE48A676-709E-CFB2-21EE-D07706D93BEE</referedAttribute>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹위치미갱신알림" id="C0E43222-0CCB-46C9-D519-3C6461E51A16">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:11:45 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="조위/물때알림" id="0C8E4A23-CC8B-2A33-14FD-33134657CF37">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:11:56 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈1단계알림" id="A7C2FFA9-6FDD-47F9-5274-0B9422D41127">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:08 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈1단계거리" id="18659945-77B7-BF51-310F-E75D5CCC5281">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:33 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈2단계알림" id="18F6EEE0-55E9-1D6D-6779-FCCA02C738D0">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:17 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈2단계거리" id="942CBF6B-3E70-9A2B-DE7C-0F3B1A15F28F">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:42 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈3단계알림" id="C146AF96-4A72-FE96-C2A7-10B4390FBA56">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:22 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="그룹이탈3단계거리" id="2ABC3194-722B-940E-E6F9-123857660E81">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:12:48 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="154542F2-B03E-A959-2C75-1DD3D6D46262" name="회원설정사항 PK">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-16 17:11:44 UTC</createdTime>
+<ownerDesignName>ISeaU ver.2</ownerDesignName>
+<engineerTo>
+<item key="86C1703A-B6F1-3C44-255C-1544C3D37C11" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>450C612A-82E8-3E86-717D-EC168EEAF022</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

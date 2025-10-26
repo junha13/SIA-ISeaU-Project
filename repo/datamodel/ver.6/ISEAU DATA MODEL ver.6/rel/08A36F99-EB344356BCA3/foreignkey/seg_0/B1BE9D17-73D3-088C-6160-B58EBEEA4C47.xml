@@ -1,0 +1,17 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="B1BE9D17-73D3-088C-6160-B58EBEEA4C47" containerWithKeyObject="81126978-4204-107E-EAD9-597B79F5A5BB" localFKIndex="85095A94-4363-A43D-CB2F-6C39832ECE29" name="tb_user_FKv4">
+<createdBy>ASUS</createdBy>
+<createdTime>2025-10-18 13:42:51 UTC</createdTime>
+<generatorID>D913E323-8345-A36C-0A6A-AD3395481401</generatorID>
+<ownerDesignName>ISEAU DATA MODEL ver.6</ownerDesignName>
+<referredTableLongName>tb_user</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>EA68E1A5-F96E-AF5A-ED7B-FCB6D1E08D9B</referredTableID>
+<keyObject>878EF8FE-4AAE-BAA4-00A3-EA984BC3A1BF</keyObject>
+<referredKeyID>878EF8FE-4AAE-BAA4-00A3-EA984BC3A1BF</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>user_number</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>

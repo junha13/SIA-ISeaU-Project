@@ -8,12 +8,19 @@ import org.springframework.stereotype.Component;
 public class ForecastScheduler {
 	
 	@Autowired
-	ForecastAPIService service;
+	ForecastAPIBeachService BeachService;
+	
+	@Autowired
+	ForecastAPIUVService UVService;
+	
+	@Autowired
+	ForecastAPISeaService SeaService;
 
 	@Scheduled(cron = "0 1 0-23 * * *", zone="Asia/Seoul")
 	public void getForecastData() {
-		service.insertDB(service.getForecastData());
-		
+		BeachService.insertFirsttDB(BeachService.getFirstForecastData());
+		UVService.insertSecondDB(UVService.getSecondForecastData());
+		SeaService.insertSecondDB(SeaService.getSecondForecastData());		
 	}
 	
 	@Scheduled(cron = "0 1 0-23 * * *", zone="Asia/Seoul")

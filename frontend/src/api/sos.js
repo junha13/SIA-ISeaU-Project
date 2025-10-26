@@ -2,16 +2,21 @@
 import { useApi } from '@/utils/useApi.js';
 
 // 해파리 제보 API (POST)
-const { execute: submitJellyfishReport } = useApi('post', '/report/jellyfish');
+const { execute: submitJellyfishReport } = useApi('post', '/sos/jellyfish-report');
 
-// 간편 신고 API (POST)
-const { execute: submitSimpleReport } = useApi('post', '/report/simple');
+// 응급 대처법 조회 (GET)
+const { execute: getFirstAidByCaseNum } = useApi('get', '/sos/first-aid');
 
-// 119/122 신고 기록 API (POST)
-const { execute: logEmergencyCall } = useApi('post', '/report/emergency');
+// 응급 상황 목록 조회 (GET) 
+const { execute: listFirstAidCases } = useApi('get', '/sos/first-aid/cases');
+
+// 119/122 신고 기록 API (POST) <== 보류
+//const { execute: logEmergencyCall } = useApi('post', '/api/report/emergency');
+
 
 export const sosApi = {
     submitJellyfishReport,
-    submitSimpleReport,
-    logEmergencyCall
+    getFirstAidByCaseNum,
+    listFirstAidCases,
+    //logEmergencyCall
 };

@@ -1,9 +1,9 @@
 <template>
   <div class="sos-main-page container-fluid p-0">
-    <!-- Header -->
+    <!-- Header 
     <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
       <div class="d-flex align-items-center">
-        <!-- 뒤로 가기 버튼 -->
+         //뒤로 가기 버튼 
         <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
         <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">SOS</h5>
       </div>
@@ -12,6 +12,7 @@
         <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
       </div>
     </div>
+    -->
 
     <div class="p-3">
 
@@ -26,21 +27,21 @@
       <!-- 주요 기능 4개 (Grid Layout) -->
       <div class="row g-3 mb-4">
 
-        <!-- 카드: 인근 응급 의료소 -->
+        <!-- 카드: 라이프가드 -->
         <div class="col-6">
           <div class="feature-card" :style="{ borderColor: safetyColor, color: darkColor }"
-               @click="handleEmergencyCall('hospital')">
+               @click="handleEmergencyCall('lifeguard')">
             <i class="fas fa-plus-square fa-2x mb-3" :style="{ color: safetyColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">인근 응급 의료소</p>
+            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">라이프가드</p>
           </div>
         </div>
 
-        <!-- 카드: 간편 신고 -->
+        <!-- 카드: 응급 대처법 -->
         <div class="col-6">
           <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }"
-               @click="$router.push({ name: 'SOSSimpleReport' })">
+               @click="$router.push({ name: 'FirstAid' })">
             <i class="fas fa-exclamation-triangle fa-2x mb-3" :style="{ color: cautionColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">간편 신고</p>
+            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">응급 대처법</p>
           </div>
         </div>
 
@@ -79,7 +80,7 @@
     </div>
 
     <!-- 응급 처치 모달 (FirstAidModal은 컴포넌트로 분리됨) -->
-    <FirstAidModal v-model:isVisible="showFirstAidModal" :type="firstAidType" />
+    <FirstAidModal v-model:isVisible="showFirstAidModal" :caseNum="firstAidCaseNum" />
 
   </div>
 </template>
@@ -102,24 +103,32 @@ const dangerColor = '#EB725B';
 
 // --- State ---
 const showFirstAidModal = ref(false);
-const firstAidType = ref('');
+const firstAidCaseNum = ref('');
 
 // --- Methods ---
-
+// 신고 타깃: '119' | '122' | 'lifeguard'
 const handleEmergencyCall = async (target) => {
-  if (target === 'hospital') {
+  
+  if (target === 'lifeguard') {
     // 의료소 찾기는 별도 로직 (여기서는 응급 처치 모달로 대체)
     showFirstAidModal.value = true;
-    firstAidType.value = 'jellyfish';
+    firstAidCaseNum.value = '1';
     return;
   }
+  
 
-  const title = (target === '119' ? '119 긴급 신고' : '해양경찰 신고');
-  const message = `${target}에 바로 연결하여 신고하시겠습니까?`;
+  // 1) 타깃별 UI 텍스트/타이틀 설정 (한 곳에서 관리)
+  const CONFIG = {
+    '119':        { title: '119 긴급 신고' },
+    '122': { title: '해양경찰 신고' },
+    'lifeguard':  { title: '라이프가드 신고' },
+  };
+
+  const cfg = CONFIG[target];
 
   const result = await showConfirmModal({
-    title: title,
-    message: message,
+    title: cfg.title,
+    message: `${cfg.title}에 바로 연결하여 신고하시겠습니까?`,
     type: 'confirm',
     confirmText: '신고 연결',
     cancelText: '취소',
@@ -130,14 +139,14 @@ const handleEmergencyCall = async (target) => {
 
     try {
       // Store Action 호출 (API 로깅)
-      await sosStore.logEmergencyCall(target);
+      await sosStore.logEmergencyCall(cfg);
 
       // 실제 연결 지연 시간 (UX용)
       setTimeout(() => {
         sosStore.setLoading(false);
         showConfirmModal({
           title: '연결 완료',
-          message: `${title} 연결이 성공했습니다. (실제 연결: ${target})`,
+          message: `${cfg.title} 연결 성공했습니다. (실제 연결: ${target})`,
           type: 'success',
           autoHide: true,
           duration: 2000,

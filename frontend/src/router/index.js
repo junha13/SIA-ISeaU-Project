@@ -20,7 +20,7 @@ import FirebaseTest from '@/views/group/Firebase.vue'
 
 // ✅ Views (SOS)
 import SOSMainPage from '@/views/sos/SOSMainPage.vue'
-import SOSSimpleReportPage from '@/views/sos/SOSSimpleReportPage.vue'
+import FirstAidPage from '@/views/sos/FirstAidPage.vue'
 import JellyfishReportPage from '@/views/sos/JellyfishReportPage.vue'
 
 // ✅ Views (MyInfo)
@@ -80,7 +80,7 @@ const routes = [
 
             // SOS
             { path: 'sos', name: 'SOSMain', component: SOSMainPage },
-            { path: 'sos/simple-report', name: 'SOSSimpleReport', component: SOSSimpleReportPage },
+            { path: 'sos/first-aid/cases', name: 'FirstAid', component: FirstAidPage },
             { path: 'sos/jellyfish-report', name: 'JellyfishReport', component: JellyfishReportPage },
 
             // 마이페이지 (MyPage와 MyCommentPage가 MyInfo 도메인에 포함됨)
