@@ -67,12 +67,9 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useConfirmModal } from '@/utils/modalUtils';
 import { authApi } from '@/api/auth';
 
 const router = useRouter();
-const { showConfirmModal } = useConfirmModal();
-// axios를 직접 사용하여 API 호출
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -107,7 +104,7 @@ const checkId = async () => {
   // 아이디 형식 검사
   if (id.value.length < 4) {
     console.log('아이디 길이 부족:', id.value.length);
-    showConfirmModal({ title: '오류', message: '아이디는 4자 이상이어야 합니다.', type: 'error', autoHide: true });
+    alert('아이디는 4자 이상이어야 합니다.');
     isIdChecked.value = false;
     return;
   }
@@ -119,9 +116,10 @@ const checkId = async () => {
   try {
     /**
      * POST /api/auth/check-id
-     * @param String id - 중복 확인할 아이디 (백엔드에서 String body 기대 → JSON.stringify로 전달)
+     * @param String id - 중복 확인할 아이디 (백엔드에서 @RequestBody String으로 받으므로 JSON 형식 문자열로 전송)
      * @returns {number} 0: 사용 가능(중복 안됨), 1 이상: 이미 사용 중(중복됨)
      */
+    // JSON.stringify로 감싸서 "아이디" 형태의 JSON 문자열로 전송
     const res = await authApi.checkId(JSON.stringify(id.value));
     console.log('API 응답:', res);
     
@@ -130,16 +128,16 @@ const checkId = async () => {
     
     if (result === 0) {
       isIdChecked.value = true;
-      showConfirmModal({ title: '확인', message: '사용 가능한 아이디입니다.', type: 'success', autoHide: true });
+      alert('사용 가능한 아이디입니다.');
     } else {
       isIdChecked.value = false;
-      showConfirmModal({ title: '중복된 아이디', message: '이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.', type: 'error', autoHide: false });
+      alert('이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.');
     }
   } catch (err) {
     console.error('아이디 중복확인 오류:', err);
     console.error('오류 상세:', err.response);
     isIdChecked.value = false;
-    showConfirmModal({ title: '오류', message: err.response?.data?.message || '아이디 중복확인에 실패했습니다.', type: 'error' });
+    alert(err.response?.data?.message || '아이디 중복확인에 실패했습니다.');
   } finally {
     isCheckingId.value = false;
     console.log('API 호출 종료');
@@ -149,56 +147,44 @@ const checkId = async () => {
 // 비밀번호 유효성 검사
 const handleCheckPassword = () => {
   if (password.value.length < 8 || !/[a-zA-Z]/.test(password.value) || !/[0-9]/.test(password.value)) {
-    showConfirmModal({ title: '오류', message: '비밀번호는 영어, 숫자를 포함하여 8자 이상이어야 합니다.', type: 'error', autoHide: true });
+    alert('비밀번호는 영어, 숫자를 포함하여 8자 이상이어야 합니다.');
     isPasswordValid.value = false;
     return;
   }
   isPasswordValid.value = true;
-  showConfirmModal({ title: '확인', message: '비밀번호가 안전합니다.', type: 'success', autoHide: true });
+  alert('비밀번호가 안전합니다.');
 };
 
 
 const handleRegister = async () => {
   // 필수 입력값 검증 추가
   if (!name.value || !email.value || !phone.value || !birthDate.value) {
-    showConfirmModal({ 
-      title: '필수', 
-      message: '모든 정보를 입력해주세요.', 
-      type: 'error' 
-    });
+    alert('모든 정보를 입력해주세요.');
     return;
   }
   
   // 이메일 형식 검증
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    showConfirmModal({ 
-      title: '오류', 
-      message: '올바른 이메일 형식이 아닙니다.', 
-      type: 'error' 
-    });
+    alert('올바른 이메일 형식이 아닙니다.');
     return;
   }
   
   // 전화번호 형식 검증 (010-XXXX-XXXX)
   if (!/^010-\d{4}-\d{4}$/.test(phone.value)) {
-    showConfirmModal({ 
-      title: '오류', 
-      message: '전화번호는 010-XXXX-XXXX 형식이어야 합니다.', 
-      type: 'error' 
-    });
+    alert('전화번호는 010-XXXX-XXXX 형식이어야 합니다.');
     return;
   }
   
   if (!isIdChecked.value) {
-    showConfirmModal({ title: '필수', message: '아이디 중복 확인이 필요합니다.', type: 'error', autoHide: false });
+    alert('아이디 중복 확인이 필요합니다.');
     return;
   }
   if (!isPasswordValid.value) {
-    showConfirmModal({ title: '필수', message: '비밀번호 확인 버튼을 눌러 유효성을 검사해야 합니다.', type: 'error', autoHide: false });
+    alert('비밀번호 확인 버튼을 눌러 유효성을 검사해야 합니다.');
     return;
   }
   if (password.value !== passwordConfirm.value) {
-    showConfirmModal({ title: '오류', message: '비밀번호 확인이 일치하지 않습니다.', type: 'error', autoHide: false });
+    alert('비밀번호 확인이 일치하지 않습니다.');
     return;
   }
 
@@ -224,14 +210,14 @@ const handleRegister = async () => {
     const result = res?.data;
 
     if (result === 1) {
-      showConfirmModal({ title: '회원가입 성공', message: '회원가입이 완료되었습니다. 로그인해주세요.', type: 'success', autoHide: false });
+      alert('회원가입이 완료되었습니다. 로그인해주세요.');
       router.push({ name: 'Login' });
     } else {
       throw new Error('회원가입에 실패했습니다.');
     }
   } catch (e) {
     console.error('회원가입 오류', e);
-    showConfirmModal({ title: '회원가입 실패', message: e.response?.data?.message || e.message || '회원가입 중 오류가 발생했습니다.', type: 'error', autoHide: false });
+    alert(e.response?.data?.message || e.message || '회원가입 중 오류가 발생했습니다.');
   } finally {
     isRegistering.value = false;
   }

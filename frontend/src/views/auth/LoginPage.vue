@@ -47,13 +47,11 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 
 
 const router = useRouter();
-const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
@@ -65,13 +63,7 @@ const rememberMe = ref(false);
 
 const handleLogin = async () => {
   if (!id.value || !password.value) {
-    showConfirmModal({
-      title: '로그인 오류',
-      message: '아이디와 비밀번호를 모두 입력해주세요.',
-      type: 'error',
-      autoHide: true,
-      duration: 1500,
-    });
+    alert('아이디와 비밀번호를 모두 입력해주세요.');
     return;
   }
 
@@ -106,15 +98,8 @@ const handleLogin = async () => {
 
     console.log('로그인 후 저장된 정보:', authStore.userInfo);
 
-    // 성공 시 모달 표시 후 페이지 이동
-    showConfirmModal({
-      title: '로그인 성공',
-      message: `${userData.userName}님 환영합니다!`,
-      type: 'success',
-      autoHide: true,
-      duration: 1000,
-    });
-
+    // 성공 시 알림 표시 후 페이지 이동
+    alert(`${userData.userName}님 환영합니다!`);
     router.push({ name: 'Main' });
 
   } catch (e) {
@@ -130,11 +115,7 @@ const handleLogin = async () => {
       errorMessage = e.message;
     }
 
-    showConfirmModal({
-      title: '로그인 실패',
-      message: errorMessage,
-      type: 'error'
-    });
+    alert(`로그인 실패: ${errorMessage}`);
   }
 };
 </script>
