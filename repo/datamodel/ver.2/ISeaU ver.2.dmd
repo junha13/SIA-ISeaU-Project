@@ -1,8 +1,0 @@
-<?xml version = '1.0' encoding = 'UTF-8'?>
-<OSDM_Design class="oracle.dbtools.crest.model.design.Design" name="ISeaU ver.2" id="B060D6B8-4159-017A-8512-5F1EA9815DC1" version="3.5">
-<createdBy>ASUS</createdBy>
-<createdTime>2025-10-15 13:24:37 UTC</createdTime>
-<ownerDesignName>ISeaU ver.2</ownerDesignName>
-<capitalNames>false</capitalNames>
-<designId>B060D6B8-4159-017A-8512-5F1EA9815DC1</designId>
-</OSDM_Design>
