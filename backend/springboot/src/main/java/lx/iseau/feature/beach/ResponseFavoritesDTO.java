@@ -1,7 +1,5 @@
 package lx.iseau.feature.beach;
 
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +8,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResponseFavoritesDTO {
-	private int beachNumber;
-
+    private Integer beachNumber; // 프론트에서 보내는 최소 정보
 }

@@ -7,14 +7,15 @@
 
     <!-- 회원가입 -->
     <insert id="register" parameterType="lx.iseau.feature.auth.RegisterDTO">
-        INSERT INTO tb_user (user_name, email, mobile, birth_date, id, password)
+        INSERT INTO tb_user (user_name, email, mobile, birth_date, id, password, role_number)
         VALUES (
             #{registerDTO.userName},
             #{registerDTO.email},
             #{registerDTO.mobile},
-            #{registerDTO.birthDate},
+            to_date(#{registerDTO.birthDate}, 'YYYY-MM-DD'),
             #{registerDTO.id},
-            #{registerDTO.password}
+            #{registerDTO.password},
+            2
         )
     </insert>
 

@@ -47,13 +47,11 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
-import axios from 'axios';
+import { authApi } from '@/api/auth';
 
 
 const router = useRouter();
-const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
@@ -65,32 +63,27 @@ const rememberMe = ref(false);
 
 const handleLogin = async () => {
   if (!id.value || !password.value) {
-    showConfirmModal({
-      title: '로그인 오류',
-      message: '아이디와 비밀번호를 모두 입력해주세요.',
-      type: 'error',
-      autoHide: true,
-      duration: 1500,
-    });
+    alert('아이디와 비밀번호를 모두 입력해주세요.');
     return;
   }
 
   /**
    * 로그인 처리
-   * @returns {Promise<void>}
-   * @throws {Error}
-   * 
-   * 
+   * POST /api/auth/login
+   * @param {string} id - 로그인 아이디
+   * @param {string} password - 비밀번호
+   * @returns {Object} userData - { userNumber, id, userName, mobile }
+   * @throws {Error} 로그인 실패 시
    */
   try {
-    // axios로 직접 백엔드 호출
-    const result = await axios.post('http://localhost:8080/api/auth/login', {
+    // 공통 API 컴포저블 사용 (VITE_API_BASE_URL 적용)
+    const result = await authApi.login({
       id: id.value,
       password: password.value
     });
 
-    // 응답 데이터 가져오기
-    const userData = result?.data?.data; // {userNumber, id, userName, mobile}
+    // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
+    const userData = result?.data; // {userNumber, id, userName, mobile}
     
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
@@ -101,19 +94,12 @@ const handleLogin = async () => {
     authStore.userInfo.userNumber = userData.userNumber;
     authStore.userInfo.id = userData.id;
     authStore.userInfo.userName = userData.userName;
-    if (userData.mobile) {
-      authStore.userInfo.mobile = userData.mobile;
-    }
+    authStore.userInfo.mobile = userData.mobile || null;
 
-    // 성공 시 모달 표시 후 페이지 이동
-    showConfirmModal({
-      title: '로그인 성공',
-      message: `${authStore.userInfo}님 환영합니다!`,
-      type: 'success',
-      autoHide: true,
-      duration: 1000,
-    });
+    console.log('로그인 후 저장된 정보:', authStore.userInfo);
 
+    // 성공 시 알림 표시 후 페이지 이동
+    alert(`${userData.userName}님 환영합니다!`);
     router.push({ name: 'Main' });
 
   } catch (e) {
@@ -129,11 +115,7 @@ const handleLogin = async () => {
       errorMessage = e.message;
     }
 
-    showConfirmModal({
-      title: '로그인 실패',
-      message: errorMessage,
-      type: 'error'
-    });
+    alert(`로그인 실패: ${errorMessage}`);
   }
 };
 </script>

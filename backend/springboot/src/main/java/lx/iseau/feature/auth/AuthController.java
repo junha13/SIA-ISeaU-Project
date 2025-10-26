@@ -23,11 +23,20 @@ public class AuthController {
 	 */
 	@PostMapping("/register")
 	public ResponseEntity<?> register(@RequestBody RegisterDTO dto) {
-		int result = service.register(dto);
-		return ResponseEntity
-				.ok()
-				.header("api", "Auth/register")
-				.body(Map.of("data", result));
+		try {
+			int result = service.register(dto);
+			return ResponseEntity
+					.ok()
+					.header("api", "Auth/register")
+					.body(Map.of("data", result));
+		} catch (Exception e) {
+			// 자세한 오류 메시지를 클라이언트에 전달하여 디버깅을 돕습니다.
+			return ResponseEntity
+					.status(500)
+					.body(Map.of(
+						"message", e.getMessage() != null ? e.getMessage() : "회원가입 처리 중 오류가 발생했습니다.",
+						"api", "Auth/register"));
+		}
 	}
 
 	/**
@@ -35,9 +44,21 @@ public class AuthController {
 	 * @param id
 	 * @return ResponseEntity<?>(data가 0이면 중복안됨, 1이상이면 중복됨)
 	 */
-	@RequestMapping("/check-id")
+	@PostMapping("/check-id")
 	public ResponseEntity<?> checkId(@RequestBody String id) {
-		int result = service.checkId(id);
+		// 디버깅용 로그
+		System.out.println("받은 아이디 원본: [" + id + "]");
+		System.out.println("아이디 길이: " + id.length());
+		
+		// JSON.stringify()로 전송된 경우 따옴표가 포함되므로 제거
+		// 예: "testid" → testid
+		String cleanId = id.replace("\"", "").trim();
+		System.out.println("정제된 아이디: [" + cleanId + "]");
+		
+		// DB에서 중복 확인
+		int result = service.checkId(cleanId);
+		System.out.println("중복확인 결과: " + result);
+		
 		return ResponseEntity
 				.ok()
 				.header("api", "Auth/check-id")
