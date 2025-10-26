@@ -26,10 +26,15 @@ use([
   CanvasRenderer                                             // 렌더러 (Canvas 권장)
 ])
 
+// 바텀시트
+import BottomSheet from '@douxcode/vue-spring-bottom-sheet'
+import '@douxcode/vue-spring-bottom-sheet/dist/style.css' 
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+app.component('BottomSheet', BottomSheet)
 app.component('quill-editor', quillEditor)
 app.component('v-chart', ECharts)
 

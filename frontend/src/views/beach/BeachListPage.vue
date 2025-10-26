@@ -157,6 +157,9 @@
             </div>
           </div>
         </div>
+        <bottom-sheet>
+          <div>바텀시트 추가</div>
+        </bottom-sheet>
       </div>
     </div>
   </div>
@@ -167,6 +170,8 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
+
+import bottomSheet from '@/components/BottomSheet.vue'
 
 const store = useStore();
 const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
