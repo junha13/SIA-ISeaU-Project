@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
+    "@douxcode/vue-spring-bottom-sheet": "^2.5.0",
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "echarts": "^6.0.0",
