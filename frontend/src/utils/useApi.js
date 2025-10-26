@@ -54,7 +54,12 @@ export function useApi(method, url) { // 함수 이름도 useAxios 대신 useApi
                 response = await api.get(url, { params: payload });
             } else {
                 // POST, PUT 등은 payload를 요청 본문(body)으로 사용
-                response = await api[method.toLowerCase()](url, payload);
+                // String을 직접 보낼 경우 Content-Type을 명시
+                const config = {};
+                if (typeof payload === 'string') {
+                    config.headers = { 'Content-Type': 'application/json' };
+                }
+                response = await api[method.toLowerCase()](url, payload, config);
             }
             
             console.log('API 응답:', response.data); // 디버깅용 로그
