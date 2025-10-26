@@ -25,7 +25,8 @@ public interface BeachDAO {
     // 특정 사용자가 특정 해변을 즐겨찾기 했는지 확인 (중복 확인)
     int checkFavoriteExists(BeachFavoritesVO beachFavorites);
 	// 위경도 위치 보내주는걸로
-	//public ResponseBeachDeptDTO getBeachDetailDept(int beachNumber);
+    // 위험 조회
+	public ResponseBeachDeptDTO getBeachDetailDept(int beachNumber);
 
 	
 	

@@ -14,7 +14,7 @@ public class ResponseBeachWeatherDTO {
     private int weatherNumber; 
     private double temperature;        // temperature (double precision)
     private int humidity;              // humidity (integer)
-    private int rainProbability;       // rain_probability (integer)
+    private Integer rainProbability;       // rain_probability (integer)
     private double rain;               // rain (double precision) -> (JSON에서는 precipitation)
     private double windGusts;          // wind_gusts (double precision)
     private double windSpeed;          // wind_speed (double precision)
@@ -22,11 +22,9 @@ public class ResponseBeachWeatherDTO {
     private double uvIndex;            // uv_index (double precision)
     private double uvIndexClearSky;    // uv_index_clear_sky (double precision)
     private LocalDateTime forecastTime; // forecast_time (timestamp)
-    // private double latitude;
-    // private double longitude;
-    
-    // ForecastAPIService에서 파싱 시 사용했던 위경도 필드 (필요시 추가)
-    // private double lat;
-    // private double lon;
+    private double latitude;
+    private double longitude;
+     private double lat;
+     private double lon; 
 
 }
