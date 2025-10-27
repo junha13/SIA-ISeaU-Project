@@ -7,7 +7,7 @@
         INSERT INTO fcm_token (user_id, fcm_token, updated_at)
         VALUES (#{userId}, #{token}, now())
             ON CONFLICT (user_id) DO UPDATE
-                                         SET
+                                         SET   
                                              fcm_token = #{token},
                                          updated_at = now();
     </insert>
