@@ -35,11 +35,11 @@
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
           
-          <h1 v-if="header === mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
-            <img class="mt-n2" src="/public/iseau.ico" style="min-width: 30px; max-width: 30px;">
+          <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
+            <img class="mt-n2" src="/public/iseau4.png" style="max-width: 35px; max-width: 43px;">
             {{ header }}
           </h1>
-          <h1 v-else="header !== mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
+          <h1 v-else="header !== mainHeaderName" class="fw-bolder mb-0" :style="{ color: darkColor, fontSize: '1.5rem' }">
             <i class="ki-duotone ki-arrow-left fs-2" @click="goBack()">
               <span class="path1"></span>
               <span class="pat2"></span>
@@ -48,8 +48,29 @@
           </h1>
         </div>
         <div class="d-flex align-items-center">
-          <i class="fas fa-bell fs-5 me-3" :style="{ color: dangerColor }"></i>
-          <i class="fas fa-bars fs-5"></i>
+          <i class="fas fa-bell fs-1 me-5" :style="{ color: dangerColor }" @click="clickAlert"></i>
+          <button
+            class="bg-transparent border-0 p-2 burger-btn"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sideMenu"
+            aria-controls="sideMenu"
+            aria-label="menu"
+          >
+            <i class="fas fa-bars mt-3 fs-1 me-4 navbar-toggler-icon"></i>
+          </button>
+        </div>
+      </div>
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 50%;">
+        <div class="offcanvas-header border-3 border-bottom shadow-sm">
+          <span class="offcanvas-title fw-bold mt-2" style="font-size: 17px;">메뉴</span>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">해수욕장 목록</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">위험도 / 예보</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">즐겨찾기</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">마이페이지</a>
         </div>
       </div>
     </header>
@@ -212,6 +233,15 @@ const navTextStyle = (path) => {
   }
   return { color: isActive ? mainColor : 'white' }
 }
+
+
+function clickAlert() {
+  alert('알림떠야할듯')
+}
+
+function clickHam() {
+  alert('햄버거 떠야할듯')
+}
 </script>
 
 <style scoped>
@@ -246,4 +276,5 @@ const navTextStyle = (path) => {
 .nav-item-custom:hover {
   background-color: rgba(0, 146, 186, 0.2);
 }
+
 </style>
