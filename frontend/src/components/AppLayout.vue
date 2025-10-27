@@ -36,7 +36,7 @@
         <div class="d-flex align-items-center">
           
           <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
-            <img class="mt-n2" src="/public/iseau4.png" style="max-width: 35px; max-width: 40px;">
+            <img class="mt-n2" src="/public/iseau6.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}
           </h1>
           <h1 v-else="header !== mainHeaderName" class="fw-bolder mb-0" :style="{ color: darkColor, fontSize: '1.5rem' }">
