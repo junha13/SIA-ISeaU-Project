@@ -1,0 +1,18 @@
+equal interval - 
+
+natural breaks 등급내 간격최소화 등급간 간격최대화
+
+
+
+
+초급 : 통계 사용
+중급 : 플러그인 사용
+
+
+
+https://darkpgmr.tistory.com/96
+
+
+npm install firebase bootstrap -g serve -D vite plugin-pwa axios, 
+
+

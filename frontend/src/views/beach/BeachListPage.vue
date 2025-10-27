@@ -164,6 +164,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
@@ -203,6 +204,7 @@ const regionCondition = regionOptions
 const primaryBtnStyle = { backgroundColor: mainColor, borderColor: mainColor, color: 'white' };
 const dropdownBtnStyle = { backgroundColor: '#f8f9fa', borderColor: '#ced4da', color: darkColor };
 
+// 검색 파라미터
 const searchParams = ref({
   region: '',
   keyword: '',
@@ -211,7 +213,7 @@ const searchParams = ref({
 
 onMounted(() => {
   loadData();
-  fetchFavoriteIds(); 
+  fetchFavoriteIds();
   header.value = "해수욕장 리스트"
   getLocation()
 });
@@ -375,69 +377,69 @@ function getLocation() {
 </script>
 
 <style scoped>
-.beach-list-page { 
-  padding-top: 10px; 
+.beach-list-page {
+  padding-top: 10px;
 }
-.beach-card { 
-  transition: transform 0.2s; 
-  cursor: pointer; 
-  box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; 
+.beach-card {
+  transition: transform 0.2s;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05) !important;
 }
-.beach-card:hover { 
-  transform: translateY(-5px); 
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; 
+.beach-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
 }
-.beach-image-placeholder { 
-  width: 100px; 
-  height: 100px; 
-  background-color: #f8f9fa; 
-  position: relative; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
+.beach-image-placeholder {
+  width: 100px;
+  height: 100px;
+  background-color: #f8f9fa;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: .25rem; }
 
-.beach-image-placeholder > p { 
-  line-height: 1.2; 
-  padding: .2rem; 
-  font-size: .65rem !important; 
+.beach-image-placeholder > p {
+  line-height: 1.2;
+  padding: .2rem;
+  font-size: .65rem !important;
 }
-.beach-image-placeholder > img { 
-  width: 100%; 
-  height: 100%; 
-  object-fit: cover; 
-  position: absolute; 
-  top: 0; 
-  left: 0; 
-  border-radius: .25rem; 
+.beach-image-placeholder > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: .25rem;
 }
-.rating-badge { 
-  position: absolute; 
-  bottom: 5px; 
-  right: 5px; 
-  font-size: .75rem; 
-  z-index: 10; 
+.rating-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: .75rem;
+  z-index: 10;
 }
-.badge { 
-  font-size: .65rem; 
-  padding: .3em .6em; 
+.badge {
+  font-size: .65rem;
+  padding: .3em .6em;
 }
-.tab-btn-primary  { 
-  background-color: v-bind(mainColor) !important; 
-  border-color: v-bind(mainColor) !important; 
+.tab-btn-primary  {
+  background-color: v-bind(mainColor) !important;
+  border-color: v-bind(mainColor) !important;
 }
 .tab-btn-light-secondary {
-  background-color: #ffffff !important; 
-  border-color: v-bind(mainColor) !important; 
+  background-color: #ffffff !important;
+  border-color: v-bind(mainColor) !important;
 }
-.dropdown-toggle { 
-  box-shadow: none !important; 
+.dropdown-toggle {
+  box-shadow: none !important;
 }
-.overflow-auto { 
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
+.overflow-auto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-.overflow-auto::-webkit-scrollbar { 
-  display: none; 
+.overflow-auto::-webkit-scrollbar {
+  display: none;
 }
 </style>

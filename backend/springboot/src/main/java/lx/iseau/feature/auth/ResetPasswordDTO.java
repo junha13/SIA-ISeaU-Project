@@ -1,20 +1,16 @@
 package lx.iseau.feature.auth;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ResetPasswordDTO {
     private String newPassword;
     private int userNumber;
-    
-    // Getter and Setters
-    public String getNewPassword() {
-        return newPassword;
-    }
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-    public int getUserNumber() {
-        return userNumber;
-    }
-    public void setUserNumber(int userNumber) {
-        this.userNumber = userNumber;
-    }
+
 }

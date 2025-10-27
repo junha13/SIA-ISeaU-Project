@@ -16,6 +16,7 @@ import SafetyGuidePage from '@/views/safeguide/SafetyGuidePage.vue'
 // ✅ Views (Group)
 import GroupListPage from '@/views/group/GroupListPage.vue'
 import GroupMainPage from '@/views/group/GroupMainPage.vue'
+import FirebaseTest from '@/views/group/Firebase.vue'
 
 // ✅ Views (SOS)
 import SOSMainPage from '@/views/sos/SOSMainPage.vue'
@@ -75,6 +76,7 @@ const routes = [
             // 그룹
             { path: 'group', name: 'GroupList', component: GroupListPage },
             { path: 'group/:id', name: 'GroupMain', component: GroupMainPage },
+            { path: 'firebase', name: 'Firebase', component: FirebaseTest },
 
             // SOS
             { path: 'sos', name: 'SOSMain', component: SOSMainPage },

@@ -49,7 +49,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
-
+import { getTokenAndSave} from "../../../fcmUtils.js";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -84,23 +84,34 @@ const handleLogin = async () => {
 
     // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
     const userData = result?.data; // {userNumber, id, userName, mobile}
-    
+
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
     }
 
     // authStore에 로그인한 사용자 정보 저장
     authStore.isAuthenticated = true;
-    authStore.userInfo.userNumber = userData.userNumber;
+    authStore.userInfo.userNumber = userData.user_number;
     authStore.userInfo.id = userData.id;
-    authStore.userInfo.userName = userData.userName;
+    authStore.userInfo.userName = userData.user_name;
     authStore.userInfo.mobile = userData.mobile || null;
 
     console.log('로그인 후 저장된 정보:', authStore.userInfo);
 
+
+    console.log('FCM에 전달할 userNumber:', userData.user_number);
+
+    // 3. 🚨 FCM 토큰 저장 로직
+    // 🚨 수정: userData.userNumber -> userData.user_number
+    getTokenAndSave(userData.user_number).catch(fcmError => {
+      // FCM 실패 시에도 로그인 자체는 성공하도록 처리
+      console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
+    });
+
+
     // 성공 시 알림 표시 후 페이지 이동
-    alert(`${userData.userName}님 환영합니다!`);
-    router.push({ name: 'Main' });
+    alert(`${userData.user_name}님 환영합니다!`);
+    router.replace({ name: 'Main' });
 
   } catch (e) {
     // 에러 처리

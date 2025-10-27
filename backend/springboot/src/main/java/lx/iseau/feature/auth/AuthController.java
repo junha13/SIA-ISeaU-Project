@@ -2,6 +2,7 @@ package lx.iseau.feature.auth;
 
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,10 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequestMapping("/api/auth")
 @RestController
+@RequiredArgsConstructor
 public class AuthController {
 	
-	@Autowired
-	AuthService service;
+
+	private final AuthService service;
 
 	/**
 	 * 회원가입
