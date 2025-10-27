@@ -20,9 +20,11 @@
       </div>
 
       <div class="mt-3">
-        <component :is="currentTab"
-         :key="`${activeTab}-${route.params.beachNumber}`"
+       <component
+  :is="currentTab"
+  :key="`${activeTab}-${route.params.beachNumber}`"
   :beach="beach"
+  :beach-region="beachRegion"
 />
       </div>
     </div>
@@ -40,11 +42,50 @@ import BeachDangerTab from './tabs/BeachDangerTab.vue';
 import BeachWeatherTab from './tabs/BeachWeatherTab.vue';
 import BeachDepthTab from './tabs/BeachDepthTab.vue';
 import BeachCctvTab from './tabs/BeachCctvTab.vue';
+import BeachJellyFish from '@/views/beach/tabs/BeachJellyFish.vue' 
 import axios from 'axios';
 
 const route = useRoute();
 const store = useStore();
 const { header, beach } = storeToRefs(store)
+ 
+// region 값 계산 (API에 region이 있으면 그대로 사용)
+// BeachDetailPage.vue 등에서
+const beachRegion = computed(() => detectRegion({
+  region: beach.value?.region,
+  address: beach.value?.address
+}));
+
+function detectRegion({ region, address }) {
+  // 1) DB에 region이 있으면 그걸 우선 신뢰
+  if (region && typeof region === 'string') return region.trim();
+
+  // 2) 주소 없으면 빈값
+  const addr = (address || '').replace(/\s+/g, ''); // 공백 제거
+  const t = addr; // 소문자 변환은 한글엔 영향 적어 생략
+
+  // 3) 매핑 테이블: 같은 지역의 다양한 표기를 모두 커버
+  const CANDIDATES = [
+    { code: '부산', keys: ['부산', '부산광역시'] },
+    { code: '강원', keys: ['강원', '강원도', '강원특별자치도'] },
+    { code: '제주', keys: ['제주', '제주특별자치도'] },
+    { code: '인천', keys: ['인천', '인천광역시'] },
+    { code: '경기', keys: ['경기', '경기도'] },
+    { code: '경남', keys: ['경남', '경상남도'] },
+    { code: '경북', keys: ['경북', '경상북도'] },
+    { code: '울산', keys: ['울산', '울산광역시'] },
+    { code: '전남', keys: ['전남', '전라남도'] },
+    { code: '전북', keys: ['전북', '전라북도'] },
+    { code: '충남', keys: ['충남', '충청남도'] },
+
+  ];
+
+  // 4) 주소 문자열에 키워드가 포함되면 해당 code 반환
+  for (const { code, keys } of CANDIDATES) {
+    if (keys.some(k => t.includes(k))) return code;
+  }
+  return '';
+}
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -54,7 +95,8 @@ const tabs = [
   { key: 'danger', label: '위험정보', comp: BeachDangerTab },
   { key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
   { key: 'depth', label: '수심지도', comp: BeachDepthTab },
-  { key: 'cctv', label: 'CCTV', comp: BeachCctvTab }
+  { key: 'cctv', label: 'CCTV', comp: BeachCctvTab },
+  { key: 'pest', label: '유해생물', comp: BeachJellyFish }
 ];
 
 const activeTab = ref('info');
@@ -84,7 +126,6 @@ const response = await axios.get(
 
 </script>
 
-<!-- [수정] 중복된 <style> 태그를 하나로 합칩니다. -->
 <style scoped>
 button {
   transition: 0.2s ease-in-out;

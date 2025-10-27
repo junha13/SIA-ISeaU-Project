@@ -1,20 +1,18 @@
 package lx.iseau.feature.beach;
 
-// 1. 필요한 클래스들을 import 합니다.
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import lx.iseau.feature.beach.ResponseBeachDTO;
-import lx.iseau.feature.beach.BeachListRequest;
-import lx.iseau.feature.beach.BeachService;
 
 @RequestMapping("/api/beach")
 @RestController
@@ -32,9 +30,6 @@ public class BeachController {
 	}
 	
 	
-	/*
-	 * ========= 하나의 해수욕장의 값을 보내주면 딤 =========
-	 */
 	@RequestMapping("/detail/{beachNumber}/info")
 	public ResponseEntity<?> getBeachDetailInfo(@PathVariable int beachNumber) {
 		Map<String, Object> result = service.getBeachDetailInfo(beachNumber);
@@ -44,9 +39,6 @@ public class BeachController {
 				.body(Map.of("data", result));
 	}
 	
-	/*
-	 * ========= 하나의 해수욕장에 대한 여러 시간대 danget 상황 보내주기 =========
-	 */
 	@RequestMapping("/detail/{beachNumber}/danger")
 	public ResponseEntity<?> getBeachDetailDanger(@PathVariable int beachNumber) {
 		Map<String, Object> result = service.getBeachDetailDanger(beachNumber);
@@ -55,5 +47,68 @@ public class BeachController {
 				.header("api", "Beach/detail/danger")
 				.body(Map.of("data", result));
 	}
- 
-}
+
+	@RequestMapping("/detail/{beachNumber}/weather")
+	public ResponseEntity<?> getBeachDetailWeather(@PathVariable int beachNumber) {
+		Map<String, Object> result = service.getBeachDetailWeather(beachNumber);
+		return ResponseEntity
+				.ok()
+				.header("api", "Beach/detail/weather")
+				.body(Map.of("data", result));
+	}
+
+	@GetMapping("/favorites/my")
+	public ResponseEntity<?> getBeachFavorites() {
+	    int userNumber = 1; 
+	    Map<String, Object> favoritesMap = service.getBeachFavorites(userNumber);
+	    // result 안에 이미 List<Integer>가 들어 있음
+	    return ResponseEntity
+	            .ok()
+	            .header("api", "Beach/beachs/favorites")
+	            .body(Map.of("data", favoritesMap));
+	}
+	@RequestMapping("/favorites")
+	public ResponseEntity<?> insertFavorite(@RequestBody ResponseFavoritesDTO dto) {
+	    int userNumber = 1; // 테스트용
+        // 2. DTO에서 beachNumber 가져오기
+        int beachNumber = dto.getBeachNumber();
+        try {
+            // 3. 서비스 호출
+            int result = service.insertFavorite(userNumber, beachNumber);
+
+            // 4. 성공 응답 반환
+            return ResponseEntity
+                    .ok()
+                    .header("api", "favorites")
+                    .body(Map.of("success", result > 0));
+
+        } catch (Exception e) {
+            // 예외 처리
+             return ResponseEntity
+                     .status(409) 
+                     .body(Map.of("error", "즐겨찾기 추가 중 오류 발생: " + e.getMessage()));
+        }
+    }
+	@DeleteMapping("/favorites/{beachNumber}")
+    public ResponseEntity<?> removeFavorite( @PathVariable int beachNumber
+            // @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        int userNumber = 1; // 임시 userNumber
+
+        try {
+     
+            int result = service.removeFavorite(userNumber, beachNumber);
+
+            return ResponseEntity
+                    .ok()
+                    .header("api", "favorites/remove")
+                    .body(Map.of("success", result > 0)); 
+
+        } catch (Exception e) {
+             return ResponseEntity
+                     .status(500) 
+                     .body(Map.of("error", "즐겨찾기 제거 중 오류 발생: " + e.getMessage()));
+        }
+    }
+
+} // 클래스 끝

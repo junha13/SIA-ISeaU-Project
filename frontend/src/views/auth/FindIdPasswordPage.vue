@@ -32,13 +32,11 @@
               </button>
             </div>
 
-            <button class="btn w-100 fw-bold text-white py-2" :style="{ backgroundColor: mainColor }" @click="verifyAndFindId">
-              아이디 찾기
-            </button>
+            <!-- 상단 버튼 제거: 하단 링크로 기능 수행 -->
           </div>
           <div v-else-if="idStep === 2">
             <div class="alert text-center p-3 rounded-3 border-0 fw-bold" :style="{ backgroundColor: mainColor + '10', color: darkColor }">
-              {{ idResult.name }}님의 아이디는 {{ idResult.username }}입니다.
+              {{ idResult.name }}님의 아이디는 {{ idResult.id }}입니다.
             </div>
           </div>
         </div>
@@ -46,7 +44,7 @@
         <div v-if="activeTab === 'password'">
           <div v-if="pwStep === 1">
             <div class="form-group mb-3">
-              <input type="text" class="form-control" placeholder="아이디" v-model="pwForm.username">
+              <input type="text" class="form-control" placeholder="아이디" v-model="pwForm.id">
             </div>
             <div class="form-group mb-3">
               <input type="tel" class="form-control" placeholder="전화번호" v-model="pwForm.phone">
@@ -58,9 +56,7 @@
               </button>
             </div>
 
-            <button class="btn w-100 fw-bold text-white py-2" :style="{ backgroundColor: mainColor }" @click="verifyAndResetPassword">
-              인증 완료
-            </button>
+            <!-- 상단 버튼 제거: 하단 링크로 기능 수행 -->
           </div>
           <div v-else-if="pwStep === 2">
             <div class="alert text-center p-3 rounded-3 border-0 fw-bold" :style="{ backgroundColor: mainColor + '10', color: darkColor }">
@@ -72,19 +68,21 @@
       </div>
     </div>
 
-    <div class="mt-4 text-center">
-      <div v-if="activeTab === 'id'">
-        <a href="#" @click.prevent="changeTab('password')" class="small fw-bold text-decoration-none" :style="{ color: mainColor }">
-          비밀번호 찾기 >
-        </a>
-      </div>
-      <div v-else-if="activeTab === 'password'">
-        <a href="#" @click.prevent="changeTab('id')" class="small fw-bold text-decoration-none" :style="{ color: mainColor }">
-          아이디 찾기 >
-        </a>
-      </div>
-
-      <a href="#" @click.prevent="$router.push({ name: 'Login' })" class="small fw-bold text-decoration-none ms-3" :style="{ color: darkColor }">
+    <div class="mt-4 text-end">
+      <a
+        href="#"
+        @click.prevent="activeTab === 'id' ? verifyAndFindId() : verifyAndResetPassword()"
+        class="small fw-bold text-decoration-none"
+        :style="{ color: mainColor }"
+      >
+        {{ activeTab === 'id' ? '아이디 찾기 이어가기 >' : '비밀번호 찾기 이어가기 >' }}
+      </a>
+      <a
+        href="#"
+        @click.prevent="$router.push({ name: 'Login' })"
+        class="small fw-bold text-decoration-none ms-3"
+        :style="{ color: darkColor }"
+      >
         로그인으로 돌아가기 >
       </a>
     </div>
@@ -110,9 +108,9 @@ const idStep = ref(1);
 const pwStep = ref(1);
 
 const idForm = ref({ name: '', phone: '', code: '' });
-const idResult = ref({ name: '김준하', username: 'junha123' });
+const idResult = ref({ name: '김준하', id: 'junha123' });
 
-const pwForm = ref({ username: '', phone: '', code: '' });
+const pwForm = ref({ id: '', phone: '', code: '' });
 
 
 // --- Styles ---
@@ -160,7 +158,7 @@ const verifyAndFindId = async () => {
 };
 
 const verifyAndResetPassword = async () => {
-  if (pwForm.value.code !== '12345' || !pwForm.value.username || !pwForm.value.phone) {
+  if (pwForm.value.code !== '12345' || !pwForm.value.id || !pwForm.value.phone) {
     showConfirmModal({ title: '인증 실패', message: '정보를 확인하거나 인증번호를 다시 요청해주세요.', type: 'error' });
     return;
   }
@@ -173,7 +171,7 @@ const verifyAndResetPassword = async () => {
 
     setTimeout(() => {
       // 사용자 정보를 쿼리 파라미터로 넘겨 재설정 페이지로 이동
-      router.push({ name: 'ResetPassword', query: { username: pwForm.value.username } });
+      router.push({ name: 'ResetPassword', query: { id: pwForm.value.id } });
     }, 1000);
 
   } catch (e) {

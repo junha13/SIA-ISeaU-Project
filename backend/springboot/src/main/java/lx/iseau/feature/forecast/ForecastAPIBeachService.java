@@ -8,23 +8,23 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Service
-public class ForecastAPIService {
+@RequiredArgsConstructor
+public class ForecastAPIBeachService {
 
-	@Autowired
-	private WebClient.Builder webClientBuilder;
+	private final WebClient.Builder webClientBuilder;
 	
-	@Autowired
-	private ForecastDAO dao;
+	private final ForecastDAO dao;
 	
-	public List<Map<String, Object>> getForecastData() {
+	public List<Map<String, Object>> getFirstForecastData() {
 		WebClient webClient = webClientBuilder.build();
 		
 		// 해수욕장에서 위경도 뽑아와서 넣기
@@ -53,10 +53,11 @@ public class ForecastAPIService {
 							.path("/v1/forecast")
 							.queryParam("latitude", lat)
 							.queryParam("longitude", lon)
-							.queryParam("hourly", "temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,rain")
+							.queryParam("hourly", "temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,uv_index_clear_sky,precipitation")
 							.queryParam("models", "kma_seamless")
 							.queryParam("timezone", "Asia/Seoul")
 							.queryParam("forecast_days", 3)
+							.queryParam("windspeed_unit", "ms")
 							.build()
 							)
 					.retrieve()
@@ -67,8 +68,9 @@ public class ForecastAPIService {
 			return result;
 	}
 	
+	
 	@Transactional
-	public void insertDB(List<Map<String, Object>> result) {
+	public void insertFirsttDB(List<Map<String, Object>> result) {
 		List<ResponseWeatherDTO> allRows = new ArrayList<>();
 		
 		// 1. 모든 API 응답을 파싱하여 하나의 리스트로 통합
@@ -89,15 +91,17 @@ public class ForecastAPIService {
             }
 			
 			List<String> forecastTime = (List<String>) hourly.get("time");
-			List<Double> temperature = (List<Double>) hourly.get("temperature_2m");
-			List<Double> windSpeed = (List<Double>) hourly.get("wind_speed_10m");
-			List<Integer> windDirection = (List<Integer>) hourly.get("wind_direction_10m");
-			List<Double> rainfall = (List<Double>) hourly.get("rain");
+			List<Double> temperature = (List<Double>) hourly.get("temperature_2m"); // 온도
+			List<Integer> humidity = (List<Integer>) hourly.get("relative_humidity_2m"); // 습도
+			List<Double> rain = (List<Double>) hourly.get("precipitation"); // 강수량
+			List<Double> windGusts = (List<Double>) hourly.get("wind_gusts_10m"); // 돌풍
+			List<Double> windSpeed = (List<Double>) hourly.get("wind_speed_10m"); // 풍속
+			List<Integer> windDirection = (List<Integer>) hourly.get("wind_direction_10m"); // 풍향
 			
             // 데이터 배열들의 크기가 일치하는지 확인하여 IndexOutOfBoundsException 방지
-            if (forecastTime == null || temperature == null || windSpeed == null || windDirection == null || rainfall == null ||
+            if (forecastTime == null || temperature == null || windSpeed == null || windDirection == null ||
                 !(forecastTime.size() == temperature.size() && forecastTime.size() == windSpeed.size() &&
-                  forecastTime.size() == windDirection.size() && forecastTime.size() == rainfall.size())) {
+                  forecastTime.size() == windDirection.size())) {
                 System.err.println("Warning: Mismatched hourly data arrays for location " + lat + "," + lon);
                 continue;
             }
@@ -108,9 +112,11 @@ public class ForecastAPIService {
 				dto.setLon(lon);
 				dto.setForecastTime(LocalDateTime.parse(forecastTime.get(i)));
 				dto.setTemperature(temperature.get(i));
+				dto.setHumidity(humidity.get(i));
+				dto.setRain(rain.get(i));
+				dto.setWindGusts(windGusts.get(i));
 				dto.setWindSpeed(windSpeed.get(i));
 				dto.setWindDirection(windDirection.get(i));
-				dto.setRainfall(rainfall.get(i));
 				
 				allRows.add(dto);
 			}
@@ -122,17 +128,17 @@ public class ForecastAPIService {
                 Collectors.toMap(
                     // 유니크 키 생성
                     dto -> dto.getLat() + ":" + dto.getLon() + ":" + dto.getForecastTime(),
-                    Function.identity(),
+                   Function.identity(),
                     // 키가 중복될 경우, 기존 값을 새 값으로 덮어씀
                     (existing, replacement) -> replacement
-                ),
-                map -> new ArrayList<>(map.values())
+               ),
+               map -> new ArrayList<>(map.values())
             ));
 		
 		// 3. 반복문이 끝난 후, 중복이 제거된 최종 리스트를 DB에 한 번만 저장
 		if (!distinctRows.isEmpty()) {
             System.out.println("Upserting " + distinctRows.size() + " unique forecast rows to the database.");
-			dao.upsertForecastDB(distinctRows);
+			dao.upsertWeatherDB(distinctRows);
 		} else {
             System.out.println("No new forecast data to upsert.");
         }
