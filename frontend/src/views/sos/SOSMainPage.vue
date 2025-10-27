@@ -21,7 +21,7 @@
            :style="{ backgroundColor: dangerColor, cursor: 'pointer' }"
            @click="handleEmergencyCall('119')">
         <i class="fas fa-phone-alt fa-3x mb-2 text-white"></i>
-        <h4 class="fw-bolder mb-0 text-white">119 긴급 신고</h4>
+        <h4 class="fw-bolder mb-0 text-white">119 긴급 신고</h4> 
       </div>
 
       <!-- 주요 기능 4개 (Grid Layout) -->
@@ -78,10 +78,6 @@
         <h4 class="fw-bolder mb-0" :style="{ color: darkColor }">연결 중입니다....</h4>
       </div>
     </div>
-
-    <!-- 응급 처치 모달 (FirstAidModal은 컴포넌트로 분리됨) -->
-    <FirstAidModal v-model:isVisible="showFirstAidModal" :caseNum="firstAidCaseNum" />
-
   </div>
 </template>
 
@@ -89,7 +85,6 @@
 import { ref } from 'vue';
 import { useSOSStore } from '@/stores/sosStore'; // SOS Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
-import FirstAidModal from '@/components/FirstAidModal.vue';
 
 const sosStore = useSOSStore();
 const { showConfirmModal } = useConfirmModal();
@@ -101,63 +96,73 @@ const safetyColor = '#8482FF';
 const cautionColor = '#FFB354';
 const dangerColor = '#EB725B';
 
-// --- State ---
-const showFirstAidModal = ref(false);
-const firstAidCaseNum = ref('');
+// ===== (NEW) 플랫폼 판단 유틸 =====
+const isMobileEnv = () => {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  return /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua);
+};
+
+// ===== 실제 다이얼 호출 =====
+// - 모바일: 전화앱 호출 (tel:)
+// - PC/미지원: 번호 복사 + 안내
+const dial = async (displayTitle, number) => {
+  try {
+    sosStore.setLoading(true);
+
+    // 스토어에 logEmergencyCall이 존재하면 로깅 (없으면 무시)
+    if (typeof sosStore.logEmergencyCall === 'function') {
+      await sosStore.logEmergencyCall({ title: displayTitle, target: number }).catch(() => {});
+    }
+
+    if (isMobileEnv()) {
+      // 모바일: 전화 앱 호출
+      window.location.href = `tel:${number}`;
+    } else {
+      // PC 등: 번호 복사 + 안내
+      try {
+        await navigator.clipboard.writeText(number);
+        await showConfirmModal({
+          title: '전화 연결 안내',
+          message: `${displayTitle} 번호(${number})를 복사했어요.\n스마트폰에서 붙여넣어 전화를 걸어주세요.`,
+          type: 'info',
+        });
+      } catch {
+        await showConfirmModal({
+          title: '전화 연결 안내',
+          message: `${displayTitle} 번호: ${number}\n복사가 차단된 환경이에요. 직접 눌러 전화해 주세요.`,
+          type: 'info',
+        });
+      }
+    }
+  } finally {
+    sosStore.setLoading(false);
+  }
+};
 
 // --- Methods ---
 // 신고 타깃: '119' | '122' | 'lifeguard'
 const handleEmergencyCall = async (target) => {
   
-  if (target === 'lifeguard') {
-    // 의료소 찾기는 별도 로직 (여기서는 응급 처치 모달로 대체)
-    showFirstAidModal.value = true;
-    firstAidCaseNum.value = '1';
-    return;
-  }
-  
-
-  // 1) 타깃별 UI 텍스트/타이틀 설정 (한 곳에서 관리)
+  // 1) 타깃별 텍스트/번호 맵
   const CONFIG = {
-    '119':        { title: '119 긴급 신고' },
-    '122': { title: '해양경찰 신고' },
-    'lifeguard':  { title: '라이프가드 신고' },
+    '119':        { title: '119 긴급 신고', number: '119' },
+    '122':        { title: '해양경찰 신고(122)', number: '122'},
+    'lifeguard':  { title: '라이프가드 신고', number: null } // 고정번호가 없으니 별도 처리
   };
 
   const cfg = CONFIG[target];
 
-  const result = await showConfirmModal({
+  const confirmed = await showConfirmModal({
     title: cfg.title,
-    message: `${cfg.title}에 바로 연결하여 신고하시겠습니까?`,
+    message: `${cfg.title}에 바로 연결할까요?`,
     type: 'confirm',
-    confirmText: '신고 연결',
+    confirmText: '전화 연결',
     cancelText: '취소',
   });
+  if (!confirmed) return;
 
-  if (result) {
-    sosStore.setLoading(true);
-
-    try {
-      // Store Action 호출 (API 로깅)
-      await sosStore.logEmergencyCall(cfg);
-
-      // 실제 연결 지연 시간 (UX용)
-      setTimeout(() => {
-        sosStore.setLoading(false);
-        showConfirmModal({
-          title: '연결 완료',
-          message: `${cfg.title} 연결 성공했습니다. (실제 연결: ${target})`,
-          type: 'success',
-          autoHide: true,
-          duration: 2000,
-        });
-      }, 1500);
-
-    } catch (e) {
-      sosStore.setLoading(false);
-      showConfirmModal({ title: '오류', message: '신고 로깅 중 오류가 발생했습니다.', type: 'error' });
-    }
-  }
+  // 실제 다이얼 (로딩/로깅 포함)
+  await dial(cfg.title, cfg.number);
 };
 </script>
 
