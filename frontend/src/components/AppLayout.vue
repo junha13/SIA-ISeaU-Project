@@ -36,7 +36,7 @@
         <div class="d-flex align-items-center">
           
           <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
-            <img class="mt-n2" src="/public/iseau4.png" style="max-width: 35px; max-width: 43px;">
+            <img class="mt-n2" src="/public/iseau4.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}
           </h1>
           <h1 v-else="header !== mainHeaderName" class="fw-bolder mb-0" :style="{ color: darkColor, fontSize: '1.5rem' }">
@@ -61,7 +61,7 @@
           </button>
         </div>
       </div>
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 50%;">
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 38%;">
         <div class="offcanvas-header border-3 border-bottom shadow-sm">
           <span class="offcanvas-title fw-bold mt-2" style="font-size: 17px;">메뉴</span>
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
