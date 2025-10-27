@@ -9,7 +9,7 @@ export const useSOSStore = defineStore('sos', () => {
     const reportData = ref({ // 해파리 제보 폼 데이터
         lat: '',
         lng: '',
-        location: '',
+        //location: '',
         phone: '',
         description: '',
         imageFile: null,
@@ -50,23 +50,20 @@ export const useSOSStore = defineStore('sos', () => {
         // 좌표(분리)
         fd.append('lat', String(latNum));
         fd.append('lon', String(lngNum));
-        // 좌표(문자열; DB에 location 컬럼이 있으면 유용)
+
+        /* 좌표(문자열; DB에 location 컬럼이 있으면 유용)
         fd.append('location', locStr);
+        */
 
         // 전화/설명 (네이밍 혼재 대비)
-        if (reportData.value.phone) {
-        fd.append('mobile', reportData.value.phone); // 백엔드가 mobile로 받을 수도 있음
-        }
-        if (reportData.value.description) {
-        fd.append('details', reportData.value.description); // 백엔드가 details로 받을 수도 있음
-        }
-
+        if (reportData.value.phone) fd.append('mobile', reportData.value.phone); 
+        if (reportData.value.description) fd.append('details', reportData.value.description); 
+        
         // 파일
-        if (reportData.value.imageFile) {
-        fd.append('imageUrl', reportData.value.imageFile); // 백엔드가 image_url로 받을 수도 있음
-        }
+        if (reportData.value.imageFile) fd.append('imageFile', reportData.value.imageFile); 
+        
         // 선택: 기본 승인 상태
-        fd.append('admin_approval', 'N');
+        fd.append('adminApproval', 'N');
 
         try {
         setLoading(true);
@@ -75,7 +72,7 @@ export const useSOSStore = defineStore('sos', () => {
         reportData.value = {
             lat: '',
             lng: '',
-            location: '',
+            //location: '',
             phone: '',
             description: '',
             imageFile: null,

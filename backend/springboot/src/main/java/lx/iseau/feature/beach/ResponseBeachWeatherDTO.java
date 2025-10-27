@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class ResponseBeachWeatherDTO {
 
 
-    private int weatherNumber; 
+    private int weatherNumber;
     private double temperature;        // temperature (double precision)
     private int humidity;              // humidity (integer)
     private Integer rainProbability;       // rain_probability (integer)
@@ -25,6 +25,6 @@ public class ResponseBeachWeatherDTO {
     private double latitude;
     private double longitude;
      private double lat;
-     private double lon; 
+     private double lon;
 
 }

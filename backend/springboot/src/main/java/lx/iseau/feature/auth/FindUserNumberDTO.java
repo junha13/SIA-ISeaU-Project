@@ -1,20 +1,16 @@
 package lx.iseau.feature.auth;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class FindUserNumberDTO {
     private String id;
     private String mobile;
 
-    //getter setter
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
-    }
-    public String getMobile() {
-        return mobile;
-    }
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
-    }
 }

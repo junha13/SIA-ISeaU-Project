@@ -163,7 +163,7 @@ const handle119Report = async () => {
 
   const confirmed = await showConfirmModal({
     title: '긴급 신고 확인',
-    message: `선택된 상황: "${label}"\n정말 119에 신고를 요청하시겠습니까?`,
+    message: `"${label}"\n정말 119에 신고를 요청하시겠습니까?`,
     type: 'confirm',
     confirmText: '신고 연결',
     cancelText: '취소',

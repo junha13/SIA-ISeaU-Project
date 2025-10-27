@@ -23,6 +23,8 @@
 --   tb_role, -- 역할
 --   tb_user, -- 회원
 --   tb_beach, -- 해수욕장
+--   tb_beach_tag, -- 해수욕장 태그
+--   tb_beach_tag_list, -- 해수욕장별 태그목록록
 --   tb_first_aid, -- 응급처치
 --   tb_beach_weather_info,
 --   tb_uv_info
@@ -44,6 +46,18 @@ CREATE TABLE tb_beach
      close_date           DATE  NOT NULL 
     ) 
 ;
+CREATE TABLE tb_beach_tag (
+    tag_number        		SERIAL PRIMARY KEY,
+    tag_name      		VARCHAR(50) NOT NULL UNIQUE   -- 예: '서핑', '가족', '안전'
+);
+
+CREATE TABLE tb_beach_tag_list (
+    beach_number  integer NOT NULL,
+    tag_number    integer NOT NULL,
+
+    -- 중복 방지 (같은 해수욕장에 같은 태그 두 번 못 넣게)
+    PRIMARY KEY (beach_number, tag_number)
+);
 
 CREATE TABLE tb_beach_cannot_forecast 
     ( 
@@ -317,6 +331,26 @@ ALTER TABLE tb_beach_comment_list
      beach_number
     ) 
 ;
+ALTER TABLE tb_beach_tag_list
+    ADD CONSTRAINT tb_beach_FKv3 FOREIGN KEY 
+    ( 
+     beach_number
+    ) 
+    REFERENCES tb_beach 
+    ( 
+     beach_number
+    ) 
+;
+ALTER TABLE tb_beach_tag_list
+    ADD CONSTRAINT tb_beach_tag_FKv1 FOREIGN KEY 
+    ( 
+     tag_number
+    ) 
+    REFERENCES tb_beach_tag
+    ( 
+     tag_number
+    ) 
+;
 
 ALTER TABLE tb_post 
     ADD CONSTRAINT tb_board_FK FOREIGN KEY 
@@ -473,6 +507,10 @@ ALTER TABLE tb_beach_daily_forcast
 ------------------------------------------------------------------------------------------------
 -- 데이터 연결
 
+-- 해수욕장 태그목록 넣기
+insert into tb_beach_tag (tag_name)
+values ('산책'), ('수영'), ('레저'), ('서핑'), ('가족'), ('핫플'), ('한적'), ('반려동물 동반');
+
 -- 해수욕장 데이터 넣기 (주의 : lon - lat 순서임) 
 INSERT INTO tb_beach (
     beach_name, 
@@ -546,7 +584,7 @@ VALUES
         '064-739-4993', -- 콤마(,) 추가
         DATE '2025-07-01', 
         DATE '2025-08-31'),
-		(
+      (
     '이호테우해수욕장',
     'https://buly.kr/8emJacU',
     '상당히 재밌다',
@@ -558,7 +596,7 @@ VALUES
     DATE '2025-07-15',
     DATE '2025-08-15'
     ),
-	(
+   (
     '경포대해수욕장',
     'https://buly.kr/8ph4YvI',
     '무지 재밌다',
@@ -569,8 +607,8 @@ VALUES
     '0507-1320-4901',
     DATE '2025-06-28',
     DATE '2025-08-17'
-	),
-	(
+   ),
+   (
     '협재해수욕장',
     'https://buly.kr/Gvnvh5N',
     '정말 재밌다',
@@ -639,7 +677,108 @@ VALUES
     '경기도 화성시 서신면 해안길 260',
     '031-5189-6018',
     DATE '2025-07-01',
-    DATE '2025-08-31'); 
+    DATE '2025-08-31'),
+
+('구룡포해수욕장',
+    'https://buly.kr/2Jp434m',
+    '구룡포 짱짱짱',
+    ST_GeomFromText('POINT(129.5665 35.99816)', 4326)::geography,
+    'Y',
+    3.5,
+    '경상북도 포항시 남구 구룡포읍 호미로426번길 6',
+    ' 054-270-6561',
+    DATE '2025-07-12',
+    DATE '2025-08-24'),
+   ('대천해수욕장',
+   'https://buly.kr/1n4n8sW', 
+   '서해 대표 해수욕장', 
+   ST_GeomFromText('POINT(126.5120 36.3030)', 4326)::geography, 
+   'Y', 
+   4.5, 
+   '충청남도 보령시 신흑동', 
+   '041-930-3520', 
+   DATE '2025-07-12', DATE '2025-08-24'),
+('무창포해수욕장', 
+'https://buly.kr/C0Ak2Ew', 
+'바닷길이 열리는 신비', 
+ST_GeomFromText('POINT(126.5130 36.2340)', 4326)::geography, 
+'Y', 4.1, '
+충청남도 보령시 웅천읍', 
+'041-930-0800', 
+DATE '2025-07-12', DATE '2025-08-24'),
+('꽃지해수욕장', 
+'https://buly.kr/DwF4pIV', 
+'할미·할아비바위 노을', 
+ST_GeomFromText('POINT(126.3300 36.5220)', 4326)::geography, 
+'Y', 4.4, 
+'충청남도 태안군 안면읍 승언리', 
+'041-670-2543', 
+DATE '2025-07-12', DATE '2025-08-24'),
+('만리포해수욕장', 
+'https://buly.kr/5UIhkAO', 
+'태안의 대표 백사장', 
+ST_GeomFromText('POINT(126.1446127 36.7879436)', 4326)::geography,
+'Y', 4.3, 
+'충청남도 태안군 소원면', 
+'041-672-9662', 
+DATE '2025-07-12', DATE '2025-08-24'),
+('신지명사십리해수욕장', 
+'https://buly.kr/CWv0yuO', 
+'직선 4km 백사장', 
+ST_GeomFromText('POINT(126.8090 34.32810)', 4326)::geography, 
+'Y', 4.5, 
+'전라남도 완도군 신지면', 
+'061-550-5427', 
+DATE '2025-07-12', DATE '2025-08-24'),
+
+('만성리검은모래해변', 'https://buly.kr/2fea3Gq', '검은모래와 해상레일바이크로 유명한 여수 대표 해변', 
+ ST_GeomFromText('POINT(127.7181 34.7713)', 4326)::geography, 'Y', 4.3,
+ '전라남도 여수시 만흥동 1-3', 
+'061-651-4525', DATE '2025-07-12', DATE '2025-08-24'),
+
+('신지명사십리해수욕장', 'https://buly.kr/CWv0yuO', '직선거리 4km의 고운 백사장으로 완도 대표 명소', 
+ ST_GeomFromText('POINT(126.8939 34.3127)', 4326)::geography, 'Y', 4.5,
+ '전라남도 완도군 신지면 명사십리길 85', '061-550-5427', DATE '2025-07-12', DATE '2025-08-24'),
+
+('율포솔밭해수욕장', 'https://buly.kr/7mCYUzR', '소나무 숲 캠핑장과 해수녹차탕으로 유명한 보성 명소', 
+ ST_GeomFromText('POINT(127.0796 34.7658)', 4326)::geography, 'Y', 4.2,
+ '전라남도 보성군 회천면 율포해변길 25', '061-850-5448', DATE '2025-07-12', DATE '2025-08-24'),
+
+('우전해수욕장', 'https://buly.kr/1RFHBef', '증도의 얕은 바다와 모래톱으로 가족 단위 인기', 
+ ST_GeomFromText('POINT(126.1367 34.97131)', 4326)::geography, 'Y', 4.3,
+ '전라남도 신안군 증도면 우전리 200', '061-240-4003', DATE '2025-07-12', DATE '2025-08-24'),
+
+('송호해수욕장', 'https://buly.kr/2qZL2ES', '완만한 경사와 얕은 수심으로 어린이 동반에 적합', 
+ ST_GeomFromText('POINT(127.2595 34.6159)', 4326)::geography, 'Y', 4.1,
+ '전라남도 고흥군 도화면 송호리 339-2','061- 530- 5917', DATE '2025-07-12', DATE '2025-08-24'),
+
+('가마미해수욕장', 'https://buly.kr/7x7JU6h', '서해안 노을 명소, 넓은 백사장과 야영장', 
+ ST_GeomFromText('POINT(126.4093 35.39868)', 4326)::geography, 'Y', 4.3,
+ '전라남도 영광군 염산면 가마미해수욕장길 23', '061-356-1020', DATE '2025-07-12', DATE '2025-08-24'),
+
+('백수해안도로해변', 'https://buly.kr/9BWcMIt', '노을이 아름다운 드라이브 코스 겸 해변', 
+ ST_GeomFromText('POINT(126.4106 35.3457)', 4326)::geography, 'Y', 4.2,
+ '전라남도 영광군 백수읍 백암리 일대',    '061-350-5600', DATE '2025-07-12', DATE '2025-08-24'),
+
+('변산해수욕장',    'https://buly.kr/1RFHCN5', '부안의 대표 관광지, 변산반도 국립공원 내 위치', 
+ ST_GeomFromText('POINT(126.5848 35.6501)', 4326)::geography, 'Y', 4.5,
+ '전라북도 부안군 변산면 대항리 1', '063-582-7808', DATE '2025-07-12', DATE '2025-08-24'),
+
+('격포해수욕장', 'https://buly.kr/74XWaRX', '채석강과 함께 즐기는 해변', 
+ ST_GeomFromText('POINT(126.5178 35.6275)', 4326)::geography, 'Y', 4.4,
+ '전라북도 부안군 격포리 178',   '063-580-4493', DATE '2025-07-12', DATE '2025-08-24'),
+
+('고사포해수욕장', 'https://buly.kr/8824TK2', '가족 단위 캠핑 명소', 
+ ST_GeomFromText('POINT(126.5884 35.6468)', 4326)::geography, 'Y', 4.3,
+ '전라북도 부안군 변산면 도청리 12', '063-580-4493', DATE '2025-07-12', DATE '2025-08-24'),
+
+('모항해수욕장', 'https://buly.kr/6Bxjg26', '조용하고 프라이빗한 소규모 해변', 
+ ST_GeomFromText('POINT(126.4975 35.5962)', 4326)::geography, 'Y', 4.2,
+ '전라북도 부안군 하서면 백련리 178-1',   '063-583-6941', DATE '2025-07-12', DATE '2025-08-24'),
+
+('위도해수욕장', 'https://buly.kr/5fDSjWo', '도서여행 명소, 맑은 물과 고운 모래', 
+ ST_GeomFromText('POINT(126.2834 35.60410)', 4326)::geography, 'Y', 4.4,
+ '전라북도 부안군 위도면 대리', '063-580-3762', DATE '2025-07-12', DATE '2025-08-24');
 
 ALTER TABLE tb_beach ADD COLUMN region varchar(20);
 UPDATE tb_beach SET region='부산' WHERE address LIKE '부산%';
@@ -669,6 +808,21 @@ insert into tb_first_aid (first_aid_case_num, first_aid_case_name,
 first_aid_step, first_aid_content, first_aid_image,
 first_aid_description) values
 (1, '해파리 쏘임 응급 처치', 1, '바다에서 나오기', 'images/fa/jellyfish1.mp4', '침착하게 바다에서 나와 안전한 곳으로 이동하세요.'),
-(1, '해파리 쏘임 응급 처치', 2, '촉수 제거하기', 'images/fa/jellyfish1.mp4', '핀셋이나 카드로 조심스럽게 제거 \n맨손으로 만지지 마세요!'),
-(1, '해파리 쏘임 응급 처치', 3, '바닷물로 씻기', 'images/fa/jellyfish1.mp4', '바닷물로 부드럽게 씻어내기 \n민물이나 알코올 사용 금지!'),
-(1, '해파리 쏘임 응급 처치', 4, '냉찜질하기', 'images/fa/jellyfish1.mp4', '깨끗한 물수건이나 얼음팩을 수건에 감싸 이용해 피부 온도를 낮춰주세요. \n얼음을 직접 피부에 대지 마세요!');
+(1, '해파리 쏘임 응급 처치', 2, '촉수 제거하기', 'images/fa/jellyfish1.mp4', '핀셋이나 카드로 조심스럽게 제거, 맨손으로 만지지 마세요!'),
+(1, '해파리 쏘임 응급 처치', 3, '바닷물로 씻기', 'images/fa/jellyfish1.mp4', '바닷물로 부드럽게 씻어내기, 민물이나 알코올 사용 금지!'),
+(1, '해파리 쏘임 응급 처치', 4, '냉찜질하기', 'images/fa/jellyfish1.mp4', '깨끗한 물수건이나 얼음팩을 수건에 감싸 이용해 피부 온도를 낮춰주세요., 얼음을 직접 피부에 대지 마세요!'),
+
+(2, '저체온증 응급 처치', 1, '바다에서 나오기', 'images/fa/jellyfish1.mp4', '침착하게 바다에서 나와 안전한 곳으로 이동하세요.'),
+(2, '저체온증 응급 처치', 2, '젖은 옷 벗기', 'images/fa/jellyfish1.mp4', '젖은 옷은 체온을 빼앗으므로 모두 벗깁니다.'),
+(2, '저체온증 응급 처치', 3, '따뜻하게 하기', 'images/fa/jellyfish1.mp4', '따뜻한 음료를 마시게 하고 옷을 껴입게 합니다., 겨드랑이나 배 목 뒤 등 큰 혈관이 있는 곳에 따뜻한 물주머니를 둡니다. (화상 주의 !)'),
+(2, '저체온증 응급 처치', 4, '움직임 최소화', 'images/fa/jellyfish1.mp4', '과도한 움직임은 심근에 부담을 주므로 최소화합니다.'),
+
+(3, '열사병 응급 처치', 1, '119 즉시 신고하기', 'images/fa/jellyfish1.mp4', '열사병인 경우 매우 위험하니 즉시 119에 신고하세요.'),
+(3, '열사병 응급 처치', 2, '환자 이동', 'images/fa/jellyfish1.mp4', '환자를 시원한 그늘이나 에어컨이 있는 곳으로 옮기세요.'),
+(3, '열사병 응급 처치', 3, '몸 식히기', 'images/fa/jellyfish1.mp4', '구급차가 도착하기 전까지 얼음이나 젖은 수건 등을 이용해 체온을 낮춰주세요.'),
+(3, '열사병 응급 처치', 4, '아무것도 먹이지 말기', 'images/fa/jellyfish1.mp4', '의식이 저하된 환자에게 약 포함 아무것도 먹이면 안됩니다.'),
+
+(4, '햇빛 화상 응급 처치', 1, '차가운 물로 식히기', 'images/fa/jellyfish1.mp4', '냉수 샤워나 찬물에 적신 수건으로 열을 식혀주세요., 얼음 또는 아주 찬물은 금지 !'),
+(4, '햇빛 화상 응급 처치', 2, '피부 수분 공급하기', 'images/fa/jellyfish1.mp4', '알로에젤 수딩젤 무향 보습로션 등을 발라주세요.'),
+(4, '햇빛 화상 응급 처치', 3, '햇볕 피하기', 'images/fa/jellyfish1.mp4', '화상을 입은 부위가 다시 햇볕에 노출되지 않도록 해주세요.'),
+(4, '햇빛 화상 응급 처치', 4, '물집은 터뜨리지 말기', 'images/fa/jellyfish1.mp4', '물집을 억지로 터뜨리면 세균 감염이 있으니 터뜨리지 마세요 !');
