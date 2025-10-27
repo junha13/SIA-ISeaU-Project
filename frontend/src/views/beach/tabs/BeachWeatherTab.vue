@@ -34,15 +34,14 @@
 
     <!-- 3. 상세 정보 (위치 변경됨) -->
     <div class="card shadow-sm p-3 mb-3"> 
-      <h6 class="fw-bold mb-2">상세 정보</h6>
-      <div class="row text-center">
-        <div class="col"><small>풍속</small><div>{{ currentWeather?.windSpeed || '--' }}m/s</div></div>
-        <div class="col"><small>습도</small><div>{{ currentWeather?.humidity || '--' }}%</div></div>
-        <div class="col"><small>자외선지수</small><div>{{ currentWeather?.uvIndex || '--' }}</div></div>
-        <div class="col"><small>강수확률</small><div>{{ currentWeather?.rainProbability || '--' }}m</div></div>
-      </div>
-    </div>
-
+      <h6 class="fw-bold mb-2">상세 정보</h6>
+      <div class="row text-center">
+                <div class="col"><small>풍속</small><div>{{ currentWeather?.windSpeed ?? '--' }}m/s</div></div>
+        <div class="col"><small>습도</small><div>{{ currentWeather?.humidity ?? '--' }}%</div></div>
+        <div class="col"><small>자외선지수</small><div>{{ currentWeather?.uvIndex ?? '--' }}</div></div>
+        <div class="col"><small>강수확률</small><div>{{ currentWeather?.rainProbability ?? '--' }}%</div></div>
+      </div>
+    </div>
     <!-- 4. [NEW] 일별 예보 (토글 & 시간별 목록) -->
     <div class="card shadow-sm p-3">
       <h6 class="fw-bold mb-2">일별 예보</h6>
@@ -193,6 +192,7 @@ const dailySummaries = computed(() => {
 });
 
 // 4. [NEW] 선택된 날짜의 시간별 예보
+// 4. [NEW] 선택된 날짜의 시간별 예보
 const selectedDayHourlyForecast = computed(() => {
     if (!Array.isArray(weatherData.value) || weatherData.value.length === 0 || !selectedDay.value) {
         return [];
@@ -214,7 +214,14 @@ const selectedDayHourlyForecast = computed(() => {
         }
     }
     
-    return result;
+    // --- [수정] ----------------------------------
+    // API가 보내준 중복 데이터를 forecastTime 기준으로 제거합니다.
+    const uniqueResult = result.filter((item, index, self) =>
+        index === self.findIndex(t => t.forecastTime === item.forecastTime)
+    );
+    // ---------------------------------------------
+    
+    return uniqueResult; // [수정] result -> uniqueResult
 });
 
 // 5. [NEW] 토글 버튼에 표시할 날짜/요일 정보

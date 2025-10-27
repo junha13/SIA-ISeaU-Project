@@ -81,8 +81,6 @@ ORDER BY
     w.forecast_time ASC
 ]]>
 </select>
-
-	
 <select id="getBeachDetailWeather" parameterType="int" resultType="ResponseBeachWeatherDTO">
     WITH beach_location AS (
         SELECT location FROM tb_beach WHERE beach_number = #{beachNumber}
@@ -96,30 +94,33 @@ ORDER BY
         w.wind_gusts,
         w.wind_speed,
         w.wind_direction,
-        w.forecast_time,  -- w와 u 둘 다 있으므로 별칭(w.) 필수!
+        w.forecast_time,
 
-        -- 2. tb_uv_info
+        -- 2. tb_uv_info (LEFT JOIN 되므로 데이터가 없으면 NULL)
         u.rain_probability,
         u.uv_index,
         u.uv_index_clear_sky
 
     FROM
-        tb_weather_info w,
-        tb_uv_info u,     -- [수정] JOIN ON 대신 FROM에 둘 다 명시
-        beach_location b
+        tb_weather_info w
+    
+    -- [수정] 해변 위치(b)를 먼저 JOIN
+    JOIN
+        beach_location b 
+        -- 날씨(w)가 10km 반경 내에 있어야 함 (메인 조건)
+        ON ST_DWithin(w.observed_location, b.location, 10000)
 
-    WHERE
-        -- [수정] 조건 1: 날씨(w)가 해변(b) 10km 반경 내에 있음
-        ST_DWithin(w.observed_location, b.location, 10000)
-
-        -- [수정] 조건 2: UV(u)도 해변(b) 10km 반경 내에 있음
+    -- [수정] UV(u) 정보는 LEFT JOIN으로 변경
+    LEFT JOIN
+        tb_uv_info u
+        -- 조건 1: 날씨(w)와 예보 시간이 같아야 함
+        ON w.forecast_time = u.forecast_time
+        -- 조건 2: UV(u) 데이터도 10km 반경 내에 있어야 함
         AND ST_DWithin(u.observed_location, b.location, 10000)
 
-        -- [수정] 조건 3: 날씨(w)와 UV(u)의 예보 시간이 같음
-        AND w.forecast_time = u.forecast_time
-
-        -- 조건 4: 현재 시간 이후의 예보만
-        AND w.forecast_time >= NOW()
+    WHERE
+        -- [수정] 메인 테이블(w)의 시간 조건
+        w.forecast_time >= NOW()
         
     ORDER BY
         -- 5. 해변 위치와 (날씨 데이터를 기준으로) 가장 가까운 순서, 그다음 시간 순으로 정렬
@@ -128,6 +129,7 @@ ORDER BY
         
     LIMIT 72;
 </select>
+	
 <!-- BeachDAO.xml 파일 내부 -->
 <select id="getBeachFavorites" parameterType="int" resultType="ResponseFavoritesDTO">
     SELECT
