@@ -10,7 +10,7 @@
       <h5 class="fw-bold mb-4" :style="{ color: mainColor }">로그인</h5>
 
       <div class="form-group mb-3">
-        <input type="text" class="form-control" placeholder="아이디" v-model="username">
+        <input type="text" class="form-control" placeholder="아이디" v-model="id">
       </div>
 
       <div class="form-group mb-4">
@@ -47,54 +47,86 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useConfirmModal } from '@/utils/modalUtils';
 import { useAuthStore } from '@/stores/authStore';
+import { authApi } from '@/api/auth';
+import { getTokenAndSave} from "../../../fcmUtils.js";
 
 const router = useRouter();
-const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-const username = ref('');
+const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 
 const handleLogin = async () => {
-  if (!username.value || !password.value) {
-    showConfirmModal({
-      title: '로그인 오류',
-      message: '아이디와 비밀번호를 모두 입력해주세요.',
-      type: 'error',
-      autoHide: true,
-      duration: 1500,
-    });
+  if (!id.value || !password.value) {
+    alert('아이디와 비밀번호를 모두 입력해주세요.');
     return;
   }
 
+  /**
+   * 로그인 처리
+   * POST /api/auth/login
+   * @param {string} id - 로그인 아이디
+   * @param {string} password - 비밀번호
+   * @returns {Object} userData - { userNumber, id, userName, mobile }
+   * @throws {Error} 로그인 실패 시
+   */
   try {
-    // Store Action 호출 (API 통신 및 상태 업데이트)
-    await authStore.login(username.value, password.value);
-
-    // 성공 시 모달 표시 후 페이지 이동
-    showConfirmModal({
-      title: '로그인 성공',
-      message: `${username.value}님 환영합니다!`,
-      type: 'success',
-      autoHide: true,
-      duration: 1000,
+    // 공통 API 컴포저블 사용 (VITE_API_BASE_URL 적용)
+    const result = await authApi.login({
+      id: id.value,
+      password: password.value
     });
 
-    router.push({ name: 'Main' });
+    // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
+    const userData = result?.data; // {userNumber, id, userName, mobile}
+
+    if (!userData) {
+      throw new Error('로그인 API 응답이 비어있습니다.');
+    }
+
+    // authStore에 로그인한 사용자 정보 저장
+    authStore.isAuthenticated = true;
+    authStore.userInfo.userNumber = userData.user_number;
+    authStore.userInfo.id = userData.id;
+    authStore.userInfo.userName = userData.user_name;
+    authStore.userInfo.mobile = userData.mobile || null;
+
+    console.log('로그인 후 저장된 정보:', authStore.userInfo);
+
+
+    console.log('FCM에 전달할 userNumber:', userData.user_number);
+
+    // 3. 🚨 FCM 토큰 저장 로직
+    // 🚨 수정: userData.userNumber -> userData.user_number
+    getTokenAndSave(userData.user_number).catch(fcmError => {
+      // FCM 실패 시에도 로그인 자체는 성공하도록 처리
+      console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
+    });
+
+
+    // 성공 시 알림 표시 후 페이지 이동
+    alert(`${userData.user_name}님 환영합니다!`);
+    router.replace({ name: 'Main' });
 
   } catch (e) {
-    // Store에서 던진 에러 메시지 표시
-    showConfirmModal({
-      title: '로그인 실패',
-      message: e.message,
-      type: 'error'
-    });
+    // 에러 처리
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+
+    // 백엔드에서 보낸 에러 메시지 (401 등)
+    if (e.response?.data?.message) {
+      errorMessage = e.response.data.message;
+    }
+    // 네트워크 오류 등
+    else if (e.message) {
+      errorMessage = e.message;
+    }
+
+    alert(`로그인 실패: ${errorMessage}`);
   }
 };
 </script>
@@ -105,8 +137,5 @@ const handleLogin = async () => {
   border-radius: 0.475rem;
   border: 1px solid #ced4da;
   height: 48px;
-}
-.auth-page {
-  /* 하단 푸터가 없으므로 min-vh-100을 사용하여 전체 화면을 차지 */
 }
 </style>

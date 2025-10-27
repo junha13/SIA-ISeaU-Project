@@ -11,11 +11,23 @@
       <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
       <div class="d-flex justify-content-between py-2 border-bottom">
         <span class="text-muted">이름</span>
-        <span class="fw-bold">{{ authStore.getUserInfo.name }}</span>
+        <span 
+          class="fw-bold" 
+          :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
+          :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+          @click="!authStore.userInfo.userName && goToLogin()">
+          {{ authStore.userInfo.userName || '알 수 없음' }}
+        </span>
       </div>
       <div class="d-flex justify-content-between py-2">
         <span class="text-muted">전화번호</span>
-        <span class="fw-bold">{{ authStore.getUserInfo.phone }}</span>
+        <span 
+          class="fw-bold"
+          :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
+          :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+          @click="!authStore.userInfo.mobile && goToLogin()">
+          {{ authStore.userInfo.mobile || '알 수 없음' }}
+        </span>
       </div>
     </div>
 
@@ -113,8 +125,8 @@ const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
 // --- State ---
-// 설정 상태를 Store에서 직접 가져오기 위해 구조 분해 할당 대신 전체 settings 객체를 참조
-const settings = authStore.getUserInfo.settings;
+// 설정 상태를 Store의 userInfo.settings에서 가져오기
+const settings = authStore.userInfo.settings;
 
 
 // --- Computed & Methods ---
@@ -136,6 +148,13 @@ const updateSettings = () => {
   // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
   // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
   authStore.updateSettings(settings);
+};
+
+/**
+ * 로그인 페이지로 이동
+ */
+const goToLogin = () => {
+  router.push({ name: 'Login' });
 };
 
 /**
