@@ -78,7 +78,6 @@
 
     <div class="mt-3">
       <div v-if="viewMode === 'list'">
-        <!-- 목록 -->
         <div v-if="isLoading" class="text-center p-5">
           <i class="fas fa-spinner fa-spin me-2"></i> 목록을 불러오는 중...
         </div>
@@ -91,7 +90,7 @@
         <div v-else>
           <div
             v-for="beach in filteredBeachList"
-            :key="`${beach.beachNumber}-${beach.updatedAt || ''}`"
+            :key="beach.beachNumber"  
             class="beach-card card shadow-sm mb-4 rounded-3 border-0"
             @click="goToDetail(beach.beachNumber)"
           >
@@ -138,7 +137,7 @@
   <div v-else>
     <div>
       <div class="map-view d-flex align-items-center justify-content-center bg-light rounded-3 shadow-sm"
-            style="height: 100vh; border: 1px solid #ccc;">
+           style="height: 100vh; border: 1px solid #ccc;">
         <div ref="beachMap" style="width:100%;height:100%; z-index: 1;">
           <div class="d-flex justify-content-end">
             <div class="btn-group p-1" role="group" style="z-index: 2;">
@@ -184,19 +183,16 @@ const favoriteBeachIds = ref([]);
 const isLoading = ref(false);
 const apiError = ref(null);
 
-// 수정하기
 const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
 const BEACH_LIST_API_URL = 'http://localhost:8080/api/beach/beaches';
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-// 보여주는 방식
 const activeTab = ref('all');
 const viewMode = ref('list');
 const currentSort = ref('distance');
 
-// 검색조건 - store에서 가져옴
 const tabCondition = tabOptions
 const sortCondition = sortOptions
 const regionCondition = regionOptions
@@ -204,7 +200,6 @@ const regionCondition = regionOptions
 const primaryBtnStyle = { backgroundColor: mainColor, borderColor: mainColor, color: 'white' };
 const dropdownBtnStyle = { backgroundColor: '#f8f9fa', borderColor: '#ced4da', color: darkColor };
 
-// 검색 파라미터
 const searchParams = ref({
   region: '',
   keyword: '',
@@ -218,7 +213,6 @@ onMounted(() => {
   getLocation()
 });
 
-// 검색조건 넣어서 받기
 async function loadData() {
   isLoading.value = true;
   apiError.value = null;
@@ -232,214 +226,152 @@ async function loadData() {
   }
 }
 
-// 즐겨찾기
 const fetchFavoriteIds = async () => {
   try {
     const res = await axios.get('http://localhost:8080/api/beach/favorites/my');
-
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
-
     console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
-
   } catch (error) {
     console.error("즐겨찾기 초기 로딩 실패:", error);
-    favoriteBeachIds.value = []; // 실패 시 빈 배열
+    favoriteBeachIds.value = [];
   }
 };
 
-// 지역 검색조건
 function selectRegion(region) {
   searchParams.value.region = region;
   loadData();
 }
 
-// 거리, 평점 등 검색조건
 function selectSort(sortValue) {
   currentSort.value = sortValue;
   searchParams.value.sort = sortValue;
   loadData();
 }
 
-// 즐겨찾기 토글
+// [수정] 즐겨찾기 토글 (console.log 추가)
 async function toggleFavorite(beachNumber) {
+  const isCurrentlyFavorite = favoriteBeachIds.value.includes(beachNumber);
+
+  // 1. UI 상태 먼저 변경!
+  if (isCurrentlyFavorite) {
+    favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+    console.log('💔 즐겨찾기 제거 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
+  } else {
+    favoriteBeachIds.value.push(beachNumber);
+    console.log('💖 즐겨찾기 추가 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
+  }
+
+  // 2. API 요청 보내기
   try {
-    if (favoriteBeachIds.value.includes(beachNumber)) {
-      // 즐겨찾기 삭제
+    if (isCurrentlyFavorite) {
       await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
-      favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+      console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
-      // 즐겨찾기 추가
       await axios.post(FAVORITES_API_URL, { beachNumber });
-      favoriteBeachIds.value.push(beachNumber);
+      console.log(`⭐ ${beachNumber} 즐겨찾기 추가 성공`);
     }
   } catch (error) {
-    console.error("즐겨찾기 토글 실패:", error);
+    console.error("😥 즐겨찾기 토글 API 실패:", error);
+
+    // 3. API 실패 시, UI 상태 원래대로 되돌리기!
+    if (isCurrentlyFavorite) {
+      favoriteBeachIds.value.push(beachNumber);
+      console.log('롤백: 즐겨찾기 다시 추가 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
+    } else {
+      favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+      console.log('롤백: 즐겨찾기 다시 제거 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
+    }
+    alert("즐겨찾기 변경 중 오류가 발생했습니다. 다시 시도해 주세요.");
   }
 }
 
-// 필터된 해수욕장 리스트 (즐겨찾기 탭 포함)
 const filteredBeachList = computed(() => {
   let list = dbOnlyList.value;
-
   if (activeTab.value === 'favorite') {
     list = list.filter(b => favoriteBeachIds.value.includes(b.beachNumber));
   }
-
   return list;
 });
 
 const dbOnlyList = computed(() => beaches.value);
 const isSelected = id => selectedBeachId.value === id;
 const toggleSelect = id => selectedBeachId.value = isSelected(id) ? null : id;
-const isFavorite = id => favoriteBeachIds.value.includes(id);
+
+// [수정] isFavorite 함수 (console.log 추가)
+const isFavorite = id => {
+  const result = favoriteBeachIds.value.includes(id);
+  // console.log(`isFavorite(${id}) 호출됨, 결과: ${result}`); // <-- 로그 추가 (너무 많이 찍힐 수 있음)
+  return result;
+};
+
 const goToDetail = id => router.push(`/beach/${id}`);
 const tagClass = tag => ({
-  '안전': 'bg-secondary',
-  '수영': 'bg-info',
-  '서핑': 'bg-info',
-  '산책': 'bg-warning',
-  '가족': 'bg-success',
+  '안전': 'bg-secondary', '수영': 'bg-info', '서핑': 'bg-info',
+  '산책': 'bg-warning', '가족': 'bg-success',
 }[tag] || 'bg-light text-dark');
 
-//===================== 지도 부분 ========================
-
+// 지도 부분 (변경 없음)
 const beachMap = ref(null)
 let map
 let markers = []
-
 const latitude = ref('')
 const longitude = ref('')
 
 watch(viewMode, (mode) => {
-  if (mode !== 'map') {
-    map = null
-    markers = []
-  }
+  if (mode !== 'map') { map = null; markers = []; }
 })
 
-// 관련된(함수 내부) 반응형 값들이 바뀌면 이 콜백을 다시 실행해주는 함수
 watchEffect(() => {
-
   const lat = latitude.value
   const lng = longitude.value
-
-  // 지도 모드일 때만 돌리기 (리스트 모드일 땐 굳이 안 그림)
-  if (viewMode.value !== 'map') return
-
-  // 아직 준비 안 된 경우 바로 종료
-  if (!lat || !lng || !beachMap.value || !window.naver?.maps) return
-
+  if (viewMode.value !== 'map' || !lat || !lng || !beachMap.value || !window.naver?.maps) return
   const list = beaches.value
-
-  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
   if (!map) {
-    // 내위치로 센터 맞춤
     const center = new window.naver.maps.LatLng(lat, lng)
-    map = new window.naver.maps.Map(beachMap.value, {
-      center,
-      zoom: 15
-    })
+    map = new window.naver.maps.Map(beachMap.value, { center, zoom: 15 })
   }
-
-  // 기존 마커 있었으면 지도에서 지우고 배열 초기화
-  markers.forEach(m => m.setMap(null)) // marker.setMap(null) 이 지도에서 마커 지우는거임
+  markers.forEach(m => m.setMap(null))
   markers = []
-
-// 전체 해수욕장 목록 마커 다시 그림
   list.forEach(b => {
     if (!b.latitude || !b.longitude) return
     const pos = new window.naver.maps.LatLng(b.latitude, b.longitude)
-    const m = new window.naver.maps.Marker({
-      position: pos,
-      map,
-      title: b.beachName
-    })
+    const m = new window.naver.maps.Marker({ position: pos, map, title: b.beachName })
     markers.push(m)
   })
 })
 
-// ========== Geolocation API ==========
 function getLocation() {
-  if (!navigator.geolocation) {
-    //error.value = '이 브라우저는 Geolocation을 지원하지 않아요.'
-    return
-  }
+  if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      latitude.value = pos.coords.latitude
-      longitude.value = pos.coords.longitude
-    },
-    (err) => { err.value = '위치 실패: ' + err.message },
+    (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
+    (err) => { console.error('위치 실패: ' + err.message); }, // err.value 대신 console.error 사용
     { enableHighAccuracy: true }
   )
 }
 </script>
 
 <style scoped>
-.beach-list-page {
-  padding-top: 10px;
+.beach-card .fa-heart.text-danger {
+    /* 빨간색을 강제로 적용 */
+    color: var(--bs-danger, #dc3545) !important; 
+    /* Bootstrap 변수 사용 또는 #dc3545 같은 hex 값 사용 */
 }
-.beach-card {
-  transition: transform 0.2s;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,.05) !important;
+.beach-card .fa-heart.text-muted {
+    /* 회색을 강제로 적용 */
+    color: var(--bs-gray-600, #6c757d) !important;
 }
-.beach-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-}
-.beach-image-placeholder {
-  width: 100px;
-  height: 100px;
-  background-color: #f8f9fa;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: .25rem; }
-
-.beach-image-placeholder > p {
-  line-height: 1.2;
-  padding: .2rem;
-  font-size: .65rem !important;
-}
-.beach-image-placeholder > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: .25rem;
-}
-.rating-badge {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  font-size: .75rem;
-  z-index: 10;
-}
-.badge {
-  font-size: .65rem;
-  padding: .3em .6em;
-}
-.tab-btn-primary  {
-  background-color: v-bind(mainColor) !important;
-  border-color: v-bind(mainColor) !important;
-}
-.tab-btn-light-secondary {
-  background-color: #ffffff !important;
-  border-color: v-bind(mainColor) !important;
-}
-.dropdown-toggle {
-  box-shadow: none !important;
-}
-.overflow-auto {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.overflow-auto::-webkit-scrollbar {
-  display: none;
-}
+.beach-list-page { padding-top: 10px; }
+.beach-card { transition: transform 0.2s; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; }
+.beach-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; }
+.beach-image-placeholder { width: 100px; height: 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; }
+.beach-image-placeholder > p { line-height: 1.2; padding: .2rem; font-size: .65rem !important; }
+.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; border-radius: .25rem; }
+.rating-badge { position: absolute; bottom: 5px; right: 5px; font-size: .75rem; z-index: 10; }
+.badge { font-size: .65rem; padding: .3em .6em; }
+.tab-btn-primary { background-color: v-bind(mainColor) !important; border-color: v-bind(mainColor) !important; color: white !important; }
+.tab-btn-light-secondary { background-color: #ffffff !important; border-color: #ced4da !important; color: #6c757d !important; }
+.dropdown-toggle { box-shadow: none !important; }
+.overflow-auto { -ms-overflow-style: none; scrollbar-width: none; }
+.overflow-auto::-webkit-scrollbar { display: none; }
 </style>
