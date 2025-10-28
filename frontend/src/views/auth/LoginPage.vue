@@ -49,7 +49,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
-import { getTokenAndSave} from "../../../fcmUtils.js";
+import { getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
 const authStore = useAuthStore();

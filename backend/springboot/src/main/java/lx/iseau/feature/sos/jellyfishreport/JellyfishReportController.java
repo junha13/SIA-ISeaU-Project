@@ -65,8 +65,4 @@ public class JellyfishReportController {
 		}
 	}
 
-	@GetMapping("/jellyfish-report/_ping")
-	public String ping() {
-		return "ok";
-	}
 }
