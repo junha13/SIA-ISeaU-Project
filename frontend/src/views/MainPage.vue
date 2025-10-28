@@ -62,12 +62,12 @@
       </div>
 
       <!-- 카드 3: 그룹 -->
-      <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }" @click="goToPage('GroupMain')">
-          <i class="fas fa-users fs-2 mb-3" :style="{ color: cautionColor }"></i>
-          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">그룹</p>
-        </div>
-      </div>
+     <div class="col-6">
+  <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }" @click="goToPage('GroupList')">
+    <i class="fas fa-users fs-2 mb-3" :style="{ color: cautionColor }"></i>
+    <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">그룹</p>
+  </div>
+</div>
 
       <!-- 카드 4: 신고 (SOSMain 라우트 연결) -->
       <div class="col-6">

@@ -3,7 +3,98 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="lx.iseau.feature.post.PostDAO">
+<mapper namespace="lx.iseau.feature.group.GroupsDAO">
 
+    <select id="findUserNumberById" parameterType="string" resultType="Integer">
+        SELECT user_number
+        FROM tb_user
+        WHERE id = #{userId}
+    </select>
+
+    <select id="findGroupsByUserNumber" parameterType="int" resultType="GroupListItemResponseDTO">
+        SELECT
+            g.group_number AS id,
+            g.group_name AS name,
+            (SELECT COUNT(DISTINCT gm.group_member) + 1 FROM tb_group gm WHERE gm.group_number = g.group_number) AS memberCount -- 리더 + 멤버 수 예시
+        FROM
+            tb_group g
+        WHERE
+            g.group_leader = #{userNumber} OR g.group_member = #{userNumber}
+        GROUP BY g.group_number, g.group_name -- 그룹별로 묶기 (멤버 수 계산 시)
+        ORDER BY
+            g.group_name
+    </select>
+
+    <insert id="insertInvitation" parameterType="map" useGeneratedKeys="true" keyProperty="invitationId">
+        INSERT INTO tb_invitation
+            (group_id, inviter_user_number, target_user_number, marker_color, status, created_at)
+        VALUES
+            (#{groupId}, #{inviterUserNumber}, #{targetUserNumber}, #{markerColor}, 'PENDING', NOW())
+    </insert>
+
+    <select id="findInvitationById" parameterType="int" resultType="InvitationDTO">
+        SELECT
+            invitation_id       AS invitationId,
+            group_id            AS groupId,
+            inviter_user_number AS inviterUserNumber,
+            target_user_number  AS targetUserNumber,
+            status,
+            marker_color        AS markerColor,
+            created_at          AS createdAt
+            -- updated_at AS updatedAt -- 필요 시 추가
+        FROM
+             tb_invitation
+        WHERE
+            invitation_id = #{invitationId}
+    </select>
+
+    <update id="updateInviteStatus" parameterType="map">
+        UPDATE tb_invitation
+        SET
+            status = #{status},
+            updated_at = NOW() -- 상태 변경 시간 기록 (updated_at 컬럼 가정)
+        WHERE
+            invitation_id = #{invitationId}
+    </update>
+
+    <insert id="insertGroupMember" parameterType="ResponseGroupDTO">
+        INSERT INTO tb_group (
+            group_leader, group_member, group_name,
+            group_accepted, marker_color
+        ) VALUES (
+            #{groupLeader}, #{groupMember}, #{groupName},
+            'Y', #{markerColor}
+        )
+    </insert>
+
+    <select id="findGroupMemberLocations" parameterType="int" resultType="GroupMemberLocationResponseDTO">
+        SELECT
+            u.user_number AS id,
+            ST_Y(u.location::geometry) AS lat,
+            ST_X(u.location::geometry) AS lng,
+            u.user_name AS name,
+            g.marker_color AS color,
+            'online' AS status,     -- 임시 상태값
+            NOW() AS lastUpdate     -- 임시 업데이트 시간
+        FROM
+             tb_group g JOIN tb_user u ON g.group_member = u.user_number -- 리더도 포함하려면 UNION 필요
+        WHERE
+            g.group_number = #{groupId}
+            AND g.group_accepted = 'Y' -- 수락된 멤버만 조회
+        UNION ALL
+        SELECT
+             u.user_number AS id,
+             ST_Y(u.location::geometry) AS lat,
+             ST_X(u.location::geometry) AS lng,
+             u.user_name AS name,
+             '#000000' AS color, -- 리더 색상 예시 (별도 컬럼 필요?)
+             'online' AS status,
+             NOW() AS lastUpdate
+        FROM
+             tb_group g JOIN tb_user u ON g.group_leader = u.user_number
+        WHERE
+             g.group_number = #{groupId}
+             -- 리더는 항상 포함될 수 있으므로 group_accepted 조건 제외 가능
+    </select>
 
 </mapper>
