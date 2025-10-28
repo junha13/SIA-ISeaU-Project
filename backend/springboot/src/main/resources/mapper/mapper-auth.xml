@@ -55,6 +55,13 @@
         WHERE id = #{findUserNumberDTO.id}
           AND mobile = #{findUserNumberDTO.mobile}
     </select>
+    
+    <!-- 비밀번호 찾기: 아이디+전화번호로 userNumber 조회 -->
+    <select id="findUserNumberByUserId" parameterType="String" resultType="int">
+        SELECT user_number
+        FROM tb_user
+        WHERE id = #{id}
+    </select>
 
     <!-- 비밀번호 재설정 -->
     <update id="resetPassword" parameterType="lx.iseau.feature.auth.ResetPasswordDTO">

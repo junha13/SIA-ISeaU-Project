@@ -33,6 +33,10 @@ import RegisterPage from '@/views/auth/RegisterPage.vue'
 import FindIdPasswordPage from '@/views/auth/FindIdPasswordPage.vue'
 import ResetPasswordPage from '@/views/auth/ResetPasswordPage.vue'
 
+// ✅ Views (Post)
+import PostDetail from '@/views/post/PostDetail.vue'
+import PostList from '@/views/post/PostList.vue'
+import PostWrite from '@/views/post/PostWrite.vue'
 
 const routes = [
     // ----------------------------------------------------
@@ -86,6 +90,11 @@ const routes = [
             // 마이페이지 (MyPage와 MyCommentPage가 MyInfo 도메인에 포함됨)
             { path: 'my-info', name: 'MyInfo', component: MyPage },
             { path: 'my-info/comments', name: 'MyComment', component: MyCommentPage },
+
+            // post 
+            { path: 'post/:postNumber', name: 'PostDetail', component: PostDetail },
+            { path: 'post/list', name: 'PostList', component: PostList },
+            { path: 'post/write', name: 'PostWrite', component: PostWrite },
         ],
     },
 ]
