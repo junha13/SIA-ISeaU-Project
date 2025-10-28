@@ -6,12 +6,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpSession;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 	
 
     private final AuthDAO dao;
+    
+    private final HttpSession session;
 
 	/**
 	 * 회원가입
@@ -39,6 +43,9 @@ public class AuthService {
 	 */
 	public Map<String, Object> login(LoginDTO dto) {
 		Map<String, Object> user = dao.login(dto);
+		int userNumber = dao.findUserNumberByUserId(dto.getId());
+		session.setAttribute("userNumber", userNumber);
+		System.out.println(session.getAttribute("userNumber"));
 		if (user == null || user.isEmpty()) {
 			throw new RuntimeException("아이디 또는 비밀번호가 일치하지 않습니다.");
 		}

@@ -56,4 +56,11 @@ public interface AuthDAO {
      */
     int resetPassword(@Param("resetPasswordDTO") ResetPasswordDTO dto);
 
+    /**
+     * 비밀번호 재설정
+     * @param id
+     * @return int (성공하면 1)
+     */ 
+    int findUserNumberByUserId(@Param("id") String id);
+
 }

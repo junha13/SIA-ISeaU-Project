@@ -76,6 +76,13 @@
           <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">신고</p>
         </div>
       </div>
+            <!-- 카드 5: 게시글 리스트 -->
+      <div class="col-6">
+        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor }" @click="goToPage('PostList')">
+          <i class="fas fa-list fs-2 mb-3" :style="{ color: mainColor }"></i>
+          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">게시글 리스트</p>
+        </div>
+      </div>
     </div>
 
   </div>
