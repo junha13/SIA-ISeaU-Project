@@ -26,13 +26,14 @@
         WHERE id = #{id}
     </select>
 
-    <!-- 로그인 -->
-    <select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
-        SELECT user_number, id, user_name
-        FROM tb_user
-        WHERE id = #{loginDTO.id}
-          AND password = #{loginDTO.password}
-    </select>
+        <!-- 로그인 -->
+        <select id="login" parameterType="lx.iseau.feature.auth.LoginDTO" resultType="Map">
+                <!-- mobile 컬럼을 추가하여 프론트엔드에서 로그인 시 전화번호를 표시할 수 있도록 합니다. -->
+                SELECT user_number, id, user_name, mobile
+                FROM tb_user
+                WHERE id = #{loginDTO.id}
+                    AND password = #{loginDTO.password}
+        </select>
 
     <!-- 회원탈퇴 -->
     <delete id="withdraw" parameterType="int">

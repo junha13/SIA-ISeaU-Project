@@ -34,6 +34,12 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+// 애플리케이션 시작 시 Auth 스토어를 바로 초기화하여
+// sessionStorage/localStorage에 저장된 로그인 정보를 복원합니다.
+// (다른 컴포넌트가 마운트되기 전에 auth 상태가 준비되도록 함)
+import { useAuthStore } from '@/stores/authStore'
+useAuthStore();
+
 app.component('BottomSheet', BottomSheet)
 app.component('quill-editor', quillEditor)
 app.component('v-chart', ECharts)
