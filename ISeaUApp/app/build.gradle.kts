@@ -1,0 +1,57 @@
+plugins {
+    alias(libs.plugins.android.application)
+    // 💡 FCM 연동에 필수적인 Firebase/Google 서비스 플러그인 추가
+    id("com.google.gms.google-services")
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    namespace = "com.lx.iseau"
+    compileSdk = 36 // 사용자 요청: 36
+
+    defaultConfig {
+        applicationId = "com.lx.iseau"
+        minSdk = 24
+        targetSdk = 34 // 사용자 요청: 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+dependencies {
+    // 1. Firebase (FCM)
+    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    implementation("com.google.firebase:firebase-messaging")
+
+    // 2. Wearable Data Layer (워치 데이터 수신)
+    implementation(libs.play.services.wearable)
+
+    // 기존 의존성
+    implementation(libs.appcompat)
+    implementation(libs.material)
+    implementation(libs.activity)
+    implementation(libs.constraintlayout)
+    implementation(libs.core.ktx)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+}
