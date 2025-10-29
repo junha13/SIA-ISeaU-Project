@@ -6,30 +6,47 @@
       <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">마이페이지</h5>
     </div>
 
+    <!-- 로그인 되어있지 않을 경우 로그인 제안, 로그인 했을 경우 사용자 정보 표시 -->
+    <div v-if="!authStore.isAuthenticated" class="col-12">
+      <div class="card mb-3 border-info">
+          <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start">
+            <div>
+              <h5 class="card-title">잠깐, 로그인 하셨나요?</h5>
+              <p class="card-text mb-0">로그인을 하시면 마이페이지의 보다 더 많은 기능을 만나보실 수 있습니다.</p>
+              <small class="text-muted">로그인이 필요하시다면, 다음 버튼을 클릭해 주세요!</small>
+            </div>
+            <div class="mt-3 mt-md-0">
+              <button class="btn" @click="goToLogin" :style="{ backgroundColor: mainColor }">로그인 하러 가기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+  <div v-else>
     <!-- 1. 정보 섹션 -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
-      <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
-      <div class="d-flex justify-content-between py-2 border-bottom">
-        <span class="text-muted">이름</span>
-        <span 
-          class="fw-bold" 
-          :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
-          :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-          @click="!authStore.userInfo.userName && goToLogin()">
-          {{ authStore.userInfo.userName || '알 수 없음' }}
-        </span>
-      </div>
-      <div class="d-flex justify-content-between py-2">
-        <span class="text-muted">전화번호</span>
-        <span 
-          class="fw-bold"
-          :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
-          :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-          @click="!authStore.userInfo.mobile && goToLogin()">
-          {{ authStore.userInfo.mobile || '알 수 없음' }}
-        </span>
-      </div>
-    </div>
+        <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
+          <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
+          <div class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">이름</span>
+            <span 
+              class="fw-bold" 
+              :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
+              :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!authStore.userInfo.userName && goToLogin()">
+              {{ authStore.userInfo.userName || '알 수 없음' }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between py-2">
+            <span class="text-muted">전화번호</span>
+            <span 
+              class="fw-bold"
+              :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
+              :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!authStore.userInfo.mobile && goToLogin()">
+              {{ authStore.userInfo.mobile || '알 수 없음' }}
+            </span>
+          </div>
+        </div>
 
     <!-- 2. 활동 섹션 -->
     <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
@@ -104,6 +121,7 @@
         <button class="btn w-100 fw-bolder py-3 fs-5 text-white rounded-3 shadow" :style="{ backgroundColor: dangerColor }" @click="handleLogout">
           로그아웃
         </button>
+      </div>
       </div>
     </div>
   </div>
