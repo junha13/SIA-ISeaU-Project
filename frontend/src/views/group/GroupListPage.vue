@@ -3,7 +3,7 @@
 
     <!-- Header: 그룹 관리 -->
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
-      <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">그룹 관리</h5>
+      <h5 class="fw-bolder mb-0">그룹 관리</h5>
       <button class="btn fw-bold text-white" :style="{ backgroundColor: mainColor }" @click="showCreateGroupModal = true">
         <i class="fas fa-plus me-1"></i> 그룹 생성
       </button>
@@ -53,7 +53,7 @@
     </div>
 
     <!-- 그룹 생성 모달 (컴포넌트 필요) -->
-    <!-- <GroupCreateModal v-model:isVisible="showCreateGroupModal" @created="handleGroupCreated" /> -->
+    <GroupCreateModal v-model:isVisible="showCreateGroupModal" @created="handleGroupCreated" />
 
   </div>
 </template>
@@ -62,7 +62,15 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore';
-// import GroupCreateModal from '@/components/GroupCreateModal.vue'; // 컴포넌트 import 필요
+import GroupCreateModal from '@/components/GroupCreateModal.vue'; // 컴포넌트 import 필요
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
+
 
 const router = useRouter();
 const groupStore = useGroupStore();
@@ -77,6 +85,8 @@ const showCreateGroupModal = ref(false);
 onMounted(() => {
   // 그룹 목록 불러오기
   groupStore.fetchGroups();
+
+  header.value = "그룹 관리"
 });
 
 // --- Computed ---
