@@ -15,8 +15,12 @@ import java.util.Map;
 @Mapper
 public interface GroupsDAO {
 
+	int insertGroup(RequestGroupDTO dto);
+	
+	int SelectdoubleCheckByGroupName(RequestGroupDTO dto);
+	
     // --- (A) 그룹 목록 조회: GET /groups ---
-
+	
     Integer findUserNumberById(String userId);
 
     List<GroupListItemResponseDTO> findGroupsByUserNumber(int userNumber);

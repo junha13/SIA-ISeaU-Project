@@ -53,7 +53,7 @@
     </div>
 
     <!-- 그룹 생성 모달 (컴포넌트 필요) -->
-    <!-- <GroupCreateModal v-model:isVisible="showCreateGroupModal" @created="handleGroupCreated" /> -->
+    <GroupCreateModal v-model:isVisible="showCreateGroupModal" @created="handleGroupCreated" />
 
   </div>
 </template>
@@ -62,7 +62,15 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore';
-// import GroupCreateModal from '@/components/GroupCreateModal.vue'; // 컴포넌트 import 필요
+import GroupCreateModal from '@/components/GroupCreateModal.vue'; // 컴포넌트 import 필요
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
+
 
 const router = useRouter();
 const groupStore = useGroupStore();
@@ -77,6 +85,8 @@ const showCreateGroupModal = ref(false);
 onMounted(() => {
   // 그룹 목록 불러오기
   groupStore.fetchGroups();
+
+  header.value = "그룹 관리"
 });
 
 // --- Computed ---

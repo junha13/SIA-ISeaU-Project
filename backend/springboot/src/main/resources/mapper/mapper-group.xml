@@ -5,6 +5,19 @@
 
 <mapper namespace="lx.iseau.feature.group.GroupsDAO">
 
+	<insert id="insertGroup" parameterType="RequestGroupDTO"> 
+		insert into tb_group (group_leader, group_member, group_name, group_accepted, marker_color)
+		values (#{userId}, #{userId}, #{groupName}, 'Y', 'blue')
+	</insert>
+	
+    <select id="SelectdoubleCheckByGroupName" parameterType="RequestGroupDTO" resultType="Integer">
+        SELECT COUNT(*) AS cnt
+        FROM tb_group
+        WHERE 1=1
+        	and group_leader = #{userId}
+        	and group_name = #{groupName}
+    </select>
+    
     <select id="findUserNumberById" parameterType="string" resultType="Integer">
         SELECT user_number
         FROM tb_user
