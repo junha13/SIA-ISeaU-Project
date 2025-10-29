@@ -47,40 +47,50 @@
 
       <!-- 카드 1: 해수욕장 리스트 -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor }" @click="goToPage('BeachList')">
-          <i class="fas fa-list fs-2 mb-3" :style="{ color: mainColor }"></i>
-          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">해수욕장 리스트</p>
+        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.BeachList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('BeachList')">
+          <div class="card-overlay"></div>
+            <p class="card-top-right fw-bolder fs-1 mt-2 me-2">해수욕장 리스트</p>
+          <div class="card-content">
+          </div>
         </div>
       </div>
 
       <!-- 카드 2: 안전 수칙 (SafetyGuide 라우트 연결) -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: safetyColor, color: darkColor }" @click="goToPage('SafetyGuide')">
-          <i class="fas fa-shield-alt fs-2 mb-3" :style="{ color: safetyColor }"></i>
-          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">안전 수칙</p>
+        <div class="feature-card" :style="{ backgroundImage: `url(${cardImages.SafetyGuide})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('SafetyGuide')">
+          <div class="card-overlay"></div>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">안전 수칙</p>
+          <div class="card-content">
+          </div>
         </div>
       </div>
 
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
-  <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }" @click="goToPage('GroupList')">
-    <i class="fas fa-users fs-2 mb-3" :style="{ color: cautionColor }"></i>
-    <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">그룹</p>
-  </div>
-</div>
+      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupList')">
+        <div class="card-overlay"></div>
+        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
+        <div class="card-content">
+        </div>
+      </div>
+    </div>
 
       <!-- 카드 4: 신고 (SOSMain 라우트 연결) -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: dangerColor, color: darkColor }" @click="goToPage('SOSMain')">
-          <i class="fas fa-exclamation-triangle fs-2 mb-3" :style="{ color: dangerColor }"></i>
-          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">신고</p>
+        <div class="feature-card" :style="{ borderColor: dangerColor, backgroundImage: `url(${cardImages.SOSMain})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('SOSMain')">
+          <div class="card-overlay"></div>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">신고</p>
+          <div class="card-content">
+          </div>
         </div>
       </div>
             <!-- 카드 5: 게시글 리스트 -->
       <div class="col-6">
-        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor }" @click="goToPage('PostList')">
-          <i class="fas fa-list fs-2 mb-3" :style="{ color: mainColor }"></i>
-          <p class="fw-bolder fs-5 mb-0" :style="{ color: darkColor }">게시글 리스트</p>
+        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
+          <div class="card-overlay"></div>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">게시글 리스트</p>
+          <div class="card-content">
+          </div>
         </div>
       </div>
     </div>
@@ -107,6 +117,15 @@ const safetyColor = '#8482FF'; // 안전
 const cautionColor = '#FFB354'; // 주의
 const dangerColor = '#EB725B';  // 경고
 const lightGrayColor = '#E9ECEF'; // 인디케이터 비활성 색상
+
+// 카드별 배경 이미지 매핑 (경로는 public 디렉터리 기준)
+const cardImages = {
+  BeachList: '/images/mainButton/beachList3.png',
+  SafetyGuide: '/images/mainButton/firstAid3.png',
+  GroupList: '/images/mainButton/group3.png',
+  SOSMain: '/images/mainButton/report3.png',
+  PostList: '/images/mainButton/postingList3.png'
+};
 
 const router = useRouter(); // 라우터 인스턴스 생성
 
@@ -140,18 +159,47 @@ const goToPage = (pageName) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 150px; /* 카드 높이 고정 */
+  height: 180px; /* 카드 높이 고정 */
   padding: 20px;
   border-radius: 12px;
-  border: 2px solid; /* 테두리 색상으로 컬러 구분 */
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; /* 오버레이용 */
+  overflow: hidden;
 }
 
 .feature-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 카드 배경 이미지 위에 흐리게 처리하는 오버레이 */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 카드 우측 상단에 텍스트를 배치 (m-1 유사 마진) */
+.card-top-right {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  margin: 0;
+  z-index: 3;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
 }
 </style>
