@@ -23,12 +23,28 @@ public class BeachController {
 
 	@RequestMapping("/beaches")
 	public ResponseEntity<?> getBeachList(@RequestBody BeachListRequest request) {
-		List<ResponseBeachDTO> beachList = service.getBeachList(request);
-		return ResponseEntity.ok()
-					.header("api", "beach/beachs")
-					.body(Map.of("result", beachList));
+	    String sort = (request.getSort() != null) ? request.getSort().toLowerCase() : "";
+
+	    switch (sort) {
+	        case "rating_desc":    // 평점순
+	        case "review_desc":    // 리뷰 많은 순
+	        case "name_asc":       // 이름순
+	        case "distance_asc":   // 거리 가까운 순 (추후)
+	            break; // 정상 sort 값 → 그대로 사용
+	        default:
+	            // 잘못된 값 들어오면 안전하게 rating_desc로 보정
+	            request.setSort("name_asc");
+	    }
+
+	    List<ResponseBeachDTO> beachList = service.getBeachList(request);
+
+	    return ResponseEntity.ok()
+	            .header("api", "beach/beachs")
+	            .body(Map.of(
+	                "sort", request.getSort(),
+	                "result", beachList
+	            ));
 	}
-	
 	
 	@RequestMapping("/detail/{beachNumber}/info")
 	public ResponseEntity<?> getBeachDetailInfo(@PathVariable int beachNumber) {

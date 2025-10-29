@@ -50,7 +50,7 @@
       <div class="d-flex align-items-center justify-content-between">
         <div class="dropdown me-3">
           <button class="btn btn-light-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ sortOptions.find(opt => opt.value === currentSort).label }}
+            {{ sortOptions.find(opt => opt.value === currentSort).label ?? '이름순'}}
           </button>
           <ul class="dropdown-menu">
             <li v-for="opt in sortCondition" :key="opt.value">
@@ -191,7 +191,7 @@ const darkColor = '#0B1956';
 
 const activeTab = ref('all');
 const viewMode = ref('list');
-const currentSort = ref('distance');
+const currentSort = ref('name');
 
 const tabCondition = tabOptions
 const sortCondition = sortOptions
@@ -206,6 +206,13 @@ const searchParams = ref({
   sort: currentSort.value,
 });
 
+const sortMap = {
+  name: 'name_asc',
+  distance: 'distance_asc',
+  review: 'review_desc',
+  rating: 'rating_desc',
+};
+
 onMounted(() => {
   loadData();
   fetchFavoriteIds();
@@ -217,7 +224,16 @@ async function loadData() {
   isLoading.value = true;
   apiError.value = null;
   try {
-    const response = await axios.post(BEACH_LIST_API_URL, searchParams.value);
+    const backendSort = sortMap[currentSort.value] ?? 'name_asc';
+
+    // 백엔드 DTO(BeachListRequest)에 맞춰 최소 필드만 전송
+    const payload = {
+      region: searchParams.value.region || '',
+      sort: backendSort,
+      // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
+    };
+
+    const response = await axios.post(BEACH_LIST_API_URL, payload);
     beaches.value = response.data.result
   } catch (error) {
     apiError.value = error;
@@ -225,6 +241,7 @@ async function loadData() {
     isLoading.value = false;
   }
 }
+
 
 const fetchFavoriteIds = async () => {
   try {

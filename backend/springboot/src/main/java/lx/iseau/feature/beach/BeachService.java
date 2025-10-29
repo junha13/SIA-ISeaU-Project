@@ -33,7 +33,8 @@ public class BeachService  {
                 vo.getLongitude(), 
                 vo.getMobile(),
                 vo.getOpenDate(),
-                vo.getCloseDate()
+                vo.getCloseDate(),
+                vo.getReviewCount()
             );
             dtoList.add(dto);
         }
@@ -133,6 +134,29 @@ public class BeachService  {
         
         // 결과가 0보다 크면 true 반환
         return count > 0;
+    }
+    
+    /*
+     * 해수욕장 방문자 리뷰
+     */
+    
+    public List<ResponseBeachCommentDTO> listBeachComments(int beachNumber) {
+        return dao.listBeachComments(beachNumber);
+    }
+
+    public int addBeachComment(ResponseBeachCommentDTO dto) {
+        // 간단 검증
+        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
+        return dao.insertBeachComment(dto);
+    }
+    
+    public int editBeachComment(ResponseBeachCommentDTO dto) {
+        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
+        return dao.updateBeachComment(dto);
+    }
+
+    public int removeBeachComment(int beachCommentNumber) {
+        return dao.deleteBeachComment(beachCommentNumber);
     }
     
     

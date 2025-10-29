@@ -96,7 +96,7 @@ const safetyColor = '#8482FF';
 const cautionColor = '#FFB354';
 const dangerColor = '#EB725B';
 
-// ===== (NEW) 플랫폼 판단 유틸 =====
+// ===== 플랫폼 판단 유틸 =====
 const isMobileEnv = () => {
   const ua = navigator.userAgent || navigator.vendor || window.opera;
   return /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua);

@@ -1,6 +1,6 @@
 import { useApi } from '@/utils/useApi.js';
 
-// [수정] API 경로를 실제 백엔드 주소로 변경합니다.
+// 해수욕장 목록 조회 API (POST)
 const { execute: fetchBeachList } = useApi('post', '/api/beach/beaches');
 
 // 해수욕장 상세 정보 조회 API (GET)

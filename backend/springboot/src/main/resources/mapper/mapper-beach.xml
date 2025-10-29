@@ -7,20 +7,25 @@
 
    <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
     SELECT
-        beach_number,
-        beach_name,
-        beach_image,
-        beach_information,
-        rating,
-        approved_by_ministry,
-        address,    
-        ST_Y(LOCATION::geometry) AS latitude,         
-        ST_X(LOCATION::geometry) AS longitude,
-        mobile,
-        open_date,
-        close_date
-        FROM
-        tb_beach
+        b.beach_number,
+        b.beach_name,
+        b.beach_image,
+        b.beach_information,
+        b.rating,
+        b.approved_by_ministry,
+        b.address,    
+        ST_Y(b.LOCATION::geometry) AS latitude,         
+        ST_X(b.LOCATION::geometry) AS longitude,
+        b.mobile,
+        b.open_date,
+        b.close_date,
+        COALESCE(c.review_count, 0)
+    FROM tb_beach b
+    LEFT JOIN (
+        SELECT beach_number, COUNT(*) AS review_count
+        FROM tb_beach_comment_list
+        GROUP BY beach_number
+    ) c ON c.beach_number = b.beach_number      
     WHERE
         1=1
    
@@ -29,14 +34,20 @@
     </if>
     
     <choose>
+        <!-- 리뷰 개수순 (내림차순), 동일 시 평점/이름으로 안정화 -->
+	    <when test="sort == 'review_desc'">
+	      ORDER BY COALESCE(c.review_count, 0) DESC,
+	               b.rating DESC,
+	               b.beach_name ASC
+	    </when>
         <when test="sort == 'rating_desc'">
-            ORDER BY rating DESC, beach_name ASC
+            ORDER BY b.rating DESC NULLS LAST, b.beach_name ASC
         </when>
         <when test="sort == 'name_asc'">
-            ORDER BY beach_name ASC
+            ORDER BY b.beach_name ASC
         </when>
         <otherwise>
-            ORDER BY beach_number ASC
+            ORDER BY b.beach_number ASC
         </otherwise>
     </choose>
 </select>
@@ -178,5 +189,43 @@ ORDER BY
           AND beach_number = #{beachNumber}
     </select>
     
+    <!-- 댓글 목록 (최신순) -->
+	<select id="listBeachComments" parameterType="int" resultType="lx.iseau.feature.beach.dto.BeachCommentDTO">
+	  SELECT c.beach_comment_number AS beachCommentNumber,
+	         c.comment_content      AS commentContent,
+	         c.created_time         AS createdTime,
+	         c.rating               AS rating,
+	         c.beach_number         AS beachNumber,
+	         c.user_number          AS userNumber,
+	         u.user_name            AS userName
+	  FROM tb_beach_comment_list c
+	  JOIN tb_user u ON u.user_number = c.user_number
+	  WHERE c.beach_number = #{beachNumber}
+	  ORDER BY c.created_time DESC, c.beach_comment_number DESC
+	</select>
+    
+    <!-- 댓글 등록 -->
+	<insert id="insertBeachComment" parameterType="lx.iseau.feature.beach.dto.BeachCommentDTO" useGeneratedKeys="true" keyProperty="beachCommentNumber">
+	  INSERT INTO tb_beach_comment_list
+	  (comment_content, created_time, rating, beach_number, user_number)
+	  VALUES
+	  (#{commentContent}, COALESCE(#{createdTime}, NOW()), #{rating}, #{beachNumber}, #{userNumber})
+	</insert>
+	
+	<!-- 댓글 수정 (자기 댓글만) -->
+	<update id="updateBeachComment" parameterType="lx.iseau.feature.beach.dto.BeachCommentDTO">
+	  UPDATE tb_beach_comment_list
+	  SET comment_content = #{commentContent},
+	      rating          = #{rating}
+	  WHERE beach_comment_number = #{beachCommentNumber}
+	    AND user_number = #{userNumber}
+	</update>
+	
+	<!-- 댓글 삭제 (자기 댓글만) -->
+	<delete id="deleteBeachComment" parameterType="int">
+	  DELETE FROM tb_beach_comment_list
+	  WHERE beach_comment_number = #{beachCommentNumber}
+	  	AND user_number = #{userNumber}
+	</delete>
     
 </mapper>
