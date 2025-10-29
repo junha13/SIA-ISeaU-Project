@@ -3,7 +3,7 @@
 
     <!-- Header: 그룹 관리 -->
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
-      <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">그룹 관리</h5>
+      <h5 class="fw-bolder mb-0">그룹 관리</h5>
       <button class="btn fw-bold text-white" :style="{ backgroundColor: mainColor }" @click="showCreateGroupModal = true">
         <i class="fas fa-plus me-1"></i> 그룹 생성
       </button>
