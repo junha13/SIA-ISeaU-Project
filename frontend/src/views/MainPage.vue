@@ -3,7 +3,7 @@
 
     <!-- 1. 알림/공지 섹션 (해파리 쏘임) -->
     <div class="alert-section d-flex align-items-center mb-4 p-3 rounded-3"
-         :style="{ backgroundColor: '#F0F0FF', color: darkColor, border: '1px solid #E0E0FF' }">
+         :style="{ color: darkColor, border: '1px solid #E0E0FF' }">
       <i class="fas fa-bell me-3 fs-5" :style="{ color: safetyColor }"></i>
       <p class="mb-0 fw-bold fs-6">부산 20대 남성 해파리 쏘임</p>
     </div>
@@ -33,14 +33,16 @@
         <!-- ... 추가 슬라이드 항목 ... -->
       </div>
 
-      <!-- Indicator (페이지네이션) -->
+      <!-- Indicator (페이지네이션: 4 dots) -->
       <div class="carousel-indicators-custom d-flex justify-content-center mt-3">
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active me-2" aria-current="true" aria-label="Slide 1" :style="{ backgroundColor: mainColor }"></button>
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" class="me-2" aria-label="Slide 2" :style="{ backgroundColor: lightGrayColor }"></button>
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" class="me-2" aria-label="Slide 3" :style="{ backgroundColor: lightGrayColor }"></button>
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="3" class="me-2" aria-label="Slide 4" :style="{ backgroundColor: lightGrayColor }"></button>
+        <button type="button" class="dot" :class="{ active: currentSlide === 0 }" @click="setSlide(0)" aria-label="Slide 1"></button>
+        <button type="button" class="dot" :class="{ active: currentSlide === 1 }" @click="setSlide(1)" aria-label="Slide 2"></button>
+        <button type="button" class="dot" :class="{ active: currentSlide === 2 }" @click="setSlide(2)" aria-label="Slide 3"></button>
+        <button type="button" class="dot" :class="{ active: currentSlide === 3 }" @click="setSlide(3)" aria-label="Slide 4"></button>
       </div>
     </div>
+
+    <div class="p-3 mt-5 border rounded">
 
     <!-- 3. 주요 기능 카드 4개 (Grid Layout) -->
     <div class="row g-3">
@@ -94,12 +96,13 @@
         </div>
       </div>
     </div>
+    </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router'; // useRouter 추가
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
@@ -126,6 +129,44 @@ const cardImages = {
   SOSMain: '/images/mainButton/report3.png',
   PostList: '/images/mainButton/postingList3.png'
 };
+
+// pagination state for static carousel
+const currentSlide = ref(0);
+let carouselItems = [];
+let carouselObserver = null;
+
+const setSlide = (i) => {
+  currentSlide.value = i;
+  if (!carouselItems.length) carouselItems = Array.from(document.querySelectorAll('#mainCarousel .carousel-item'));
+  carouselItems.forEach((el, idx) => el.classList.toggle('active', idx === i));
+};
+
+onMounted(() => {
+  // initialize carouselItems and currentSlide from DOM
+  carouselItems = Array.from(document.querySelectorAll('#mainCarousel .carousel-item'));
+  const activeIndex = carouselItems.findIndex((el) => el.classList.contains('active'));
+  if (activeIndex >= 0) currentSlide.value = activeIndex;
+
+  // Observe class changes on carousel items so pagination stays in sync
+  if (carouselItems.length) {
+    carouselObserver = new MutationObserver(() => {
+      const idx = carouselItems.findIndex((el) => el.classList.contains('active'));
+      if (idx >= 0 && idx !== currentSlide.value) {
+        currentSlide.value = idx;
+      }
+    });
+    carouselItems.forEach((el) => {
+      carouselObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+});
+
+onUnmounted(() => {
+  if (carouselObserver) {
+    carouselObserver.disconnect();
+    carouselObserver = null;
+  }
+});
 
 const router = useRouter(); // 라우터 인스턴스 생성
 
@@ -175,13 +216,6 @@ const goToPage = (pageName) => {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* 카드 배경 이미지 위에 흐리게 처리하는 오버레이 */
-.card-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
 .card-content {
   position: relative;
   z-index: 2;
@@ -201,5 +235,20 @@ const goToPage = (pageName) => {
   color: #ffffff;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
+}
+
+/* pagination dots (4) */
+.carousel-indicators-custom .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d3d3d3; /* light gray */
+  border: none;
+  margin-right: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+.carousel-indicators-custom .dot.active {
+  background: #6c757d; /* darker gray for active */
 }
 </style>
