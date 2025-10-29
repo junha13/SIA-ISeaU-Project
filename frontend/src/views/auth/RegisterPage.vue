@@ -30,7 +30,7 @@
         <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="id">
         <button 
           class="btn fw-bold text-white" 
-          :style="{ backgroundColor: (isIdChecked && isPasswordValid) ? '#dedede' : (isIdChecked ? '#28a745' : mainColor), minWidth: '100px', opacity: (isIdChecked && isPasswordValid) ? 0.65 : 1 }" 
+          :style="{ backgroundColor: (isIdChecked && passwordsMatch) ? '#dedede' : (isIdChecked ? '#28a745' : mainColor), minWidth: '100px', opacity: (isIdChecked && passwordsMatch) ? 0.65 : 1 }" 
           @click="checkId"
           :disabled="isIdChecked">
           {{ isIdChecked ? '완료됨' : '중복확인' }}
@@ -38,16 +38,12 @@
       </div>
 
       <div class="form-group mb-3">
-        <input type="password" class="form-control" placeholder="비밀번호 (영어 + 숫자, 8자 이상)" v-model="password">
+        <input type="password" class="form-control" placeholder="비밀번호" v-model="password">
       </div>
 
       <div class="form-group mb-4">
         <input type="password" class="form-control" placeholder="비밀번호 확인" v-model="passwordConfirm">
         <div class="mt-2">
-          <small :class="passwordFormatOk ? 'text-success' : 'text-danger'">
-            {{ passwordFormatOk ? '비밀번호 형식이 유효합니다.' : '비밀번호는 영어와 숫자를 포함하여 8자 이상이어야 합니다.' }}
-          </small>
-          <br />
           <small :class="passwordsMatch ? 'text-success' : (passwordConfirm ? 'text-danger' : 'text-muted')">
             {{ passwordsMatch ? '비밀번호가 일치합니다.' : (passwordConfirm ? '비밀번호가 일치하지 않습니다.' : '비밀번호 확인을 입력하세요.') }}
           </small>
@@ -70,7 +66,6 @@
 </template>
 
 <script setup>
-// computed: 종속된 갑이 바뀔 때마다 재계산됨(캐시)
 import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { authApi } from '@/api/auth';
@@ -93,20 +88,11 @@ const passwordConfirm = ref('');
 const isIdChecked = ref(false);
 const isCheckingId = ref(false);
 const isRegistering = ref(false);
-const isPasswordValid = ref(false);
 
-// 라이브 비밀번호 유효성 상태
-const passwordFormatOk = computed(() => {
-  return password.value.length >= 8 && /[a-zA-Z]/.test(password.value) && /[0-9]/.test(password.value);
-});
+// 라이브 비밀번호 일치 상태 (형식 검사는 하지 않음)
 const passwordsMatch = computed(() => {
   return passwordConfirm.value.length > 0 && password.value === passwordConfirm.value;
 });
-
-// password 또는 confirm 변경 시 isPasswordValid를 자동으로 갱신
-watch([passwordFormatOk, passwordsMatch], () => {
-  isPasswordValid.value = passwordFormatOk.value && passwordsMatch.value;
-}, { immediate: true });
 
 // id이 바뀌면 기존 중복확인 상태 초기화
 watch(id, () => {
@@ -188,10 +174,7 @@ const handleRegister = async () => {
     alert('아이디 중복 확인이 필요합니다.');
     return;
   }
-  if (!isPasswordValid.value) {
-    alert('비밀번호가 유효하지 않거나 일치하지 않습니다. 조건을 확인해주세요.');
-    return;
-  }
+
   if (password.value !== passwordConfirm.value) {
     alert('비밀번호 확인이 일치하지 않습니다.');
     return;
