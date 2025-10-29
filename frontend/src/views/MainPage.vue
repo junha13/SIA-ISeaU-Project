@@ -13,21 +13,21 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/assets/media/books/1.png"
+          <img src="/images/mainBeach/1.png"
                class="d-block w-100" alt="해변 풍경 1" style="height: 200px; object-fit: cover;">
         </div>
         <div class="carousel-item">
-          <img src="/assets/media/books/2.png"
+          <img src="/images/mainBeach/2.png"
                class="d-block w-100" alt="해변 풍경 2" style="height: 200px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/assets/media/books/3.png"
+          <img src="/images/mainBeach/3.png"
                class="d-block w-100" alt="해변 풍경 3" style="height: 200px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/assets/media/books/4.png"
+          <img src="/images/mainBeach/4.png"
                class="d-block w-100" alt="해변 풍경 4" style="height: 200px; object-fit: cover;">
         </div>
         <!-- ... 추가 슬라이드 항목 ... -->
