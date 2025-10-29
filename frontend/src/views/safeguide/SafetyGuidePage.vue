@@ -1,16 +1,5 @@
 <template>
   <div class="safety-guide-page container-fluid p-0">
-    <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">안전 수칙</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
-        <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
-      </div>
-    </div>
-
     <div class="p-3">
       <div id="safetyGuideCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
         <div class="carousel-inner rounded-3 overflow-hidden bg-light" style="height: 200px;">
@@ -59,8 +48,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import VideoModal from '@/components/VideoModal.vue'; 
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '안전수칙'
+})
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';

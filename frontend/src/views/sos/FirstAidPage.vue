@@ -80,6 +80,18 @@ import { useSOSStore } from '@/stores/sosStore';
 import { useConfirmModal } from '@/utils/modalUtils.js';
 import { useApi } from '@/utils/useApi'; // ← 너의 공통 axios 컴포저블
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '응급 대처법'
+})
+
+
 const { showConfirmModal } = useConfirmModal();
 const sosStore = useSOSStore();
 

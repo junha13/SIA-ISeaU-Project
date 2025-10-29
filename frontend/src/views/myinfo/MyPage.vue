@@ -1,10 +1,5 @@
 <template>
   <div class="my-page container-fluid p-3">
-    <!-- Header (뒤로 가기 및 타이틀) -->
-    <div class="d-flex align-items-center justify-content-start pb-3 border-bottom shadow-sm mb-4">
-      <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-      <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">마이페이지</h5>
-    </div>
 
     <!-- 로그인 되어있지 않을 경우 로그인 제안, 로그인 했을 경우 사용자 정보 표시 -->
     <div v-if="!authStore.isAuthenticated" class="col-12">
@@ -128,10 +123,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore'; // Auth Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '내 정보'
+})
 
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();

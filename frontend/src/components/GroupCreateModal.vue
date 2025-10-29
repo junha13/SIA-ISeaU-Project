@@ -108,7 +108,7 @@ async function groupDoubleCheck(groupName) {
 
   try {
     const response = await axios.post(
-      `http://localhost:8080/api/groups/doubleCheck`,
+      `${import.meta.env.VITE_API_BASE_URL}api/groups/doubleCheck`,
       { groupName: groupName },
       {
         headers: { 'Content-Type': 'application/json' },
@@ -139,7 +139,7 @@ const createGroup = async () => {
 
   try {
     const response = await axios.post(
-      `http://localhost:8080/api/groups/create`,
+      `${import.meta.env.VITE_API_BASE_URL}api/groups/create`,
       { groupName: groupName.value,
 
        },

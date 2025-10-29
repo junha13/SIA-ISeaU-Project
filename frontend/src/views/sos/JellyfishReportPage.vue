@@ -52,6 +52,17 @@
 import { ref, onMounted, watchEffect } from 'vue';
 import { useConfirmModal } from '@/utils/modalUtils.js';
 import { useSOSStore } from '@/stores/sosStore';
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '유해생물 제보'
+})
+
 
 const { showConfirmModal } = useConfirmModal();
 const sos = useSOSStore();

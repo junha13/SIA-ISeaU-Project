@@ -82,9 +82,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useSOSStore } from '@/stores/sosStore'; // SOS Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '긴급신고'
+})
+
 
 const sosStore = useSOSStore();
 const { showConfirmModal } = useConfirmModal();
