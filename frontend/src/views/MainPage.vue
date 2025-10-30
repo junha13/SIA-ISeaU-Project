@@ -2,8 +2,7 @@
   <div class="main-page p-3">
 
     <!-- 1. 알림/공지 섹션 (해파리 쏘임) -->
-    <div class="alert-section d-flex align-items-center mb-4 p-3 rounded-3"
-         :style="{ color: darkColor, border: '1px solid #E0E0FF' }">
+    <div class="alert-section d-flex align-items-center mb-4 p-3 rounded-3" :style="{ color: darkColor, border: '1px solid #E0E0FF' }">
       <i class="fas fa-bell me-3 fs-5" :style="{ color: safetyColor }"></i>
       <p class="mb-0 fw-bold fs-6">부산 20대 남성 해파리 쏘임</p>
     </div>
@@ -50,49 +49,34 @@
       <!-- 카드 1: 해수욕장 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.BeachList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('BeachList')">
-          <div class="card-overlay"></div>
-            <p class="card-top-right fw-bolder fs-1 mt-2 me-2">해수욕장 리스트</p>
-          <div class="card-content">
-          </div>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">해수욕장 리스트</p>
         </div>
       </div>
 
       <!-- 카드 2: 안전 수칙 (SafetyGuide 라우트 연결) -->
       <div class="col-6">
         <div class="feature-card" :style="{ backgroundImage: `url(${cardImages.SafetyGuide})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('SafetyGuide')">
-          <div class="card-overlay"></div>
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">안전 수칙</p>
-          <div class="card-content">
-          </div>
         </div>
       </div>
 
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
       <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupList')">
-        <div class="card-overlay"></div>
         <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
-        <div class="card-content">
-        </div>
       </div>
     </div>
 
       <!-- 카드 4: 신고 (SOSMain 라우트 연결) -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: dangerColor, backgroundImage: `url(${cardImages.SOSMain})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('SOSMain')">
-          <div class="card-overlay"></div>
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">신고</p>
-          <div class="card-content">
-          </div>
         </div>
       </div>
             <!-- 카드 5: 게시글 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
-          <div class="card-overlay"></div>
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">게시글 리스트</p>
-          <div class="card-content">
-          </div>
         </div>
       </div>
     </div>
