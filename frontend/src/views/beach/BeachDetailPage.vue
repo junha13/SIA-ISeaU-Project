@@ -11,7 +11,8 @@
             :class="{'text-white': activeTab===tab.key}"
             :style="{
               backgroundColor: activeTab === tab.key ? mainColor : 'transparent',
-              color: activeTab === tab.key ? 'white' : darkColor
+              color: activeTab === tab.key ? 'white' : darkColor,
+              fontSize: '11px'
             }"
             @click="activeTab = tab.key"
         >
@@ -33,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, proxyRefs } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
