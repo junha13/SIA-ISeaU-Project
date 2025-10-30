@@ -112,14 +112,8 @@ function handleInput(e) {
  * [최종본] 그룹명 중복 체크 (사용자의 {"result": "true"} 방식 적용)
  */
 async function groupDoubleCheck(name) {
-  // 1. .env 환경 변수 확인 (Invalid URL 버그 수정)
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  if (!baseUrl) {
-    console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
-    message.value = '설정 오류: API 주소를 찾을 수 없습니다.';
-    return;
-  }
-  const url = `${baseUrl}/api/groups/doubleCheck`;
+
+  const url = `${import.meta.env.VITE_API_BASE_URL}/groups/doubleCheck`;
   
   canCreate.value = false // 우선 비활성화
   
@@ -165,14 +159,8 @@ async function groupDoubleCheck(name) {
  * [최종본] 그룹 생성
  */
 const createGroup = async () => {
-  // 1. .env 환경 변수 확인 (Invalid URL 버그 수정)
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  if (!baseUrl) {
-    console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
-    message.value = '설정 오류: API 주소를 찾을 수 없습니다.';
-    return;
-  }
-  const url = `${baseUrl}/api/groups/create`;
+
+  const url = `${import.meta.env.VITE_API_BASE_URL}/groups/create`;
 
   if (!canCreate.value || isLoading.value) return
   

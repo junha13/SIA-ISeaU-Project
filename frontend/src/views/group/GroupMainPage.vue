@@ -111,8 +111,7 @@ const groupLocations = computed(() => {
  */
 const fetchGroups = async () => {
     try {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL;
-        const url = `${baseUrl}/api/groups?timestamp=${new Date().getTime()}`; 
+        const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`; 
 
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; 
@@ -133,8 +132,7 @@ const fetchLocations = async () => {
     if (!activeGroupId.value) return;
 
     try {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL;
-        const url = `${baseUrl}/api/groups/locations?groupId=${activeGroupId.value}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
         
         const response = await axios.get(url, { withCredentials: true });
         
@@ -361,7 +359,7 @@ function requestGeoLocation(value) {
 
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`,
+          axiosUrl,
           payload,
           {
             headers: { 'Content-Type': 'application/json' },

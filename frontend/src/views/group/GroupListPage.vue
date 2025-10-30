@@ -83,14 +83,9 @@ const fetchGroupsDirectly = async () => {
   console.log('[LOG-DIRECT] 1. fetchGroupsDirectly: Axios로 직접 API 호출 시작...');
 
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
-      return;
-    }
 
     // 3. 캐시(Cache) 문제를 피하기 위해 timestamp 추가
-    const url = `${baseUrl}/api/groups?timestamp=${new Date().getTime()}`;
+    const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
 
     const response = await axios.get(url, {
       withCredentials: true, // 4. 세션(로그인)을 위해 필수
