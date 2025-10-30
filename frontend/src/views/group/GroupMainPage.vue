@@ -1,25 +1,7 @@
 <template>
-  <div class="group-main-page">
-    <!-- 1. Header (뒤로가기 버튼 추가) -->
-    <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
-      <div class="d-flex align-items-center">
-        <!-- 뒤로 가기 버튼 -->
-        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.push({ name: 'GroupList' })" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <!-- 현재 그룹명 표시 -->
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">{{ activeGroupName }} 위치 알림</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
-        <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
-      </div>
-    </div>
-
+  <div class="group-main-page" style="position: relative;">
     <!-- 2. 지도 영역 -->
-    <div class="map-area position-relative" style="height: 400px; background-color: #f0f0f0;">
-      <!-- 지도 Placeholder -->
-      <div class="h-100 w-100 d-flex justify-content-center align-items-center text-muted fw-bold">
-        지도 영역 (그룹 ID: {{ activeGroupId }})
-      </div>
+    <div ref="mapEl" style="width:100%;height:300px;"></div>
 
       <!-- 지도 오버레이 버튼 -->
       <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
@@ -36,7 +18,7 @@
            :style="markerStyle(member.color)"
            class="position-absolute rounded-circle shadow-sm">
       </div>
-    </div>
+    
 
     <!-- 3. 그룹 액션 & 멤버 리스트 -->
     <div class="group-actions p-3">
@@ -78,10 +60,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore.js';
 import GroupInviteModal from '@/components/GroupInviteModal.vue';
+import axios from 'axios';
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+
+const mapEl = ref(null)
+let map, marker
 
 const route = useRoute();
 const mainColor = '#0092BA';
@@ -116,6 +107,12 @@ const loadGroupData = () => {
 onMounted(() => {
   // 마운트 시 데이터 로드
   groupStore.fetchGroups(); // 그룹 목록을 먼저 로드
+
+  getLocation() // 내 위치 로드
+
+  requestGeoLocation("test")
+
+
 });
 
 // URL의 그룹 ID가 변경될 때마다 데이터 다시 로드
@@ -131,6 +128,199 @@ const markerStyle = (color) => ({
   zIndex: 10,
   border: '2px solid white',
 });
+
+
+/*
+
+지도 부분 
+
+*/
+
+const latitude = ref('')
+const longitude = ref('')
+
+watchEffect(() => {
+  // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
+  const lat = latitude.value
+  const lng = longitude.value
+
+  // 아직 준비 안 된 경우 바로 종료
+  if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
+
+  // 네이버 지도에서 쓰는 좌표 객체 생성
+  const pos = new window.naver.maps.LatLng(lat, lng)
+
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
+  if (!map) {
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 15
+    })
+    // marker = new window.naver.maps.Marker({
+    //   position: pos,
+    //   map
+    // })
+
+  //window.naver.maps.Event.once(map, 'init', loadBoundary)
+  window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+  loadBoundary()
+    // 이미 map이 만들어져 있으면 새로 안 만들고 중심 좌표와 마커 위치만 업데이트
+  } else {
+    map.setCenter(pos)
+    marker.setPosition(pos)
+  }
+})
+
+const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_boundary` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+// 해안선 가져오기
+let boundaryRings = [];
+
+async function loadBoundary() {
+  const res = await fetch(url);
+  const data = await res.json();
+
+  boundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (data.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      boundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', boundaryRings);
+}
+
+
+
+// =========== 테스트 데이터 (공카데미) ==========
+const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_test_layer` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+let testBoundaryRings = []
+
+async function testLoadBoundary() {
+  const testRes = await fetch(test_url);
+  const testData = await testRes.json();
+
+  testBoundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (testData.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      testBoundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', testBoundaryRings);
+
+  testDrawBoundaryRings() 
+}
+
+function testDrawBoundaryRings() {
+  if (!map) return;
+
+  testBoundaryRings.forEach(ring => {
+    // lon,lat → naver LatLng
+    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon));
+
+    new naver.maps.Polyline({
+      map,
+      path,
+      strokeColor: '#0092BA',
+      strokeWeight: 3,
+      strokeOpacity: 0.9,
+    });
+  });
+
+  // 보기 좋게 화면도 경계로 맞춰주자
+  const bounds = new naver.maps.LatLngBounds();
+  testBoundaryRings.forEach(ring => {
+    ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon)));
+  });
+  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
+    map.fitBounds(bounds);
+  }
+}
+
+
+// 지오로케이션 내 위치 보기
+function getLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
+    (err) => { console.error('위치 실패: ' + err.message); },
+    { enableHighAccuracy: true }
+  )
+}
+
+function requestGeoLocation(value) {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      // 1) 값 넣고
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
+
+      // 2) 서버로 보냄
+      const payload = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      console.log('sending to server:', payload)
+
+      let axiosUrl;
+      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}api/location/testBoundaryCheck`
+      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}api/location/boundaryCheck`
+
+      try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}api/location/testBoundaryCheck`,
+          payload,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 5000,
+          }
+        )
+        console.log('OK', res.data)
+      } catch (e) {
+        console.error('send error', e)
+      }
+    },
+    (err) => {
+      console.error('위치 실패:', err.message)
+    },
+    { enableHighAccuracy: true }
+  )
+}
 
 </script>
 
