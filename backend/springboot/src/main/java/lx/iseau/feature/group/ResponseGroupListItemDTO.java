@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 @Data 
 @NoArgsConstructor 
 @AllArgsConstructor 
-public class GroupListItemResponseDTO {
+public class ResponseGroupListItemDTO {
 
     private Integer id;
     private String name;

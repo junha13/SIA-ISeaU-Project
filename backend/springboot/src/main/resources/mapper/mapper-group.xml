@@ -5,17 +5,23 @@
 
 <mapper namespace="lx.iseau.feature.group.GroupsDAO">
 
-	<insert id="insertGroup" parameterType="RequestGroupDTO"> 
-		insert into tb_group (group_leader, group_member, group_name, group_accepted, marker_color)
-		values (#{userId}, #{userId}, #{groupName}, 'Y', 'blue')
+    <insert id="insertGroup" parameterType="RequestGroupDTO"> 
+		INSERT INTO tb_group (
+            group_leader, group_member, group_name, 
+            group_accepted, marker_color
+        )
+		VALUES (
+            #{userId}, #{userId}, #{groupName}, 
+            'Y', 'blue'
+        )
 	</insert>
 	
     <select id="SelectdoubleCheckByGroupName" parameterType="RequestGroupDTO" resultType="Integer">
         SELECT COUNT(*) AS cnt
         FROM tb_group
-        WHERE 1=1
-        	and group_leader = #{userId}
-        	and group_name = #{groupName}
+        WHERE 
+        	group_leader = #{userId}
+        	AND group_name = #{groupName}
     </select>
     
     <select id="findUserNumberById" parameterType="string" resultType="Integer">
@@ -24,53 +30,71 @@
         WHERE id = #{userId}
     </select>
 
-    <select id="findGroupsByUserNumber" parameterType="int" resultType="GroupListItemResponseDTO">
+    <select id="findGroupsByUserNumber" parameterType="int" resultType="ResponseGroupListItemDTO">
         SELECT
             g.group_number AS id,
             g.group_name AS name,
-            (SELECT COUNT(DISTINCT gm.group_member) + 1 FROM tb_group gm WHERE gm.group_number = g.group_number) AS memberCount -- 리더 + 멤버 수 예시
+            (SELECT COUNT(*) 
+             FROM tb_group gm 
+             WHERE gm.group_leader = g.group_leader 
+               AND gm.group_name = g.group_name
+               AND gm.group_accepted = 'Y' -- 수락한 멤버만 카운트
+            ) AS memberCount
         FROM
             tb_group g
         WHERE
-            g.group_leader = #{userNumber} OR g.group_member = #{userNumber}
-        GROUP BY g.group_number, g.group_name -- 그룹별로 묶기 (멤버 수 계산 시)
+            g.group_member = #{userNumber} -- 내가 멤버로 속한
+            AND g.group_accepted = 'Y' -- 수락된 그룹만
+        GROUP BY 
+            g.group_number, g.group_name, g.group_leader
         ORDER BY
             g.group_name
     </select>
 
-    <insert id="insertInvitation" parameterType="map" useGeneratedKeys="true" keyProperty="invitationId">
-        INSERT INTO tb_invitation
-            (group_id, inviter_user_number, target_user_number, marker_color, status, created_at)
-        VALUES
-            (#{groupId}, #{inviterUserNumber}, #{targetUserNumber}, #{markerColor}, 'PENDING', NOW())
-    </insert>
+    <insert id="insertInvitation" parameterType="RequestGroupInviteDTO">
+        INSERT INTO tb_group (
+            group_leader,   group_member,   group_name,     group_accepted, marker_color
+        )
+        SELECT
+            g.group_leader,        -- 현재 그룹(groupId)의 리더
+            #{targetUserNumber},   -- 초대 대상자 (DTO에서 받음)
+            g.group_name,          -- 현재 그룹(groupId)의 이름
+            'N',                   -- 상태: 'N' (초대 대기)
+            #{markerColor}         -- DTO에서 받음
+        FROM tb_group g
+        WHERE g.group_number = #{groupId}
+        LIMIT 1 </insert>
 
     <select id="findInvitationById" parameterType="int" resultType="InvitationDTO">
-        SELECT
-            invitation_id       AS invitationId,
-            group_id            AS groupId,
-            inviter_user_number AS inviterUserNumber,
-            target_user_number  AS targetUserNumber,
-            status,
-            marker_color        AS markerColor,
-            created_at          AS createdAt
-            -- updated_at AS updatedAt -- 필요 시 추가
+        SELECT     
+            g.group_number        AS invitationId,    g.group_number        AS groupId,         
+            g.group_leader        AS inviterUserNumber, g.group_member        AS targetUserNumber,  'PENDING'             AS status,          g.marker_color        AS markerColor,
+            g.group_name          AS groupName
+            -- u.user_name AS inviterName (필요시 tb_user JOIN 추가)
         FROM
-             tb_invitation
+             tb_group g
         WHERE
-            invitation_id = #{invitationId}
+            g.group_number = #{invitationId}
+            AND g.group_accepted = 'N' -- 'N' (초대 대기) 상태인 것만
     </select>
-
+    
     <update id="updateInviteStatus" parameterType="map">
-        UPDATE tb_invitation
-        SET
-            status = #{status},
-            updated_at = NOW() -- 상태 변경 시간 기록 (updated_at 컬럼 가정)
-        WHERE
-            invitation_id = #{invitationId}
+        <if test="status == 'ACCEPTED'">
+            UPDATE tb_group
+            SET group_accepted = 'Y'
+            WHERE
+                group_number = #{invitationId}
+                AND group_accepted = 'N'
+        </if>
+        <if test="status == 'REJECTED'">
+            DELETE FROM tb_group
+            WHERE
+                group_number = #{invitationId}
+                AND group_accepted = 'N'
+        </if>
     </update>
 
-    <insert id="insertGroupMember" parameterType="ResponseGroupDTO">
+    <insert id="insertGroupMember" parameterType="RequestGroupDTO">
         INSERT INTO tb_group (
             group_leader, group_member, group_name,
             group_accepted, marker_color
@@ -80,34 +104,59 @@
         )
     </insert>
 
-    <select id="findGroupMemberLocations" parameterType="int" resultType="GroupMemberLocationResponseDTO">
+    <select id="findGroupMemberLocations" parameterType="int" resultType="ResponseGroupMemberLocationDTO">
+        WITH CurrentGroup AS (
+            -- 1. 현재 groupId(PK)로 이 그룹의 논리적 키(group_leader, group_name)를 찾습니다.
+            SELECT 
+                group_leader, 
+                group_name
+            FROM 
+                tb_group
+            WHERE 
+                group_number = #{groupId}
+            LIMIT 1
+        )
+        -- 2. 위에서 찾은 논리적 키(leader, name)와 일치하는 모든 '수락된' 멤버를 조회합니다.
         SELECT
             u.user_number AS id,
             ST_Y(u.location::geometry) AS lat,
             ST_X(u.location::geometry) AS lng,
             u.user_name AS name,
             g.marker_color AS color,
-            'online' AS status,     -- 임시 상태값
-            NOW() AS lastUpdate     -- 임시 업데이트 시간
+            'online' AS status,
+            (NOW() AT TIME ZONE 'UTC')::TIMESTAMP AS lastUpdate
         FROM
-             tb_group g JOIN tb_user u ON g.group_member = u.user_number -- 리더도 포함하려면 UNION 필요
+            tb_group g
+        JOIN 
+            tb_user u ON g.group_member = u.user_number
+        JOIN 
+            CurrentGroup cg ON g.group_leader = cg.group_leader AND g.group_name = cg.group_name
         WHERE
-            g.group_number = #{groupId}
-            AND g.group_accepted = 'Y' -- 수락된 멤버만 조회
-        UNION ALL
-        SELECT
-             u.user_number AS id,
-             ST_Y(u.location::geometry) AS lat,
-             ST_X(u.location::geometry) AS lng,
-             u.user_name AS name,
-             '#000000' AS color, -- 리더 색상 예시 (별도 컬럼 필요?)
-             'online' AS status,
-             NOW() AS lastUpdate
-        FROM
-             tb_group g JOIN tb_user u ON g.group_leader = u.user_number
-        WHERE
-             g.group_number = #{groupId}
-             -- 리더는 항상 포함될 수 있으므로 group_accepted 조건 제외 가능
+            g.group_accepted = 'Y' -- 3. 'Y' (수락한) 멤버만 필터링
     </select>
 
+    <select id="findGroupLeaderByGroupId" resultType="int" parameterType="int">
+    SELECT 
+        group_leader
+    FROM 
+        tb_group
+    WHERE 
+        group_number = #{groupId} LIMIT 1
+</select>
+<select id="findPendingInvitationsByMember" parameterType="int" resultType="InvitationDTO">
+    SELECT     
+        g.group_number        AS invitationId,    
+        g.group_number        AS groupId,         
+        g.group_leader        AS inviterUserNumber, 
+        g.group_member        AS targetUserNumber,  
+        'PENDING'             AS status,          
+        g.marker_color        AS markerColor,
+        g.group_name          AS groupName,
+        (SELECT u.user_name FROM tb_user u WHERE u.user_number = g.group_leader) AS inviterName
+    FROM
+         tb_group g
+    WHERE
+        g.group_member = #{userNumber} -- 현재 로그인한 사용자
+        AND g.group_accepted = 'N'     -- 'N' (초대 대기) 상태인 것만
+</select>
 </mapper>

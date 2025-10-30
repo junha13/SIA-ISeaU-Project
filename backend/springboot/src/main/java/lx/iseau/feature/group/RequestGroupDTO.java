@@ -11,4 +11,9 @@ public class RequestGroupDTO {
 
 	private int userId;
 	private String GroupName;
+	private Integer groupLeader;
+	private Integer groupNumber;    
+	private Integer groupMember;
+	private String groupAccepted;
+	private String markerColor;
 }
