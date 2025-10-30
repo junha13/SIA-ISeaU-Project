@@ -190,7 +190,7 @@ ORDER BY
     </select>
     
     <!-- 댓글 목록 (최신순) -->
-	<select id="listBeachComments" parameterType="int" resultType="lx.iseau.feature.beach.dto.BeachCommentDTO">
+	<select id="listBeachComments" parameterType="int" resultType="ResponseBeachCommentDTO">
 	  SELECT c.beach_comment_number AS beachCommentNumber,
 	         c.comment_content      AS commentContent,
 	         c.created_time         AS createdTime,
@@ -205,7 +205,7 @@ ORDER BY
 	</select>
     
     <!-- 댓글 등록 -->
-	<insert id="insertBeachComment" parameterType="lx.iseau.feature.beach.dto.BeachCommentDTO" useGeneratedKeys="true" keyProperty="beachCommentNumber">
+	<insert id="insertBeachComment" parameterType="ResponseBeachCommentDTO" useGeneratedKeys="true" keyProperty="beachCommentNumber">
 	  INSERT INTO tb_beach_comment_list
 	  (comment_content, created_time, rating, beach_number, user_number)
 	  VALUES
@@ -213,7 +213,7 @@ ORDER BY
 	</insert>
 	
 	<!-- 댓글 수정 (자기 댓글만) -->
-	<update id="updateBeachComment" parameterType="lx.iseau.feature.beach.dto.BeachCommentDTO">
+	<update id="updateBeachComment" parameterType="ResponseBeachCommentDTO">
 	  UPDATE tb_beach_comment_list
 	  SET comment_content = #{commentContent},
 	      rating          = #{rating}

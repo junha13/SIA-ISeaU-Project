@@ -15,6 +15,10 @@ export const useBeachStore = defineStore('beach', () => {
     const currentBeachDetail = ref(null);
     const isDetailLoading = ref(false);
 
+    // === 댓글 상태 ===
+    const comments = ref([]);
+    const isCommentsLoading = ref(false);   
+
     // --- Actions ---
     const fetchBeaches = async (params = {}) => {
         isLoading.value = true;
@@ -137,12 +141,49 @@ export const useBeachStore = defineStore('beach', () => {
   }
 };
 
+    // -------- 댓글 액션 --------
+    const loadComments = async (beachNumber) => {
+      isCommentsLoading.value = true;
+      try {
+        const call = beachApi.fetchComments(beachNumber);
+        const res = await call();
+        comments.value = res?.result ?? res?.data?.result ?? [];
+      } catch (e) {
+        console.error('리뷰 목록 불러오기 실패', e);
+        comments.value = [];
+      } finally {
+        isCommentsLoading.value = false;
+      }
+    };
+
+    const addComment = async (beachNumber, { commentContent, rating }) => {
+      const call = beachApi.addComment(beachNumber);
+      await call({ commentContent, rating });
+      await loadComments(beachNumber);
+    };
+
+    const editComment = async (beachNumber, beachCommentNumber, { commentContent, rating }) => {
+      const call = beachApi.editComment(beachNumber, beachCommentNumber);
+      await call({ commentContent, rating });
+      await loadComments(beachNumber);
+    };
+
+    const deleteComment = async (beachCommentNumber, beachNumber) => {
+      const call = beachApi.deleteComment(beachCommentNumber);
+      await call();
+      await loadComments(beachNumber);
+    };
+    
+
+
     // --- Getters ---
     const getCurrentSelectedBeachId = computed(() => selectedBeachId.value);
     const getFavoriteBeachIds = computed(() => favoriteBeachIds.value);
     const getCurrentBeachDetail = computed(() => currentBeachDetail.value);
+    const getComments = computed(() => comments.value);
 
     return {
+        // state
         beaches,
         selectedBeachId,
         favoriteBeachIds,
@@ -150,13 +191,26 @@ export const useBeachStore = defineStore('beach', () => {
         apiError,
         currentBeachDetail,
         isDetailLoading,
+        // comments
+        comments, 
+        isCommentsLoading,
+
+        // actions
         fetchBeaches,
         fetchBeachDetail,
         fetchFavoriteIds,
         toggleSelectBeach,
         toggleFavoriteBeach,
+        // comments
+        addComment,
+        editComment,
+        deleteComment,
+        loadComments,
+
+        // getters
         getCurrentSelectedBeachId,
         getFavoriteBeachIds,
         getCurrentBeachDetail,
+        getComments
     };
 });

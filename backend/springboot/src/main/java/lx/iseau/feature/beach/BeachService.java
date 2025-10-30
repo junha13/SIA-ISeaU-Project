@@ -139,22 +139,22 @@ public class BeachService  {
     /*
      * 해수욕장 방문자 리뷰
      */
-    
-    public List<ResponseBeachCommentDTO> listBeachComments(int beachNumber) {
+    // 방문자 리뷰 목록
+    public List<ResponseBeachCommentDTO> getListBeachComments(int beachNumber) {
         return dao.listBeachComments(beachNumber);
     }
-
+	// 방문자 리뷰 등록
     public int addBeachComment(ResponseBeachCommentDTO dto) {
         // 간단 검증
         if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
         return dao.insertBeachComment(dto);
     }
-    
+    // 방문자 리뷰 수정    
     public int editBeachComment(ResponseBeachCommentDTO dto) {
         if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
         return dao.updateBeachComment(dto);
     }
-
+    // 방문자 리뷰 삭제
     public int removeBeachComment(int beachCommentNumber) {
         return dao.deleteBeachComment(beachCommentNumber);
     }
