@@ -50,4 +50,27 @@
         FROM tb_user
     WHERE user_name = #{name} AND mobile = #{mobile}
 </select>
+
+	  <!-- ✅ 선택: tb_user.beach_number = #{beachNumber} -->
+  <update id="setActiveBeach">
+    UPDATE tb_user
+       SET beach_number = #{beachNumber}
+     WHERE user_number = #{userNumber}
+  </update>
+
+  <!-- ✅ 해제: tb_user.beach_number = NULL -->
+  <update id="clearActiveBeach">
+    UPDATE tb_user
+       SET beach_number = NULL
+     WHERE user_number = #{userNumber}
+  </update>
+
+  <!-- 현재 선택된 해수욕장 번호 (없으면 null) 
+  <select id="findActiveBeach" resultType="java.lang.Integer">
+    SELECT beach_number
+      FROM tb_user
+     WHERE user_number = #{userNumber}
+  </select>
+  -->
+	
 </mapper>

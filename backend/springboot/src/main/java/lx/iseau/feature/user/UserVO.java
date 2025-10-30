@@ -22,5 +22,5 @@ public class UserVO {
     private LocalDate birthDate; //birth_date
     private String location; // logation
     private int roleNumber; // role_number
-    
+    private Integer beachNumber; // beach_number Integer= NULL 허용
 }

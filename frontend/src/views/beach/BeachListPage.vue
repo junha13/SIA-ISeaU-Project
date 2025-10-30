@@ -186,8 +186,6 @@ import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia';
 import { useBeachStore } from '@/stores/beachStore';
 
-//import InfiniteLoading from 'infinite-loading-vue3-ts'
-
 import bottomSheet from '@/components/BottomSheet.vue'
 
 
@@ -246,6 +244,16 @@ onMounted(() => {
   header.value = "해수욕장 리스트"
   getLocation();
 });
+
+// 📌 목록/검색 조건 초기화 후 다시 불러오기 (무한스크롤 리셋)
+function resetInfinite() {
+  page.value = 1;           // 다음 요청 페이지 초기화
+  hasMore.value = true;     // 더 불러올 수 있음
+  beaches.value = [];       // 화면 목록 비우고
+  infiniteId.value++;       // InfiniteLoading 새로고침 트리거
+  loadData();               // 첫 페이지 다시 호출
+}
+
 
 async function loadData() {
   isLoading.value = true;

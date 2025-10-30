@@ -95,9 +95,9 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/group')">그룹</span>
         </div>
 
-        <div class="nav-item-custom" @click="goTo('/beach/1')">
-          <i class="fas fa-swimmer fs-4 mb-1" :style="navIconStyle('/beach/1')"></i>
-          <span class="fs-7 fw-bold" :style="navTextStyle('/beach/1')">해수욕장</span>
+        <div class="nav-item-custom" @click="goToSelectedBeach">
+          <i class="fas fa-swimmer fs-4 mb-1" :style="navIconStyle('/beach')"></i>
+          <span class="fs-7 fw-bold" :style="navTextStyle('/beach')">해수욕장</span>
         </div>
 
         <!-- 내정보 탭 (MyInfo 라우트 연결) -->
@@ -171,6 +171,26 @@ const handleGroupInviteConfirm = (isAccepted) => {
   groupStore.receivedInvitation = null;
 }
 
+// 사용자가 선택한 해수욕장 번호
+const { selectedBeachId } = storeToRefs(beachStore) // 숫자 또는 null
+
+function goToSelectedBeach() {
+  const id = Number(selectedBeachId.value || 0); // 0/null ⇒ 미선택
+  if (id > 0) {
+    // 선택된 해수욕장 상세로 이동
+    router.push(`/beach/${id}`)
+  } else {
+    // 미선택 ⇒ 안내 후 리스트로
+    showConfirmModal({
+      title: '알림',
+      message: '현재 선택된 해수욕장이 없습니다.\n해수욕장 목록 페이지로 이동합니다.',
+      type: 'info',
+      autoHide: true,
+      duration: 1500
+    })
+    router.push({ name: 'BeachList' })
+  }
+}
 
 const goTo = (path) => {
   // 해수욕장 상세 페이지 (선택된 해수욕장 확인 로직)
@@ -208,7 +228,7 @@ const isMyInfoActive = computed(() => route.path.startsWith('/my-info'))
 
 const navIconStyle = (path) => {
   let isActive = false
-  if (path === '/beach/1') {
+  if (path === '/beach') {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
@@ -222,7 +242,7 @@ const navIconStyle = (path) => {
 
 const navTextStyle = (path) => {
   let isActive = false
-  if (path === '/beach/1') {
+  if (path === '/beach') {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
