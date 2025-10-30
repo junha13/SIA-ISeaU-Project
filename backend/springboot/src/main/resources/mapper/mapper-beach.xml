@@ -5,89 +5,137 @@
 
 <mapper namespace="lx.iseau.feature.beach.BeachDAO">
 
-   <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
-    SELECT
-        beach_number,
-        beach_name,
-        beach_image,
-        beach_information,
-        rating,
-        approved_by_ministry,
-        address,    
-        ST_Y(LOCATION::geometry) AS latitude,         
-        ST_X(LOCATION::geometry) AS longitude,
-        mobile,
-        open_date,
-        close_date
-        FROM
-        tb_beach
-    WHERE
-        1=1
-   
-    <if test="region != null and region != ''">
-        AND address LIKE CONCAT(#{region}, '%')
-    </if>
-    
-    <choose>
-        <when test="sort == 'rating_desc'">
-            ORDER BY rating DESC, beach_name ASC
-        </when>
-        <when test="sort == 'name_asc'">
-            ORDER BY beach_name ASC
-        </when>
-        <otherwise>
-            ORDER BY beach_number ASC
-        </otherwise>
-    </choose>
-</select>
+  <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
+    <!-- page/size로 offset 계산 -->
+    <bind name="safePage" value="(page == null || page &lt;= 0) ? 1 : page"/>
+    <bind name="safeSize" value="(size == null || size &lt;= 0) ? 10 : size"/>
+    <bind name="offset"   value="(safePage - 1) * safeSize"/>
 
-	<select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
-		select beach_number,
-		        beach_name,
-		        beach_image,
-		        beach_information,
-		        rating,
-		        approved_by_ministry,
-		        address,    
-		        ST_Y(LOCATION::geometry) AS latitude,         
-		        ST_X(LOCATION::geometry) AS longitude,
-		        mobile,
-		        open_date,
-		        close_date
-		from tb_beach
-		where beach_number = #{beachNumber}
-	</select>
-<select id="getBeachDetailDanger" parameterType="int" resultType="ResponseBeachDangerDTO">
-<![CDATA[
-WITH beach_location AS (
-    SELECT location 
-    FROM tb_beach 
+    <![CDATA[
+    SELECT
+        b.beach_number,
+        b.beach_name,
+        b.beach_image,
+        b.beach_information,
+        b.rating,
+        b.approved_by_ministry,
+        b.address,
+        ST_Y(b.location::geometry) AS latitude,
+        ST_X(b.location::geometry) AS longitude,
+        b.mobile,
+        b.open_date,
+        b.close_date,
+        COALESCE(c.review_count, 0)
+    FROM tb_beach b
+    LEFT JOIN (
+        SELECT beach_number, COUNT(*) AS review_count
+        FROM tb_beach_comment_list
+        GROUP BY beach_number
+    ) c ON c.beach_number = b.beach_number
+    WHERE 1=1
+    ]]>
+
+    <!-- 지역 필터 -->
+    <if test="region != null and region != ''">
+      <![CDATA[
+      AND address LIKE CONCAT(#{region}, '%')
+      ]]>
+    </if>
+
+    <!-- 카테고리 필터 -->
+    <if test="category != null and category != ''">
+      <![CDATA[
+      AND b.category = #{category}
+      ]]>
+    </if>
+
+    <choose>
+      <!-- 리뷰 개수순 (내림차순), 동일 시 평점/이름으로 안정화 -->
+      <when test="sort == 'review_desc'">
+        <![CDATA[
+        ORDER BY COALESCE(c.review_count, 0) DESC,
+                 b.rating DESC,
+                 b.beach_name ASC
+        ]]>
+      </when>
+      <when test="sort == 'rating_desc'">
+        <![CDATA[
+        ORDER BY b.rating DESC NULLS LAST, b.beach_name ASC
+        ]]>
+      </when>
+      <when test="sort == 'name_asc'">
+        <![CDATA[
+        ORDER BY b.beach_name ASC
+        ]]>
+      </when>
+      <otherwise>
+        <![CDATA[
+        ORDER BY b.beach_number ASC
+        ]]>
+      </otherwise>
+    </choose>
+
+    <!-- 페이지네이션 -->
+    <![CDATA[
+    LIMIT #{safeSize}
+    OFFSET #{offset}
+    ]]>
+
+  </select>
+
+
+  <!-- 해수욕장 상세 정보 -->
+  <select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
+    <![CDATA[
+    SELECT beach_number,
+           beach_name,
+           beach_image,
+           beach_information,
+           rating,
+           approved_by_ministry,
+           address,
+           ST_Y(location::geometry) AS latitude,
+           ST_X(location::geometry) AS longitude,
+           mobile,
+           open_date,
+           close_date
+    FROM tb_beach
     WHERE beach_number = #{beachNumber}
-)
-SELECT
-    w.wave_height AS waveHeight,
-    w.sea_surface_temperature AS seaSurfaceTemperature,
-    w.forecast_time AS forecastTime,
-    ST_Y(w.observed_location::geometry) AS latitude,
-    ST_X(w.observed_location::geometry) AS longitude
-FROM
-    tb_beach_weather_info w,
-    beach_location b
-WHERE
-    ST_DWithin(w.observed_location, b.location, 10000)
-    AND w.forecast_time >= DATE_TRUNC('day', NOW())
-    AND w.forecast_time < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
-ORDER BY
-    w.forecast_time ASC
-]]>
-</select>
-<select id="getBeachDetailWeather" parameterType="int" resultType="ResponseBeachWeatherDTO">
+    ]]>
+  </select>
+
+
+  <!-- 해수욕장 위험정보 -->
+  <select id="getBeachDetailDanger" parameterType="int" resultType="ResponseBeachDangerDTO">
+    <![CDATA[
+    WITH beach_location AS (
+        SELECT location
+        FROM tb_beach
+        WHERE beach_number = #{beachNumber}
+    )
+    SELECT
+        w.wave_height AS waveHeight,
+        w.sea_surface_temperature AS seaSurfaceTemperature,
+        w.forecast_time AS forecastTime,
+        ST_Y(w.observed_location::geometry) AS latitude,
+        ST_X(w.observed_location::geometry) AS longitude
+    FROM tb_beach_weather_info w,
+         beach_location b
+    WHERE ST_DWithin(w.observed_location, b.location, 10000)
+      AND w.forecast_time >= DATE_TRUNC('day', NOW())
+      AND w.forecast_time < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
+    ORDER BY w.forecast_time ASC
+    ]]>
+  </select>
+
+
+  <!-- 해수욕장 날씨 -->
+  <select id="getBeachDetailWeather" parameterType="int" resultType="ResponseBeachWeatherDTO">
+    <![CDATA[
     WITH beach_location AS (
         SELECT location FROM tb_beach WHERE beach_number = #{beachNumber}
     )
-    
     SELECT
-        -- 1. tb_weather_info
         w.temperature,
         w.humidity,
         w.rain,
@@ -95,43 +143,26 @@ ORDER BY
         w.wind_speed,
         w.wind_direction,
         w.forecast_time,
-
-        -- 2. tb_uv_info (LEFT JOIN 되므로 데이터가 없으면 NULL)
         u.rain_probability,
         u.uv_index,
         u.uv_index_clear_sky
+    FROM tb_weather_info w
+    JOIN beach_location b
+      ON ST_DWithin(w.observed_location, b.location, 10000)
+    LEFT JOIN tb_uv_info u
+      ON w.forecast_time = u.forecast_time
+     AND ST_DWithin(u.observed_location, b.location, 10000)
+    WHERE w.forecast_time >= NOW()
+    ORDER BY ST_Distance(w.observed_location, b.location) ASC,
+             w.forecast_time ASC
+    LIMIT 72
+    ]]>
+  </select>
 
-    FROM
-        tb_weather_info w
-    
-    -- [수정] 해변 위치(b)를 먼저 JOIN
-    JOIN
-        beach_location b 
-        -- 날씨(w)가 10km 반경 내에 있어야 함 (메인 조건)
-        ON ST_DWithin(w.observed_location, b.location, 10000)
 
-    -- [수정] UV(u) 정보는 LEFT JOIN으로 변경
-    LEFT JOIN
-        tb_uv_info u
-        -- 조건 1: 날씨(w)와 예보 시간이 같아야 함
-        ON w.forecast_time = u.forecast_time
-        -- 조건 2: UV(u) 데이터도 10km 반경 내에 있어야 함
-        AND ST_DWithin(u.observed_location, b.location, 10000)
-
-    WHERE
-        -- [수정] 메인 테이블(w)의 시간 조건
-        w.forecast_time >= NOW()
-        
-    ORDER BY
-        -- 5. 해변 위치와 (날씨 데이터를 기준으로) 가장 가까운 순서, 그다음 시간 순으로 정렬
-        ST_Distance(w.observed_location, b.location) ASC, 
-        w.forecast_time ASC
-        
-    LIMIT 72;
-</select>
-	
-<!-- BeachDAO.xml 파일 내부 -->
-<select id="getBeachFavorites" parameterType="int" resultType="ResponseFavoritesDTO">
+  <!-- 즐겨찾기 -->
+  <select id="getBeachFavorites" parameterType="int" resultType="ResponseFavoritesDTO">
+    <![CDATA[
     SELECT
         b.beach_number AS beachNumber,
         b.beach_name AS beachName,
@@ -139,44 +170,78 @@ ORDER BY
         b.beach_information AS beachInformation,
         b.rating AS rating,
         b.approved_by_ministry AS approvedByMinistry,
-        b.address AS address,    
-        ST_Y(b.LOCATION::geometry) AS latitude,         
-        ST_X(b.LOCATION::geometry) AS longitude,
+        b.address AS address,
+        ST_Y(b.location::geometry) AS latitude,
+        ST_X(b.location::geometry) AS longitude,
         b.mobile AS mobile,
         b.open_date AS openDate,
         b.close_date AS closeDate
-    FROM
-        tb_beach_saved bs
-    JOIN
-        tb_beach b ON bs.beach_number = b.beach_number
-    WHERE
-        bs.user_number = #{userNumber}
-    ORDER BY
-        b.beach_name ASC
-</select>
-    <insert id="insertFavorite" parameterType="BeachFavoritesVO">
-        INSERT INTO tb_beach_saved (user_number, beach_number)
-        VALUES (#{userNumber}, #{beachNumber})
-    </insert>
+    FROM tb_beach_saved bs
+    JOIN tb_beach b ON bs.beach_number = b.beach_number
+    WHERE bs.user_number = #{userNumber}
+    ORDER BY b.beach_name ASC
+    ]]>
+  </select>
 
-    <delete id="removeFavorite" parameterType="BeachFavoritesVO">
-        DELETE FROM tb_beach_saved
-        WHERE user_number = #{userNumber}
-          AND beach_number = #{beachNumber}
-    </delete>
 
-    <select id="findFavoriteBeachByUser" parameterType="int" resultType="int">
-        SELECT beach_number
-        FROM tb_beach_saved
-        WHERE user_number = #{userNumber}
-    </select>
+  <insert id="insertFavorite" parameterType="BeachFavoritesVO">
+    <![CDATA[
+    INSERT INTO tb_beach_saved (user_number, beach_number)
+    VALUES (#{userNumber}, #{beachNumber})
+    ]]>
+  </insert>
 
-    <select id="checkFavoriteExists" parameterType="BeachFavoritesVO" resultType="int">
-        SELECT COUNT(*)
-        FROM tb_beach_saved
-        WHERE user_number = #{userNumber}
-          AND beach_number = #{beachNumber}
-    </select>
-    
-    
+  <delete id="removeFavorite" parameterType="BeachFavoritesVO">
+    <![CDATA[
+    DELETE FROM tb_beach_saved
+    WHERE user_number = #{userNumber}
+      AND beach_number = #{beachNumber}
+    ]]>
+  </delete>
+
+
+  <!-- 댓글 -->
+  <select id="listBeachComments" parameterType="int" resultType="ResponseBeachCommentDTO">
+    <![CDATA[
+    SELECT c.beach_comment_number AS beachCommentNumber,
+           c.comment_content      AS commentContent,
+           c.created_time         AS createdTime,
+           c.rating               AS rating,
+           c.beach_number         AS beachNumber,
+           c.user_number          AS userNumber,
+           u.user_name            AS userName
+    FROM tb_beach_comment_list c
+    JOIN tb_user u ON u.user_number = c.user_number
+    WHERE c.beach_number = #{beachNumber}
+    ORDER BY c.created_time DESC, c.beach_comment_number DESC
+    ]]>
+  </select>
+
+  <insert id="insertBeachComment" parameterType="ResponseBeachCommentDTO" useGeneratedKeys="true" keyProperty="beachCommentNumber">
+    <![CDATA[
+    INSERT INTO tb_beach_comment_list
+    (comment_content, created_time, rating, beach_number, user_number)
+    VALUES
+    (#{commentContent}, COALESCE(#{createdTime}, NOW()), #{rating}, #{beachNumber}, #{userNumber})
+    ]]>
+  </insert>
+
+  <update id="updateBeachComment" parameterType="ResponseBeachCommentDTO">
+    <![CDATA[
+    UPDATE tb_beach_comment_list
+    SET comment_content = #{commentContent},
+        rating          = #{rating}
+    WHERE beach_comment_number = #{beachCommentNumber}
+      AND user_number = #{userNumber}
+    ]]>
+  </update>
+
+  <delete id="deleteBeachComment" parameterType="int">
+    <![CDATA[
+    DELETE FROM tb_beach_comment_list
+    WHERE beach_comment_number = #{beachCommentNumber}
+      AND user_number = #{userNumber}
+    ]]>
+  </delete>
+
 </mapper>

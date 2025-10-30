@@ -52,12 +52,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useConfirmModal } from '@/utils/modalUtils';
 import axios from 'axios'; 
 import GroupInviteModal from '@/components/GroupInviteModal.vue';
-import axios from 'axios';
 
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
@@ -357,12 +356,12 @@ function requestGeoLocation(value) {
       console.log('sending to server:', payload)
 
       let axiosUrl;
-      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}api/location/testBoundaryCheck`
-      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}api/location/boundaryCheck`
+      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`
+      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`
 
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}api/location/testBoundaryCheck`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`,
           payload,
           {
             headers: { 'Content-Type': 'application/json' },

@@ -1,29 +1,46 @@
 import { useApi } from '@/utils/useApi.js';
 
-// [수정] API 경로를 실제 백엔드 주소로 변경합니다.
-const { execute: fetchBeachList } = useApi('post', '/api/beach/beaches');
+// 해수욕장 목록 조회 API (POST)
+const { execute: fetchBeachList } = useApi('post', '/beach/beaches');
 
 // 해수욕장 상세 정보 조회 API (GET)
-const { execute: fetchBeachDetail } = useApi('get', '/api/beach/detail/{beachNumber}/info');
+const fetchBeachDetail = (beachNumber) => useApi('get', `/beach/detail/${beachNumber}/info`).execute;
 
 // 즐겨찾기 추가 API (POST)
-const { execute: addFavorite } = useApi('post', '/api/favorites/add');
+const { execute: addFavorite } = useApi('post', '/favorites/add');
 
 // 즐겨찾기 제거 API (POST)
-const { execute: removeFavorite } = useApi('post', '/api/favorites/remove');
+const { execute: removeFavorite } = useApi('post', '/favorites/remove');
 
 // 활동 해수욕장 선택 API (POST)
-const { execute: selectBeach } = useApi('post', '/api/user/select-beach');
+const { execute: selectBeach } = useApi('post', '/user/select-beach');
 
 // 활동 해수욕장 선택 해제 API (POST)
-const { execute: unselectBeach } = useApi('post', '/api/user/unselect-beach');
+const { execute: unselectBeach } = useApi('post', '/user/unselect-beach');
+
+// === 댓글(Comment) APIs 동적구조이기 때문에 정적 구조와 다름 ===
+// 목록
+const fetchComments = (beachNumber) => useApi('get',  `/beach/detail/${beachNumber}/comments`).execute;
+// 등록
+const addComment    = (beachNumber) => useApi('post', `/beach/detail/${beachNumber}/comments`).execute;
+// 수정
+const editComment   = (beachNumber, beachCommentNumber) =>
+  useApi('put', `/beach/detail/${beachNumber}/comments/${beachCommentNumber}`).execute;
+// 삭제 (백엔드 경로 주의: beachNumber 없이 commentNumber만)
+const deleteComment = (beachCommentNumber) =>
+  useApi('delete', `/beach/detail/comments/${beachCommentNumber}`).execute;
 
 
 export const beachApi = {
     fetchBeachList,
-    fetchBeachDetail,
     addFavorite,
     removeFavorite,
     selectBeach,
     unselectBeach,
+
+    fetchBeachDetail,
+    fetchComments,
+    addComment,
+    editComment,
+    deleteComment
 };

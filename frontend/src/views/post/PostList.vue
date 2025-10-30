@@ -196,7 +196,7 @@ onMounted(() => {
 async function requestPostList() {
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}api/post/getPostList`, 
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/getPostList`, 
         {
           headers: { 'Content-Type': 'application/json' },
           timeout: 5000,
@@ -214,7 +214,7 @@ async function requestPostListByCondition() {
   }
 
   try {
-    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}api/post/getPostListByCondition`,
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/getPostListByCondition`,
     condition,
       {
         headers: { 'Content-Type': 'application/json' },

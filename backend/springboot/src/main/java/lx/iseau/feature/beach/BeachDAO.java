@@ -27,7 +27,17 @@ public interface BeachDAO {
 	// 위경도 위치 보내주는걸로
     // 위험 조회
 	public ResponseBeachDeptDTO getBeachDetailDept(int beachNumber);
-
+	/*
+	 * 방문자 리뷰
+	 */
+	// 방문자 리뷰 목록 조회
+    List<ResponseBeachCommentDTO> listBeachComments(@Param("beachNumber") int beachNumber);
+    // 방문자 리뷰 등록
+    int insertBeachComment(ResponseBeachCommentDTO dto);
+    // 방문자 리뷰 수정
+    int updateBeachComment(ResponseBeachCommentDTO dto);
+    // 방문자 리뷰 삭제
+    int deleteBeachComment(@Param("beachCommentNumber") int beachCommentNumber);
 	
 	
 	//public ResponseBeachPestDTO getBeachDetailPest(int beachNumber);

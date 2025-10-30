@@ -16,11 +16,12 @@ export const useStore = defineStore('store', () => {
     { label: '가족', value: 'family' },
   ]);
 
-  const sortOptions = ref([
-    { label: '거리순', value: 'distance' },
-    { label: '리뷰순', value: 'review' },
-    { label: '평점순', value: 'rating' },
-  ]);
+const sortOptions = ref([
+  { label: '이름순', value: 'name' },
+  { label: '거리순', value: 'distance' },
+  { label: '리뷰순', value: 'review' },
+  { label: '평점순', value: 'rating' },
+]);
 
   const regionOptions = ref([
     { label: "전체", value: "" },

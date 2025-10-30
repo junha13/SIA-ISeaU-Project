@@ -179,7 +179,7 @@ onMounted(() => {
 async function requestPostDetail(postNumber) {
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}api/post/getPostDetail/${postNumber}`, 
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/getPostDetail/${postNumber}`, 
       null,
         {
           headers: { 'Content-Type': 'application/json' },
@@ -206,7 +206,7 @@ async function requestAddComment(postNumber) {
   }
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}api/post/addComment`,
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/addComment`,
       comment,
         {
           headers: { 'Content-Type': 'application/json' },
@@ -230,7 +230,7 @@ async function requestRecommendPost(postNumber) {
   }
 
   try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}api/post/recommend`,
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/recommend`,
       recommend,
         {
           headers: { 'Content-Type': 'application/json' },

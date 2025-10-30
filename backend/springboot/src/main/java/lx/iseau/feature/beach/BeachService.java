@@ -17,11 +17,25 @@ public class BeachService  {
     BeachDAO dao;
     
     @Transactional(readOnly = true)
-    public List<ResponseBeachDTO> getBeachList(BeachListRequest request) {
+    public Map<String, Object> getBeachList(BeachListRequest request) {
+        // 1) 기본값 보정
+        int page = (request.getPage() == null || request.getPage() < 1) ? 1 : request.getPage();
+        int size = (request.getSize() == null || request.getSize() < 1) ? 10 : request.getSize();
+        size = Math.min(size, 50); // 안전 상한
+
+        // 2) 정렬 기본값
+        if (request.getSort() == null || request.getSort().isEmpty()) {
+            request.setSort("name_asc");
+        }
+        // (region/category는 null/"" 허용)
+
+        // 3) 조회
         List<BeachVO> voList = dao.findBeacheList(request);
-        List<ResponseBeachDTO> dtoList = new ArrayList<>();      
+
+        // 4) 변환
+        List<ResponseBeachDTO> dtoList = new ArrayList<>();
         for (BeachVO vo : voList) {
-        	ResponseBeachDTO dto = new ResponseBeachDTO(
+            dtoList.add(new ResponseBeachDTO(
                 vo.getBeachNumber(),
                 vo.getBeachName(),
                 vo.getBeachImage(),
@@ -30,21 +44,29 @@ public class BeachService  {
                 vo.isApprovedByMinistry(),
                 vo.getAddress(),
                 vo.getLatitude(),
-                vo.getLongitude(), 
+                vo.getLongitude(),
                 vo.getMobile(),
                 vo.getOpenDate(),
-                vo.getCloseDate()
-            );
-            dtoList.add(dto);
+                vo.getCloseDate(),
+                vo.getReviewCount()
+            ));
         }
-       
-        Map<String, Object> map = new HashMap<String, Object>();
-        
-        
-        map.put("result", dtoList);
-        
-      
-        return dtoList;
+
+        // 5) hasMore 계산: 이번 페이지가 가득 찼으면 다음 페이지 있다고 가정
+        boolean hasMore = dtoList.size() == size;
+
+        // (옵션) 정확한 hasMore 원하면 count 사용
+        // int total = dao.countBeaches(request);
+        // boolean hasMore = page * size < total;
+
+        // 6) 응답 패키징
+        Map<String, Object> res = new HashMap<>();
+        res.put("result", dtoList);
+        res.put("page", page);
+        res.put("size", size);
+        res.put("hasMore", hasMore);
+        res.put("nextPage", hasMore ? page + 1 : null);
+        return res;
     }
 
 	/*
@@ -133,6 +155,29 @@ public class BeachService  {
         
         // 결과가 0보다 크면 true 반환
         return count > 0;
+    }
+    
+    /*
+     * 해수욕장 방문자 리뷰
+     */
+    // 방문자 리뷰 목록
+    public List<ResponseBeachCommentDTO> getListBeachComments(int beachNumber) {
+        return dao.listBeachComments(beachNumber);
+    }
+	// 방문자 리뷰 등록
+    public int addBeachComment(ResponseBeachCommentDTO dto) {
+        // 간단 검증
+        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
+        return dao.insertBeachComment(dto);
+    }
+    // 방문자 리뷰 수정    
+    public int editBeachComment(ResponseBeachCommentDTO dto) {
+        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
+        return dao.updateBeachComment(dto);
+    }
+    // 방문자 리뷰 삭제
+    public int removeBeachComment(int beachCommentNumber) {
+        return dao.deleteBeachComment(beachCommentNumber);
     }
     
     

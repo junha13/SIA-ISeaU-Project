@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import lx.iseau.feature.group.GroupInviteRequestDTO;
 import lx.iseau.feature.group.GroupsService;
 
 @RequestMapping("/api/location")
