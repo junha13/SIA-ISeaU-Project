@@ -217,7 +217,8 @@ CREATE TABLE tb_user
      email       varchar (100)  NOT NULL , 
      birth_date  DATE  NOT NULL , 
      location    geography(Point, 4326) , 
-     role_number integer  NOT NULL 
+     role_number integer  NOT NULL,
+	 beach_number integer
     ) 
 ;
 Create table tb_post_recommend
@@ -348,6 +349,18 @@ ALTER TABLE tb_beach_comment_list
     ( 
      beach_number
     ) 
+;
+
+ALTER TABLE tb_user
+	ADD CONSTRAINT tb_beach_FKv5 FOREIGN KEY
+	(
+	beach_number
+	)
+	REFERENCES tb_beach
+	(
+	beach_number
+	)
+
 ;
 ALTER TABLE tb_beach_tag_list
     ADD CONSTRAINT tb_beach_FKv3 FOREIGN KEY 
