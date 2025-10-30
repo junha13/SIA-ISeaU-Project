@@ -1,5 +1,6 @@
 package lx.iseau.feature.beach;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class BeachController {
 	@Autowired
 	private BeachService service; 
 
-	@RequestMapping("/beaches")
+	@PostMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
 	public ResponseEntity<?> getBeachList(@RequestBody BeachListRequest request) {
 	    String sort = (request.getSort() != null) ? request.getSort().toLowerCase() : "";
 
@@ -37,14 +38,15 @@ public class BeachController {
 	            request.setSort("name_asc");
 	    }
 
-	    List<ResponseBeachDTO> beachList = service.getBeachList(request);
+	    Map<String, Object> res = service.getBeachList(request);
+	    
+	    // 정렬값도 함께 내려주고 싶으면(선택) 새 Map에 합쳐서 반환
+	    Map<String, Object> body = new HashMap<>(res);
+	    body.put("sort", request.getSort());
 
 	    return ResponseEntity.ok()
 	            .header("api", "beach/beachs")
-	            .body(Map.of(
-	                "sort", request.getSort(),
-	                "result", beachList
-	            ));
+	            .body(body);
 	}
 	
 	@RequestMapping("/detail/{beachNumber}/info")

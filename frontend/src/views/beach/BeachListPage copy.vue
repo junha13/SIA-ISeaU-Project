@@ -25,14 +25,14 @@
             class="form-control"
             placeholder="해수욕장 검색..."
             v-model="searchParams.keyword"
-            @keyup.enter="resetInfinite"
+            @keyup.enter="loadData"
             aria-label="해수욕장 검색"
             style="border-radius: 0.475rem 0 0 0.475rem;"
           />
           <button
             class="btn"
             type="button"
-            @click="resetInfinite"
+            @click="loadData"
             :style="{ backgroundColor: mainColor, color: 'white', border: 'none', borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }"
           >
             <i class="fas fa-search"></i>
@@ -183,10 +183,9 @@ import { ref, computed, onMounted, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useStore } from '@/stores/store.js';
-import { storeToRefs } from 'pinia';
-import { useBeachStore } from '@/stores/beachStore';
-
+import { storeToRefs } from 'pinia'
 //import InfiniteLoading from 'infinite-loading-vue3-ts'
+
 
 import bottomSheet from '@/components/BottomSheet.vue'
 
@@ -195,11 +194,10 @@ const blank = ""
 
 const store = useStore();
 const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
-const beachStore = useBeachStore();
 
 const router = useRouter();
 const beaches = ref([]);
-const { selectedBeachId } = storeToRefs(beachStore)
+const selectedBeachId = ref(null);
 const favoriteBeachIds = ref([]);
 const isLoading = ref(false);
 const apiError = ref(null);
@@ -374,31 +372,16 @@ async function toggleFavorite(beachNumber) {
 }
 
 const filteredBeachList = computed(() => {
-  const kw = (searchParams.value.keyword || '').trim().toLowerCase();
-
   let list = dbOnlyList.value;
-
-  // ✅ 프론트 검색(부분일치)
-  if (kw) {
-    list = list.filter(b => {
-      const name = (b.beachName || '').toLowerCase();
-      const addr = (b.address || '').toLowerCase();
-      const tags = Array.isArray(b.tags) ? b.tags.join(' ').toLowerCase() : '';
-      return name.includes(kw) || addr.includes(kw) || tags.includes(kw);
-    });
-  }
-
-  // ⭐ 즐겨찾기 탭일 때만 추가 필터
   if (activeTab.value === 'favorite') {
     list = list.filter(b => favoriteBeachIds.value.includes(b.beachNumber));
   }
-
   return list;
 });
 
 const dbOnlyList = computed(() => beaches.value);
-const isSelected = (id) => beachStore.isSelected(id)
-const toggleSelect = (id, name) => beachStore.toggleSelectBeach(id, name)
+const isSelected = id => selectedBeachId.value === id;
+const toggleSelect = id => selectedBeachId.value = isSelected(id) ? null : id;
 
 // [수정] isFavorite 함수 (console.log 추가)
 const isFavorite = id => {

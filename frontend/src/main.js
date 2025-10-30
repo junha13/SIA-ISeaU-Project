@@ -30,6 +30,9 @@ use([
 import BottomSheet from '@douxcode/vue-spring-bottom-sheet'
 import '@douxcode/vue-spring-bottom-sheet/dist/style.css' 
 
+// 무한스크롤
+import { InfiniteLoading } from 'infinite-loading-vue3-ts';
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
@@ -37,6 +40,6 @@ app.use(router)
 app.component('BottomSheet', BottomSheet)
 app.component('quill-editor', quillEditor)
 app.component('v-chart', ECharts)
-
+app.component('InfiniteLoading', InfiniteLoading)
 
 app.mount('#app')

@@ -4,7 +4,7 @@ import { useApi } from '@/utils/useApi.js';
 const { execute: fetchBeachList } = useApi('post', '/beach/beaches');
 
 // 해수욕장 상세 정보 조회 API (GET)
-const { execute: fetchBeachDetail } = useApi('get', '/beach/detail/{beachNumber}/info');
+const fetchBeachDetail = (beachNumber) => useApi('get', `/beach/detail/${beachNumber}/info`).execute;
 
 // 즐겨찾기 추가 API (POST)
 const { execute: addFavorite } = useApi('post', '/favorites/add');
@@ -18,7 +18,7 @@ const { execute: selectBeach } = useApi('post', '/user/select-beach');
 // 활동 해수욕장 선택 해제 API (POST)
 const { execute: unselectBeach } = useApi('post', '/user/unselect-beach');
 
-// === 댓글(Comment) APIs 동적구조이기 때문에 정적 구조와 다름(?)  ===
+// === 댓글(Comment) APIs 동적구조이기 때문에 정적 구조와 다름 ===
 // 목록
 const fetchComments = (beachNumber) => useApi('get',  `/beach/detail/${beachNumber}/comments`).execute;
 // 등록
@@ -33,12 +33,12 @@ const deleteComment = (beachCommentNumber) =>
 
 export const beachApi = {
     fetchBeachList,
-    fetchBeachDetail,
     addFavorite,
     removeFavorite,
     selectBeach,
     unselectBeach,
 
+    fetchBeachDetail,
     fetchComments,
     addComment,
     editComment,

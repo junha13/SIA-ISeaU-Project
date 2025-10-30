@@ -8,16 +8,21 @@ const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
 
 export const useBeachStore = defineStore('beach', () => {
     const beaches = ref([]);
-    const selectedBeachId = ref(null);
+    // ✅ 선택 상태를 새로고침 후에도 유지: localStorage에서 초기값 복원
+    const selectedBeachId = ref(Number(localStorage.getItem('selectedBeachId')) || null);
     const favoriteBeachIds = ref([]);
     const isLoading = ref(false);
     const apiError = ref(null);
     const currentBeachDetail = ref(null);
     const isDetailLoading = ref(false);
+    const { showConfirmModal } = useConfirmModal();
 
     // === 댓글 상태 ===
     const comments = ref([]);
     const isCommentsLoading = ref(false);   
+
+    // 현재 id가 선택 상태인지?
+    const isSelected = (id) => selectedBeachId.value === id
 
     // --- Actions ---
     const fetchBeaches = async (params = {}) => {
@@ -64,28 +69,57 @@ export const useBeachStore = defineStore('beach', () => {
             console.error('즐겨찾기 초기 로딩 실패:', error);
         }
     };
+    /**
+     * ✅ 선택/해제 토글 (낙관적 업데이트 → 서버 호출 → 실패 시 롤백)
+     *  - 선택: POST /user/select-beach { beachNumber }
+     *  - 해제: POST /user/unselect-beach
+     */
+    const toggleSelectBeach = async (beachId, beachName) => {
+      const prevId = selectedBeachId.value
+      const selecting = prevId !== beachId // true=선택, false=해제
 
-    const toggleSelectBeach = (beachId, beachName) => {
-        const { showConfirmModal } = useConfirmModal();
-        let message = '';
-        if (selectedBeachId.value === beachId) {
-            selectedBeachId.value = null;
-            message = `${beachName} 해수욕장의 선택이 해제되었습니다.`;
+      // 1) UI/스토리지 먼저 반영
+      selectedBeachId.value = selecting ? beachId : null
+      if (selecting) localStorage.setItem('selectedBeachId', String(beachId))
+      else localStorage.removeItem('selectedBeachId')
+
+      try {
+        if (selecting) {
+          await beachApi.selectBeach({ beachNumber: beachId })
+          showConfirmModal({
+            title: '활동 해수욕장',
+            message: `${beachName}가 선택되었습니다.`,
+            type: 'success',
+            autoHide: true,
+            duration: 1200,
+          })
         } else {
-            selectedBeachId.value = beachId;
-            message = `${beachName} 해수욕장이 현재 활동 해수욕장으로 선택되었습니다.`;
-        }
-        showConfirmModal({
-            title: '해수욕장 선택 변경',
-            message: message,
+          await beachApi.unselectBeach()
+          showConfirmModal({
+            title: '선택 해제',
+            message: `${beachName} 선택이 해제되었습니다.`,
             type: 'info',
             autoHide: true,
-            duration: 1500
-        });
-    };
+            duration: 1000,
+          })
+        }
+      } catch (e) {
+        // 2) 실패 → 롤백
+        selectedBeachId.value = prevId
+        if (prevId) localStorage.setItem('selectedBeachId', String(prevId))
+        else localStorage.removeItem('selectedBeachId')
 
-    const toggleFavoriteBeach = async (beachNumber) => {
-  const { showConfirmModal } = useConfirmModal();
+        showConfirmModal({
+          title: '처리 실패',
+          message: '선택 상태 저장 중 오류가 발생했습니다. 다시 시도해 주세요.',
+          type: 'error',
+          autoHide: false,
+        })
+        console.error('toggleSelectBeach error:', e)
+      }
+    }
+
+  const toggleFavoriteBeach = async (beachNumber) => {
   const isFav = favoriteBeachIds.value.includes(beachNumber);
 
   try {
@@ -191,7 +225,6 @@ export const useBeachStore = defineStore('beach', () => {
         apiError,
         currentBeachDetail,
         isDetailLoading,
-        // comments
         comments, 
         isCommentsLoading,
 
@@ -201,11 +234,11 @@ export const useBeachStore = defineStore('beach', () => {
         fetchFavoriteIds,
         toggleSelectBeach,
         toggleFavoriteBeach,
-        // comments
         addComment,
         editComment,
         deleteComment,
         loadComments,
+        isSelected,
 
         // getters
         getCurrentSelectedBeachId,
