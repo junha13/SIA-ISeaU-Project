@@ -1,7 +1,6 @@
 <template>
   <div class="group-list-page container-fluid p-3">
 
-    <!-- Header: 그룹 관리 -->
     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
       <h5 class="fw-bolder mb-0">그룹 관리</h5>
       <button class="btn fw-bold text-white" :style="{ backgroundColor: mainColor }" @click="showCreateGroupModal = true">
@@ -9,7 +8,6 @@
       </button>
     </div>
 
-    <!-- 현재 활동 그룹 (Selected Group) -->
     <div class="mb-4">
       <h6 class="fw-bold mb-3 text-muted">현재 활동 그룹</h6>
       <div v-if="activeGroup" class="card shadow-sm border-0 rounded-3 p-3"
@@ -30,7 +28,6 @@
       </div>
     </div>
 
-    <!-- 내 그룹 리스트 -->
     <div class="mb-4">
       <h6 class="fw-bold mb-3" :style="{ color: darkColor }">내 그룹 목록 ({{ myGroupList.length }}개)</h6>
       <div v-if="otherGroupList.length > 0">
@@ -52,28 +49,25 @@
       </div>
     </div>
 
-    <!-- 그룹 생성 모달 (컴포넌트 필요) -->
-    <GroupCreateModal v-model:isVisible="showCreateGroupModal" @created="handleGroupCreated" />
+    <GroupCreateModal v-model:isVisible="showCreateGroupModal" @group-created="handleGroupCreated"/>
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore';
-import GroupCreateModal from '@/components/GroupCreateModal.vue'; // 컴포넌트 import 필요
-
+import GroupCreateModal from '@/components/GroupCreateModal.vue';
 import { useStore } from '@/stores/store.js';
-import { storeToRefs } from 'pinia'
+import { storeToRefs } from 'pinia';
+import axios from 'axios'; // 1. Axios를 직접 import 합니다.
 
 const store = useStore();
-
-const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
-
+const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store);
 
 const router = useRouter();
-const groupStore = useGroupStore();
+const groupStore = useGroupStore(); // 2. 스토어 인스턴스는 계속 사용합니다.
 
 // 🎨 Color
 const mainColor = '#0092BA';
@@ -82,53 +76,101 @@ const safetyColor = '#8482FF';
 
 const showCreateGroupModal = ref(false);
 
-onMounted(() => {
-  // 그룹 목록 불러오기
-  groupStore.fetchGroups();
+/**
+ * [신규] Axios를 직접 호출하여 그룹 목록을 가져오고 스토어를 수동 업데이트합니다.
+ */
+const fetchGroupsDirectly = async () => {
+  console.log('[LOG-DIRECT] 1. fetchGroupsDirectly: Axios로 직접 API 호출 시작...');
 
+  try {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
+      return;
+    }
+
+    // 3. 캐시(Cache) 문제를 피하기 위해 timestamp 추가
+    const url = `${baseUrl}/api/groups?timestamp=${new Date().getTime()}`;
+
+    const response = await axios.get(url, {
+      withCredentials: true, // 4. 세션(로그인)을 위해 필수
+    });
+
+    console.log('[LOG-DIRECT] 2. API 호출 성공:', response.data);
+
+    // 5. 컨트롤러 응답(data.data.result)에서 실제 목록을 추출
+    const groupList = response.data.data.result;
+    
+    // 6. 스토어의 상태(State)를 직접 업데이트
+    groupStore.myGroupList = groupList;
+
+    // 7. 스토어의 activeGroupId도 수동으로 업데이트
+    if (!groupStore.activeGroupId && groupList.length > 0) {
+      groupStore.activeGroupId = groupList[0].id;
+    }
+    
+    console.log('[LOG-DIRECT] 3. 스토어 상태 수동 업데이트 완료.');
+
+  } catch (error) {
+    console.error('[LOG-DIRECT] 4. CATCH! API 호출 실패:', error);
+    if (error.response && error.response.status === 401) {
+      console.error('  > 401 오류: 로그인이 필요합니다.');
+      // router.push('/login'); // 로그인 페이지로 이동
+    } else {
+      console.error('  > 기타 오류:', error.message);
+    }
+  }
+};
+
+
+onMounted(() => {
+  console.log('[LOG 1] GroupListView가 마운트되었습니다. (onMounted)');
+  
+  // 8. 스토어 액션 대신, 새로 만든 직접 호출 함수를 사용
+  fetchGroupsDirectly();
+  
   header.value = "그룹 관리"
 });
 
 // --- Computed ---
-
-// 모든 그룹 목록
+// (스토어의 상태를 읽어오는 computed는 그대로 둡니다)
 const myGroupList = computed(() => groupStore.getMyGroupList);
-
-// 현재 활성화된 그룹 정보
 const activeGroup = computed(() =>
-    myGroupList.value.find(g => g.id === groupStore.getActiveGroupId)
+  myGroupList.value.find(g => g.id === groupStore.getActiveGroupId)
+);
+const otherGroupList = computed(() =>
+  myGroupList.value.filter(g => g.id !== groupStore.getActiveGroupId)
 );
 
-// 현재 활성화된 그룹을 제외한 나머지 그룹
-const otherGroupList = computed(() =>
-    myGroupList.value.filter(g => g.id !== groupStore.getActiveGroupId)
-);
+// (로그용 watch도 그대로 둡니다)
+watch(myGroupList, (newList, oldList) => {
+  console.log('[LOG 3] myGroupList (computed)가 변경되었습니다.');
+  console.log('  > 새 목록:', newList);
+  console.log('  > 계산된 activeGroup:', activeGroup.value);
+  console.log('  > 계산된 otherGroupList:', otherGroupList.value);
+}, {
+  immediate: true 
+});
+
 
 // --- Methods ---
 
-/**
- * 특정 그룹의 위치 공유 메인 페이지로 이동
- * @param {number} groupId - 그룹 ID
- */
 const goToGroupMain = (groupId) => {
   router.push({ name: 'GroupMain', params: { id: groupId } });
 };
 
-/**
- * 그룹 목록에서 그룹을 선택했을 때 활성 그룹을 변경하고 메인 페이지로 이동
- * @param {number} groupId - 그룹 ID
- */
 const setActiveAndGoToMain = (groupId) => {
-  // Pinia Store에서 활성 그룹 ID 업데이트
-  groupStore.setActiveGroup(groupId);
+  groupStore.setActiveGroup(groupId); // (이 기능은 스토어의 setActiveGroup 사용)
   goToGroupMain(groupId);
 };
 
-// const handleGroupCreated = () => {
-//   groupStore.fetchGroups();
-// };
+const handleGroupCreated = () => {
+  console.log('[LOG 2] handleGroupCreated: 모달에서 @group-created 이벤트를 받았습니다.');
+  
+  // 9. 스토어 액션 대신, 새로 만든 직접 호출 함수를 사용
+  fetchGroupsDirectly();
+};
 </script>
-
 <style scoped>
 .group-list-page {
   min-height: calc(100vh - 55px - 60px);

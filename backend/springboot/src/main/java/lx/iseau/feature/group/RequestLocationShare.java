@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class LocationShareRequest {
+class RequestLocationShare {
     private Integer invitationId; // 초대 식별 ID (DB 설계 필요)
     private Integer groupId;
 }

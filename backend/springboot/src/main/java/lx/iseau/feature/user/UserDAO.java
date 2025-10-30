@@ -12,4 +12,7 @@ public interface UserDAO {
      * @return int (성공하면 1)
      */
     int settings(@Param("dto") SettingsDTO dto);
-}
+    
+    RequestUserDTO findUserById(String id);
+    RequestUserDTO findUserByNameAndPhone(@Param("name") String name, @Param("mobile") String mobile);
+    }

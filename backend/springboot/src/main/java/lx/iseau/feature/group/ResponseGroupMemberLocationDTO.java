@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
  * 그룹 위치 조회 (GET /groups/locations) 시 사용되는 응답 DTO의 단일 항목 구조입니다.
  * API 명세: [ { id, lat, lng, name, color, status, lastUpdate } ]
  */
-@Data // Getter, Setter, toString(), equals(), hashCode() 자동 생성
-@NoArgsConstructor // 기본 생성자
-@AllArgsConstructor // 전체 필드 생성자
-public class GroupMemberLocationResponseDTO {
+@Data 
+@NoArgsConstructor 
+@AllArgsConstructor 
+public class ResponseGroupMemberLocationDTO {
 	
     private Integer id;
     private Double lat;

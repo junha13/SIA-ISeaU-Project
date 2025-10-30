@@ -1,100 +1,103 @@
 <template>
-  <div v-if="isVisible" class="modal-backdrop d-flex align-items-center justify-content-center" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content shadow-xl rounded-lg border-0 bg-white rounded-xl">
-        <div class="modal-header d-flex justify-content-between align-items-center border-0 p-4">
-          <h5 class="modal-title fw-bolder" :style="{ color: darkColor }">그룹원 추가</h5>
-          <button type="button" class="btn-close" @click="handleCancel"></button>
-        </div>
-        <div class="modal-body p-4">
+	<div v-if="isVisible" class="modal-backdrop d-flex align-items-center justify-content-center" style="z-index: 1060;">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content shadow-xl rounded-lg border-0 bg-white rounded-xl">
+				<div class="modal-header d-flex justify-content-between align-items-center border-0 p-4">
+					<h5 class="modal-title fw-bolder" :style="{ color: darkColor }">그룹원 추가</h5>
+					<button type="button" class="btn-close" @click="handleCancel"></button>
+				</div>
+				<div class="modal-body p-4">
 
-          <div class="mb-4">
-            <h6 class="fw-bold mb-3">검색 방법 선택</h6>
-            <div class="form-check p-0 mb-2">
-              <input class="form-check-input" type="radio" name="searchMethod" id="searchById" value="id" v-model="searchMethod" checked>
-              <label class="form-check-label w-100 p-3 rounded border" for="searchById" :class="{'border-primary': searchMethod === 'id', 'border-opacity-10': searchMethod === 'id'}">
-                <span class="fw-bold">아이디로 검색</span>
-              </label>
-            </div>
-            <div class="form-check p-0">
-              <input class="form-check-input" type="radio" name="searchMethod" id="searchByPhone" value="phone" v-model="searchMethod">
-              <label class="form-check-label w-100 p-3 rounded border" for="searchByPhone" :class="{'border-primary': searchMethod === 'phone', 'border-opacity-10': searchMethod === 'phone'}">
-                <span class="fw-bold">이름 + 전화번호로 검색</span>
-              </label>
-            </div>
-          </div>
+					<div class="mb-4">
+						<h6 class="fw-bold mb-3">검색 방법 선택</h6>
+						<div class="form-check p-0 mb-2">
+							<input class="form-check-input" type="radio" name="searchMethod" id="searchById" value="id" v-model="searchMethod" checked>
+							<label class="form-check-label w-100 p-3 rounded border" for="searchById" :class="{'border-primary': searchMethod === 'id', 'border-opacity-10': searchMethod === 'id'}">
+								<span class="fw-bold">아이디로 검색</span>
+							</label>
+						</div>
+						<div class="form-check p-0">
+							<input class="form-check-input" type="radio" name="searchMethod" id="searchByPhone" value="phone" v-model="searchMethod">
+							<label class="form-check-label w-100 p-3 rounded border" for="searchByPhone" :class="{'border-primary': searchMethod === 'phone', 'border-opacity-10': searchMethod === 'phone'}">
+								<span class="fw-bold">이름 + 전화번호로 검색</span>
+							</label>
+						</div>
+					</div>
 
-          <div class="mb-4">
-            <h6 class="fw-bold mb-2">{{ searchMethod === 'id' ? '사용자 아이디' : '사용자 정보 (이름, 전화번호)' }}</h6>
-            <input v-if="searchMethod === 'id'" type="text" class="form-control" placeholder="아이디를 입력하세요" v-model="searchQuery">
-            <div v-else>
-              <input type="text" class="form-control mb-2" placeholder="이름을 입력하세요" v-model="searchQueryName">
-              <input type="text" class="form-control" placeholder="전화번호를 입력하세요" v-model="searchQueryPhone">
-            </div>
-            <button class="btn w-100 mt-3 fw-bold text-white" :style="{ backgroundColor: mainColor }" @click="searchUser" :disabled="isSearching">
-              <span v-if="isSearching"><i class="fas fa-spinner fa-spin me-2"></i> 검색 중...</span>
-              <span v-else>조회</span>
-            </button>
-          </div>
+					<div class="mb-4">
+						<h6 class="fw-bold mb-2">{{ searchMethod === 'id' ? '사용자 아이디' : '사용자 정보 (이름, 전화번호)' }}</h6>
+						<input v-if="searchMethod === 'id'" type="text" class="form-control" placeholder="아이디를 입력하세요" v-model="searchQuery">
+						<div v-else>
+							<input type="text" class="form-control mb-2" placeholder="이름을 입력하세요" v-model="searchQueryName">
+							<input type="text" class="form-control" placeholder="전화번호를 입력하세요" v-model="searchQueryPhone">
+						</div>
+						<button class="btn w-100 mt-3 fw-bold text-white" :style="{ backgroundColor: mainColor }" @click="searchUser" :disabled="isSearching">
+							<span v-if="isSearching"><i class="fas fa-spinner fa-spin me-2"></i> 검색 중...</span>
+							<span v-else>조회</span>
+						</button>
+					</div>
 
-          <div v-if="searchError" class="alert alert-warning p-3 rounded-lg mb-4" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i> 사용자 검색 중 오류 발생: {{ searchError.message }}
-          </div>
-          <div v-if="searchResult" class="mb-4">
-            <div class="alert p-3 rounded-lg" :class="searchResult.found ? 'alert-success' : 'alert-danger'" role="alert">
-              <div class="d-flex align-items-center">
-                <i :class="['fas me-2', searchResult.found ? 'fa-check-circle' : 'fa-times-circle']"></i>
-                <span class="fw-bold">{{ searchResult.found ? '회원이 존재합니다' : '회원을 찾을 수 없습니다' }}</span>
-              </div>
-              <div v-if="searchResult.found" class="mt-2 ms-4">
-                <div class="d-flex align-items-center">
-                  <div class="me-3 rounded-circle" :style="{ backgroundColor: selectedMarkerColor, width: '20px', height: '20px' }"></div>
-                  <div>
-                    <h6 class="fw-bold mb-0">{{ searchResult.name }}</h6>
-                    <small class="text-muted">{{ searchResult.username }}</small>
-                  </div>
-                </div>
-              </div>
-            </div>
+					<div v-if="searchError" class="alert alert-warning p-3 rounded-lg mb-4" role="alert">
+						<i class="fas fa-exclamation-triangle me-2"></i> 사용자 검색 중 오류 발생: {{ searchError.message }}
+					</div>
+					<div v-if="searchResult" class="mb-4">
+						<div class="alert p-3 rounded-lg" :class="searchResult.found ? 'alert-success' : 'alert-danger'" role="alert">
+							<div class="d-flex align-items-center">
+								<i :class="['fas me-2', searchResult.found ? 'fa-check-circle' : 'fa-times-circle']"></i>
+								<span class="fw-bold">{{ searchResult.found ? '회원이 존재합니다' : '회원을 찾을 수 없습니다' }}</span>
+							</div>
+							<div v-if="searchResult.found" class="mt-2 ms-4">
+								<div class="d-flex align-items-center">
+									<div class="me-3 rounded-circle" :style="{ backgroundColor: selectedMarkerColor, width: '20px', height: '20px' }"></div>
+									<div>
+										<h6 class="fw-bold mb-0">{{ searchResult.name }}</h6>
+										<small class="text-muted">{{ searchResult.username }}</small>
+									</div>
+								</div>
+							</div>
+						</div>
 
-            <h6 class="fw-bold mb-3 mt-4">마커 색상 선택</h6>
-            <div class="d-flex gap-3 justify-content-center">
-              <div v-for="color in markerColors" :key="color"
-                   :class="['marker-color-option', { 'active-color': selectedMarkerColor === color }]"
-                   :style="{ backgroundColor: color, border: selectedMarkerColor === color ? `3px solid ${mainColor}` : '3px solid transparent' }"
-                   @click="selectedMarkerColor = color">
-              </div>
-            </div>
-          </div>
-        </div>
+						<h6 class="fw-bold mb-3 mt-4">마커 색상 선택</h6>
+						<div class="d-flex gap-3 justify-content-center">
+							<div v-for="color in markerColors" :key="color"
+								:class="['marker-color-option', { 'active-color': selectedMarkerColor === color }]"
+								:style="{ backgroundColor: color, border: selectedMarkerColor === color ? `3px solid ${mainColor}` : '3px solid transparent' }"
+								@click="selectedMarkerColor = color">
+							</div>
+						</div>
+					</div>
+				</div>
 
-        <div class="modal-footer d-flex justify-content-center border-0 p-4 pt-0">
-          <button type="button" class="btn fw-bold flex-fill text-white" :style="{ backgroundColor: mainColor }"
-                  :disabled="!searchResult?.found || isInviting"
-                  @click="handleInvite">
-            <span v-if="isInviting"><i class="fas fa-spinner fa-spin me-2"></i> 추가 중...</span>
-            <span v-else>추가</span>
-          </button>
-          <button type="button" class="btn btn-light-secondary fw-bold flex-fill" @click="handleCancel" :disabled="isInviting">취소</button>
-        </div>
-      </div>
-    </div>
-  </div>
+				<div class="modal-footer d-flex justify-content-center border-0 p-4 pt-0">
+					<button type="button" class="btn fw-bold flex-fill text-white" :style="{ backgroundColor: mainColor }"
+						:disabled="!searchResult?.found || !searchResult?.username || isInviting"
+						@click="handleInvite">
+						<span v-if="isInviting"><i class="fas fa-spinner fa-spin me-2"></i> 추가 중...</span>
+						<span v-else>추가</span>
+					</button>
+					<button type="button" class="btn btn-light-secondary fw-bold flex-fill" @click="handleCancel" :disabled="isInviting">취소</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
+
 
 <script setup>
 import { ref, watch } from 'vue';
 import { useConfirmModal } from '@/utils/modalUtils';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'; // useRoute import
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const { showConfirmModal } = useConfirmModal();
-const route = useRoute();
+const route = useRoute(); // 1. useRoute 인스턴스 생성
 
 const props = defineProps({
-  isVisible: { type: Boolean, default: false },
+	isVisible: { type: Boolean, default: false },
+	// groupId를 prop으로 받을 경우 (선택적)
+	// groupId: { type: Number, required: true } 
 });
 
 const emit = defineEmits(['update:isVisible']);
@@ -114,106 +117,181 @@ const isInviting = ref(false);
 
 // --- Methods ---
 
-// [수정] Axios 호출 없이 더미 결과 반환
 const searchUser = async () => {
-  searchResult.value = null;
-  searchError.value = null;
-  isSearching.value = true;
-  console.log('[GroupInviteModal] 사용자 검색 시작 (더미)');
+	searchResult.value = null;
+	searchError.value = null;
+	isSearching.value = true;
+	console.log('[GroupInviteModal] 사용자 검색 시작');
 
-  // 입력값 유효성 검사 (간단히)
-  if (searchMethod.value === 'id' && !searchQuery.value) {
-    showConfirmModal({ title: '알림', message: '아이디를 입력하세요.', type: 'warning' });
-    isSearching.value = false; return;
-  }
-  if (searchMethod.value === 'phone' && (!searchQueryName.value || !searchQueryPhone.value)) {
-    showConfirmModal({ title: '알림', message: '이름과 전화번호를 모두 입력하세요.', type: 'warning' });
-    isSearching.value = false; return;
-  }
+	// 입력값 유효성 검사
+	let isValid = false;
+	// 백엔드 DTO(UserSearchDTO) 형식에 맞춘 Payload 정의
+	let payload = {
+		id: null,
+		name: null,
+		mobile: null // 백엔드 DTO 필드 이름 'mobile'에 맞춤
+	};
+	
+	if (searchMethod.value === 'id' && searchQuery.value) {
+		isValid = true;
+		payload.id = searchQuery.value; 
+	} else if (searchMethod.value === 'phone' && searchQueryName.value && searchQueryPhone.value) {
+		isValid = true;
+		payload.name = searchQueryName.value; 
+		payload.mobile = searchQueryPhone.value; // **'phone' 대신 'mobile'로 수정**
+	}
 
-  // --- API 호출 로직 주석 처리 ---
-  // try {
-  //   const apiUrl = '/api/users/search';
-  //   let params = {};
-  //   // ... params 설정 ...
-  //   const response = await axios.get(apiUrl, { params });
-  //   // ... 응답 처리 ...
-  // } catch (error) {
-  //   // ... 에러 처리 ...
-  // } finally {
-  //   isSearching.value = false;
-  // }
-  // --- API 호출 로직 끝 ---
+	if (!isValid) {
+		showConfirmModal({ title: '알림', message: '검색 정보를 올바르게 입력하세요.', type: 'warning' });
+		isSearching.value = false; return;
+	}
 
-  // 항상 더미 성공 결과 반환 (약간의 딜레이 추가)
-  setTimeout(() => {
-    if (searchMethod.value === 'id') {
-      searchResult.value = {
-        found: true,
-        id: Math.floor(Math.random() * 1000), // 임의 ID
-        name: `사용자_${searchQuery.value}`, // 입력 ID 기반 이름
-        username: searchQuery.value, // 입력 ID
-      };
-    } else {
-      searchResult.value = {
-        found: true,
-        id: Math.floor(Math.random() * 1000), // 임의 ID
-        name: searchQueryName.value, // 입력 이름
-        username: `user_${searchQueryName.value.toLowerCase()}`, // 이름 기반 임의 ID
-      };
-    }
-    isSearching.value = false;
-    console.log('[GroupInviteModal] 사용자 검색 완료 (더미 결과):', searchResult.value);
-  }, 300); // 0.3초 딜레이 예시
+	try {
+		// [수정 없음] 백엔드 경로 /api/user/search 및 POST 요청 유지
+		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`; 
+
+		const response = await axios.post(apiUrl, payload, { 
+			headers: { 'Content-Type': 'application/json' },
+			withCredentials: true 
+		});
+		
+		// [핵심 수정] Controller가 Map.of("data", result) 형태로 감쌌으므로,
+		// 실제 데이터는 response.data.data에 있습니다.
+		const responsePayload = response.data.data;
+		
+		// 🚨 사용자 검색 결과 매핑 로직 수정: Service 응답 키 (id, user)에 맞춤
+		if (responsePayload && responsePayload.found && responsePayload.user) {
+			// UserService 코드를 보면, DTO 객체가 'user' 키 아래에 담겨 반환됩니다.
+			const userData = responsePayload.user;
+			
+			searchResult.value = {
+				found: true,
+				// DTO의 필드명에 맞게 정확히 매핑
+				id: userData.id, 
+				name: userData.userName || userData.name, // DTO 필드명은 userName으로 추정
+				username: userData.id, // targetUserId로 사용할 로그인 ID
+			};
+		} else {
+			// 찾지 못했을 때도 명시적으로 객체를 생성하여 반응성을 보장
+			searchResult.value = { found: false, id: null, name: null, username: null };
+		}
+		console.log('[GroupInviteModal] 사용자 검색 완료:', searchResult.value);
+
+	} catch (error) {
+		console.error('[GroupInviteModal] 사용자 검색 오류:', error);
+		// 오류 발생 시 응답 데이터 확인하여 메시지 표시
+		searchError.value = error.response ? error.response.data : error;
+		// 오류 시에도 객체 구조를 유지하여 템플릿 렌더링 오류 방지
+		searchResult.value = { found: false, id: null, name: null, username: null }; 
+	} finally {
+		isSearching.value = false;
+	}
 };
 
-// handleInvite - 더미 성공 로직만 실행 (변경 없음)
+/**
+ * 그룹 초대 API 호출
+ */
 const handleInvite = async () => {
-  if (!searchResult.value?.found) {
-     showConfirmModal({ title: '알림', message: '초대할 사용자를 먼저 조회하세요.', type: 'warning' });
-     return;
-  }
+	// Target ID가 undefined인지 확인
+	console.log('Target ID:', searchResult.value?.username); 
 
-  isInviting.value = true;
-  console.log('[GroupInviteModal] 그룹 초대 시작 (더미)');
+	// 🚨 수정된 버튼 비활성화 조건과 동일하게 유효성 검사
+	if (!searchResult.value?.found || !searchResult.value?.username) {
+		showConfirmModal({ title: '알림', message: '초대할 사용자를 먼저 조회하세요.', type: 'warning' });
+		return;
+	}
 
-  setTimeout(() => {
-      showConfirmModal({
-        title: '초대 성공 (테스트)',
-        message: `${searchResult.value.name}님에게 그룹 초대 요청을 보냈습니다. (테스트 메시지)`,
-        type: 'success',
-        autoHide: true,
-        duration: 1500
-      });
-      emit('update:isVisible', false);
-      resetState();
-      isInviting.value = false;
-      console.log('[GroupInviteModal] 그룹 초대 완료 (더미)');
-  }, 500);
+	isInviting.value = true;
+	console.log('[GroupInviteModal] 그룹 초대 API 호출 시작...');
+
+	// 2. 현재 라우트 파_라미터에서 groupId 가져오기 (또는 props 사용)
+	const groupId = parseInt(route.params.id); // URL이 /groups/123 형태라고 가정
+
+	if (!groupId) {
+		console.error('[GroupInviteModal] 그룹 ID를 찾을 수 없습니다.');
+		showConfirmModal({ title: '오류', message: '초대할 그룹 정보를 찾을 수 없습니다.', type: 'error' }); // 🚨 경고 해결: 'danger' -> 'error'
+		isInviting.value = false;
+		return;
+	}
+
+	// 3. API 요청 본문(Payload) 생성
+	const payload = {
+		groupId: groupId,
+		targetUserId: searchResult.value.username, // 유효한 ID가 들어올 것으로 기대
+		markerColor: selectedMarkerColor.value
+	};
+
+	try {
+		// 4. Axios POST 요청 보내기
+		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/groups/invite`;
+		const response = await axios.post(apiUrl, payload, {
+			headers: { 'Content-Type': 'application/json' },
+			withCredentials: true,
+			timeout: 5000,
+		});
+
+		// 5. 🚨 [핵심 수정] 응답 구조 (response.data.data) 확인
+		const responsePayload = response.data.data;
+
+		// 🚨 [핵심 수정] 응답 페이로드의 success 필드를 확인
+		if (responsePayload && responsePayload.success) { 
+			showConfirmModal({
+				title: '초대 성공',
+				message: `${searchResult.value.name}님에게 그룹 초대 요청을 보냈습니다.`,
+				type: 'success',
+				autoHide: true,
+				duration: 1500
+			});
+			emit('update:isVisible', false);
+			resetState();
+			console.log('[GroupInviteModal] 그룹 초대 성공');
+		} else {
+			// API는 성공(200 OK)했지만, 백엔드가 success: false 반환 시
+			console.warn('[GroupInviteModal] 초대 API 응답 실패:', responsePayload);
+			// 🚨 경고 해결: 유효한 type 값 'error' 사용
+			showConfirmModal({ 
+				title: '초대 실패', 
+				message: responsePayload.message || '초대 요청에 실패했습니다.', 
+				type: 'error' 
+			});
+		}
+
+	} catch (error) {
+		// 6. 에러 처리 (4xx, 5xx 에러)
+		console.error('[GroupInviteModal] 그룹 초대 오류:', error);
+		let errorMessage = '초대 요청 중 오류가 발생했습니다.';
+		if (error.response && error.response.data && error.response.data.message) {
+			errorMessage = error.response.data.message; // 백엔드가 보낸 에러 메시지 사용
+		}
+		// 🚨 경고 해결: 유효한 type 값 'error' 사용
+		showConfirmModal({ title: '초대 실패', message: errorMessage, type: 'error' });
+	} finally {
+		isInviting.value = false;
+	}
 };
 
 const handleCancel = () => {
-  if (isInviting.value) return;
-  emit('update:isVisible', false);
-  resetState();
+	if (isInviting.value) return;
+	emit('update:isVisible', false);
+	resetState();
 };
 
 const resetState = () => {
-  searchMethod.value = 'id';
-  searchQuery.value = '';
-  searchQueryName.value = '';
-  searchQueryPhone.value = '';
-  searchResult.value = null;
-  searchError.value = null;
-  selectedMarkerColor.value = markerColors[0];
-  isSearching.value = false;
-  isInviting.value = false;
+	searchMethod.value = 'id';
+	searchQuery.value = '';
+	searchQueryName.value = '';
+	searchQueryPhone.value = '';
+	searchResult.value = null;
+	searchError.value = null;
+	selectedMarkerColor.value = markerColors[0];
+	isSearching.value = false;
+	isInviting.value = false;
 };
 
 watch(() => props.isVisible, (newValue) => {
-    if (!newValue) {
-        resetState();
-    }
+	if (!newValue) {
+		resetState();
+	}
 });
 
 </script>
@@ -221,30 +299,48 @@ watch(() => props.isVisible, (newValue) => {
 <style scoped>
 /* 스타일 변경 없음 */
 .modal-backdrop {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  transition: opacity 0.3s ease;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	transition: opacity 0.3s ease;
 }
 .modal-content {
-  border-radius: 12px;
-  animation: modal-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	border-radius: 12px;
+	animation: modal-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .marker-color-option {
-  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-  transition: border-color 0.2s; box-sizing: border-box;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	cursor: pointer;
+	transition: border-color 0.2s;
+	box-sizing: border-box;
 }
 .marker-color-option.active-color {
-  box-shadow: 0 0 0 3px v-bind(mainColor);
-  border: 3px solid white !important;
+	box-shadow: 0 0 0 3px v-bind(mainColor);
+	border: 3px solid white !important;
 }
-.form-check-label { cursor: pointer; }
-.form-check-input { display: none; }
+.form-check-label {
+	cursor: pointer;
+}
+.form-check-input {
+	display: none;
+}
 .form-check-label.border-primary {
-  border-color: v-bind(mainColor) !important;
-  background-color: #f1f9ff;
+	border-color: v-bind(mainColor) !important;
+	background-color: #f1f9ff;
 }
 @keyframes modal-in {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+	0% {
+		transform: scale(0.9);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 </style>

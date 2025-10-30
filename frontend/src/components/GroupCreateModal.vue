@@ -7,13 +7,11 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content bg-white rounded-xl shadow-sm" style="border:0; border-radius:12px;">
 
-        <!-- 헤더 -->
         <div class="modal-header d-flex justify-content-between align-items-center border-0 p-3">
           <h5 class="modal-title fw-bold" style="margin:0; color:#0B1956;">그룹 생성</h5>
           <button type="button" class="btn-close" @click="close"></button>
         </div>
 
-        <!-- 바디 -->
         <div class="modal-body p-3">
           <div class="mb-3">
             <label class="fw-semibold mb-2" style="font-size:0.9rem; color:#0B1956;">그룹 이름</label>
@@ -31,7 +29,6 @@
           </div>
         </div>
 
-        <!-- 푸터 -->
         <div class="modal-footer border-0 p-3 pt-0 d-flex gap-2">
           <button
             type="button"
@@ -62,11 +59,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue' 
 import axios from 'axios'
 
 const message = ref('그룹 이름을 입력해주세요')
-let canCreate = ref(false);
+const canCreate = ref(false)
 
 const props = defineProps({
   isVisible: { type: Boolean, default: false },
@@ -75,74 +72,61 @@ const props = defineProps({
 const emit = defineEmits(['update:isVisible', 'group-created'])
 
 const groupName = ref('')
-const errorMessage = ref('')
 const isLoading = ref(false)
 
+/**
+ * 모달의 모든 상태를 초기화합니다.
+ */
 const resetState = () => {
   groupName.value = ''
-  errorMessage.value = ''
   isLoading.value = false
+  message.value = '그룹 이름을 입력해주세요' 
+  canCreate.value = false 
 }
 
+/**
+ * 모달 닫기
+ */
 const close = () => {
-  message.value = '그룹 이름을 입력해주세요'
-  canCreate.value = false
   if (isLoading.value) return
   emit('update:isVisible', false)
-  resetState()
+  // watch가 리셋을 처리하므로 여기서는 호출 안 함
 }
 
-// 한글은 keyup으로 하면 최종 값을 적용하기가 어려움
-// watch(groupName, (newVal) => {
-//   // 그냥 바로 검사 함수 호출
-//   groupDoubleCheck(newVal)
-// })
-
+/**
+ * 입력 필드 핸들러
+ */
 function handleInput(e) {
   const currentValue = e.target.value
   groupName.value = currentValue
-  groupDoubleCheck(currentValue) // 지금 값으로 즉시 체크
+  
+  if (!currentValue.trim()) {
+    message.value = '그룹 이름을 입력해주세요'
+    canCreate.value = false
+  } else {
+    groupDoubleCheck(currentValue)
+  }
 }
 
-async function groupDoubleCheck(groupName) {
-
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}api/groups/doubleCheck`,
-      { groupName: groupName },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true,
-        timeout: 5000,
-      }
-    )
+/**
+ * [최종본] 그룹명 중복 체크 (사용자의 {"result": "true"} 방식 적용)
+ */
+async function groupDoubleCheck(name) {
+  // 1. .env 환경 변수 확인 (Invalid URL 버그 수정)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!baseUrl) {
+    console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
+    message.value = '설정 오류: API 주소를 찾을 수 없습니다.';
+    return;
+  }
+  const url = `${baseUrl}/api/groups/doubleCheck`;
   
-    console.log('group-created', response.data.data)
-    if (response.data.data.result === 'true') {
-      message.value = "그룹 생성이 가능합니다"
-      canCreate.value = true
-    }
-    if (response.data.data.result === "false") {
-      message.value = "이미 중복된 그룹 이름이 존재합니다."
-      canCreate.value = false
-    }
-    if (response.data.data.result === "empty") {
-      canCreate.value = false
-    }
-
-
-  } catch (err) {
-    console.error('[CreateGroupModal] createGroup error:', err)
-}}
-
-const createGroup = async () => {
-
+  canCreate.value = false // 우선 비활성화
+  
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}api/groups/create`,
-      { groupName: groupName.value,
-
-       },
+      url,
+      { groupName: name }, // 'pathVariable' 오타가 없는 올바른 코드
       {
         headers: { 'Content-Type': 'application/json' },
         withCredentials: true,
@@ -150,25 +134,92 @@ const createGroup = async () => {
       }
     )
 
-    emit('group-created', response.data)
+    // 2. 사용자의 현 자바 코드 응답 방식 ({"data": {"result": "true"}})에 맞춤
+    const result = response.data.data.result;
 
-    // 닫고 리셋
-    emit('update:isVisible', false)
-    resetState()
+    if (result === 'true') {
+      message.value = "그룹 생성이 가능합니다"
+      canCreate.value = true // ⬅️ 활성화
+    } else if (result === 'false') {
+      message.value = "이미 중복된 그룹 이름이 존재합니다."
+      canCreate.value = false;
+    } else if (result === 'empty') {
+      message.value = "그룹 이름을 입력해주세요."
+      canCreate.value = false;
+    }
 
   } catch (err) {
-    console.error('[CreateGroupModal] createGroup error:', err)
-}}
+    // 500 에러 또는 네트워크 오류
+    console.error('[CreateGroupModal] doubleCheck error:', err); 
+    canCreate.value = false 
+    
+    if (err.response) {
+      message.value = err.response.data.message || "이름을 확인할 수 없습니다.";
+    } else {
+      message.value = "요청 중 오류가 발생했습니다.";
+    }
+  }
+}
 
-// 외부에서 isVisible 내려올 때 false가 되면 상태 초기화
+/**
+ * [최종본] 그룹 생성
+ */
+const createGroup = async () => {
+  // 1. .env 환경 변수 확인 (Invalid URL 버그 수정)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!baseUrl) {
+    console.error('[ERROR] VITE_API_BASE_URL이 .env 파일에 정의되지 않았습니다!');
+    message.value = '설정 오류: API 주소를 찾을 수 없습니다.';
+    return;
+  }
+  const url = `${baseUrl}/api/groups/create`;
+
+  if (!canCreate.value || isLoading.value) return
+  
+  isLoading.value = true
+  message.value = '' 
+
+  try {
+    const response = await axios.post(
+      url, 
+      { groupName: groupName.value },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true,
+        timeout: 5000,
+      }
+    )
+    
+    // 2. 사용자의 현 자바 코드 응답 방식 ({"data": {"result": "true"}})에 맞춤
+    if (response.data.data.result === 'true') {
+      emit('group-created') 
+      emit('update:isVisible', false) 
+    } else {
+      message.value = "그룹 생성에 실패했습니다. (서버 응답 오류)";
+    }
+
+  } catch (err) {
+    console.error('[CreateGroupModal] createGroup error:', err);
+    if (err.response && err.response.data && err.response.data.message) {
+      message.value = err.response.data.message 
+    } else {
+      message.value = "그룹 생성 중 오류가 발생했습니다."
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 모달 닫힐 때 리셋
 watch(
   () => props.isVisible,
   (now) => {
-    if (!now) resetState()
+    if (!now) {
+      resetState()
+    }
   }
 )
 </script>
-
 <style scoped>
 .modal-backdrop {
   position: fixed;
