@@ -1,21 +1,20 @@
 <template>
   <div class="group-main-page" style="position: relative;">
-    <!-- 2. 지도 영역 -->
     <div ref="mapEl" style="width:100%;height:300px;"></div>
 
-      <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
-        <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="fetchLocations">
-          내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
-        </button>
-        <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
-          <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
-        </button>
-      </div>
+    <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
+      <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="fetchLocations">
+        내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
+      </button>
+      <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
+        <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
+      </button>
+    </div>
 
-      <div v-for="member in groupLocations" :key="member.id"
-           :style="markerStyle(member.color)"
-           class="position-absolute rounded-circle shadow-sm">
-      </div>
+    <div v-for="member in groupLocations" :key="member.id"
+         :style="markerStyle(member.color)"
+         class="position-absolute rounded-circle shadow-sm">
+    </div>
     
 
     <div class="group-actions p-3">
@@ -39,12 +38,18 @@
           </div>
 
           <div class="d-flex align-items-center">
-            <span :class="['small fw-bold', member.status === '활동 중' ? 'text-success' : 'text-danger']">{{ member.status }}</span>
+            
+            <span v-if="member.status === 'online'" class="text-success small fw-bold">
+              online
+            </span>
+            <span v-else-if="member.status === 'pending'" class="text-muted small fw-bold">
+              (초대 중)
+            </span>
             <i class="fas fa-comment-dots text-secondary ms-3 me-3" style="cursor: pointer;"></i>
             <i class="fas fa-ellipsis-v text-secondary" style="cursor: pointer;"></i>
           </div>
         </div>
-      </div>
+        </div>
     </div>
 
     <GroupInviteModal v-model:isVisible="showInviteModal" />
@@ -354,8 +359,21 @@ function requestGeoLocation(value) {
       console.log('sending to server:', payload)
 
       let axiosUrl;
-      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`
-      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`
+      
+      // 🚨 [버그 수정] = (할당)이 아닌 === (비교)를 사용해야 합니다.
+      if ( value === "test") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
+      }
+      // 🚨 [버그 수정] else if를 사용하거나, 여기서도 === 를 사용해야 합니다.
+      if ( value === "boundary") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
+      }
+
+      // 🚨 axiosUrl이 설정되지 않았으면(value가 "test"도 "boundary"도 아니면) 실행 중지
+      if (!axiosUrl) {
+        console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
+        return;
+      }
 
       try {
         const res = await axios.post(
@@ -396,5 +414,4 @@ function requestGeoLocation(value) {
   background-color: v-bind(mainColor) !important;
   color: white !important;
 }
-
 </style>

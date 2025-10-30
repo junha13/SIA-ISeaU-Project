@@ -61,6 +61,7 @@ import { useGroupStore } from '@/stores/groupStore';
 import GroupCreateModal from '@/components/GroupCreateModal.vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia';
+
 import axios from 'axios'; // 1. Axios를 직접 import 합니다.
 
 const store = useStore();

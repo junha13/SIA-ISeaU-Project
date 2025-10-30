@@ -104,7 +104,7 @@
         )
     </insert>
 
-    <select id="findGroupMemberLocations" parameterType="int" resultType="ResponseGroupMemberLocationDTO">
+   <select id="findGroupMemberLocations" parameterType="int" resultType="ResponseGroupMemberLocationDTO">
         WITH CurrentGroup AS (
             -- 1. 현재 groupId(PK)로 이 그룹의 논리적 키(group_leader, group_name)를 찾습니다.
             SELECT 
@@ -116,14 +116,22 @@
                 group_number = #{groupId}
             LIMIT 1
         )
-        -- 2. 위에서 찾은 논리적 키(leader, name)와 일치하는 모든 '수락된' 멤버를 조회합니다.
+        -- 2. 위에서 찾은 논리적 키(leader, name)와 일치하는 모든 멤버를 조회합니다.
         SELECT
             u.user_number AS id,
             ST_Y(u.location::geometry) AS lat,
             ST_X(u.location::geometry) AS lng,
             u.user_name AS name,
             g.marker_color AS color,
-            'online' AS status,
+            
+            -- 🚨 [핵심 수정] 
+            -- group_accepted 값에 따라 status를 'online' 또는 'pending'으로 분기합니다.
+            CASE 
+                WHEN g.group_accepted = 'Y' THEN 'online'
+                WHEN g.group_accepted = 'N' THEN 'pending'
+                ELSE 'unknown'
+            END AS status,
+            
             (NOW() AT TIME ZONE 'UTC')::TIMESTAMP AS lastUpdate
         FROM
             tb_group g
@@ -131,8 +139,12 @@
             tb_user u ON g.group_member = u.user_number
         JOIN 
             CurrentGroup cg ON g.group_leader = cg.group_leader AND g.group_name = cg.group_name
-        WHERE
-            g.group_accepted = 'Y' -- 3. 'Y' (수락한) 멤버만 필터링
+        
+        -- 🚨 [핵심 수정]
+        -- 'Y'인 멤버만 필터링하는 WHERE 절을 삭제해야 'N'인 멤버도 보입니다.
+        -- WHERE
+        --    g.group_accepted = 'Y' 
+            
     </select>
 
     <select id="findGroupLeaderByGroupId" resultType="int" parameterType="int">
