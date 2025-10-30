@@ -148,7 +148,7 @@ const searchUser = async () => {
 
 	try {
 		// [수정 없음] 백엔드 경로 /api/user/search 및 POST 요청 유지
-		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`; 
+		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/user/search`; 
 
 		const response = await axios.post(apiUrl, payload, { 
 			headers: { 'Content-Type': 'application/json' },
@@ -223,7 +223,7 @@ const handleInvite = async () => {
 
 	try {
 		// 4. Axios POST 요청 보내기
-		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/groups/invite`;
+		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/groups/invite`;
 		const response = await axios.post(apiUrl, payload, {
 			headers: { 'Content-Type': 'application/json' },
 			withCredentials: true,

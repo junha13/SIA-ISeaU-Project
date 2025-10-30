@@ -356,12 +356,12 @@ function requestGeoLocation(value) {
       console.log('sending to server:', payload)
 
       let axiosUrl;
-      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`
-      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`
+      if ( value = "test") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`
+      if ( value = "boundary") axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`
 
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`,
+          `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`,
           payload,
           {
             headers: { 'Content-Type': 'application/json' },
