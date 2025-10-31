@@ -1,85 +1,74 @@
 <template>
   <div class="sos-main-page container-fluid p-0">
-    <!-- Header 
-    <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
-      <div class="d-flex align-items-center">
-         //뒤로 가기 버튼 
-        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">SOS</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
-        <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
-      </div>
-    </div>
-    -->
-
-    <div class="p-3">
-
-      <!-- 119 긴급 신고 (가장 큰 버튼) -->
-      <div class="card shadow-lg mb-4 rounded-3 p-5 text-center"
-           :style="{ backgroundColor: dangerColor, cursor: 'pointer' }"
-           @click="handleEmergencyCall('119')">
-        <i class="fas fa-phone-alt fa-3x mb-2 text-white"></i>
-        <h4 class="fw-bolder mb-0 text-white">119 긴급 신고</h4> 
-      </div>
-
-      <!-- 주요 기능 4개 (Grid Layout) -->
-      <div class="row g-3 mb-4">
-
-        <!-- 카드: 라이프가드 -->
+    <div class="p-3 actions-center">
+      <!-- ✅ 상단: 현장 액션 2그리드 -->
+      <div class="row g-3 justify-content-center w-100">
+        <!-- 라이프가드 -->
         <div class="col-6">
-          <div class="feature-card" :style="{ borderColor: safetyColor, color: darkColor }"
-               @click="handleEmergencyCall('lifeguard')">
-            <i class="fas fa-plus-square fa-2x mb-3" :style="{ color: safetyColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">라이프가드</p>
+          <div
+            class="feature-card"
+            :style="{ borderColor: safetyColor, color: darkColor, backgroundImage: `url(${cardImages.lifeguard})`, backgroundSize: 'cover', backgroundPosition: 'center' }"
+            @click="handleEmergencyCall('lifeguard')"
+          >
+           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">라이프가드</p>
           </div>
         </div>
 
-        <!-- 카드: 응급 대처법 -->
+        <!-- 해파리 제보 -->
         <div class="col-6">
-          <div class="feature-card" :style="{ borderColor: cautionColor, color: darkColor }"
-               @click="$router.push({ name: 'FirstAid' })">
-            <i class="fas fa-exclamation-triangle fa-2x mb-3" :style="{ color: cautionColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">응급 대처법</p>
+          <div
+            class="feature-card"
+            :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.jellyfish})`, backgroundSize: 'cover', backgroundPosition: 'center'}"
+            @click="$router.push({ name: 'JellyfishReport' })"
+          >
+            <p class="card-top-right fw-bolder fs-1 mt-2 me-2">해파리 제보</p>
           </div>
         </div>
+      </div> <!-- /.row -->
+    </div> <!-- /.p-3 -->
 
-        <!-- 카드: 해양경찰 신고 -->
-        <div class="col-6">
-          <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor }"
-               @click="handleEmergencyCall('122')">
-            <i class="fas fa-shield-alt fa-2x mb-3" :style="{ color: mainColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">해양경찰 신고</p>
+    <!-- ✅ 하단 SOS 바(탭바 위로 고정): 119 / 112 -->
+    <div class="sos-bar">
+      <div class="container px-3 py-2">
+        <div class="row g-2">
+          <div class="col-6">
+            <button
+              class="sos-btn w-100"
+              :style="{ backgroundColor: dangerColor }"
+              @click="handleEmergencyCall('119')"
+              aria-label="119 긴급 신고"
+            >
+              <div class="sos-num">119</div>
+              <div class="sos-label">긴급 신고</div>
+            </button>
           </div>
-        </div>
-
-        <!-- 카드: 해파리 제보 -->
-        <div class="col-6">
-          <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor }"
-               @click="$router.push({ name: 'JellyfishReport' })">
-            <i class="fas fa-umbrella-beach fa-2x mb-3" :style="{ color: mainColor }"></i>
-            <p class="fw-bolder fs-6 mb-0" :style="{ color: darkColor }">해파리 제보</p>
+          <div class="col-6">
+            <button
+              class="sos-btn w-100"
+              :style="{ backgroundColor: mainColor }"
+              @click="handleEmergencyCall('112')"
+              aria-label="112 경찰 신고"
+            >
+              <div class="sos-num">112</div>
+              <div class="sos-label">경찰</div>
+            </button>
           </div>
-        </div>
+        </div> <!-- /.row -->
+      </div> <!-- /.container -->
+    </div> <!-- /.sos-bar -->
 
-      </div>
-
-      <!-- 안내 메시지 -->
-      <div class="alert alert-light text-center p-3 rounded-3 fw-bold border-0"
-           :style="{ backgroundColor: '#f1f9ff', color: darkColor }">
-        버튼 클릭 시 연결됩니다
-      </div>
-    </div>
-
-    <!-- 로딩 모달 (sosStore.isLoading 상태에 연결) -->
-    <div v-if="sosStore.isLoading" class="loading-overlay d-flex align-items-center justify-content-center">
+    <!-- 로딩 오버레이 (기존 그대로) -->
+    <div
+      v-if="sosStore.isLoading"
+      class="loading-overlay d-flex align-items-center justify-content-center"
+    >
       <div class="loading-box p-5 rounded-3 shadow-lg text-center" :style="{ backgroundColor: 'white' }">
         <h4 class="fw-bolder mb-0" :style="{ color: darkColor }">연결 중입니다....</h4>
       </div>
     </div>
-  </div>
+  </div> <!-- /.sos-main-page -->
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -108,6 +97,13 @@ const safetyColor = '#8482FF';
 const cautionColor = '#FFB354';
 const dangerColor = '#EB725B';
 
+// 카드별 배경 이미지 매핑 (경로는 public 디렉터리 기준)
+const cardImages = {
+  jellyfish: '/images/sosButton/jellyfish.png',
+  lifeguard: '/images/sosButton/lifeguard.png',
+
+};
+
 // ===== 플랫폼 판단 유틸 =====
 const isMobileEnv = () => {
   const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -121,21 +117,21 @@ const dial = async (displayTitle, number) => {
   try {
     sosStore.setLoading(true);
 
-    // 스토어에 logEmergencyCall이 존재하면 로깅 (없으면 무시)
-    if (typeof sosStore.logEmergencyCall === 'function') {
-      await sosStore.logEmergencyCall({ title: displayTitle, target: number }).catch(() => {});
-    }
+    // // 스토어에 logEmergencyCall이 존재하면 로깅 (없으면 무시)
+    // if (typeof sosStore.logEmergencyCall === 'function') {
+    //   await sosStore.logEmergencyCall({ title: displayTitle, target: number }).catch(() => {});
+    // }
 
     if (isMobileEnv()) {
       // 모바일: 전화 앱 호출
       window.location.href = `tel:${number}`;
     } else {
-      // PC 등: 번호 복사 + 안내
+      // PC : 신고는 모바일 전용
       try {
         await navigator.clipboard.writeText(number);
         await showConfirmModal({
           title: '전화 연결 안내',
-          message: `${displayTitle} 번호(${number})를 복사했어요.\n스마트폰에서 붙여넣어 전화를 걸어주세요.`,
+          message: `신고는 모바일 전용입니다.`,
           type: 'info',
         });
       } catch {
@@ -158,7 +154,7 @@ const handleEmergencyCall = async (target) => {
   // 1) 타깃별 텍스트/번호 맵
   const CONFIG = {
     '119':        { title: '119 긴급 신고', number: '119' },
-    '122':        { title: '해양경찰 신고(122)', number: '122'},
+    '112':        { title: '112 경찰 신고', number: '112'},
     'lifeguard':  { title: '라이프가드 신고', number: null } // 고정번호가 없으니 별도 처리
   };
 
@@ -180,44 +176,65 @@ const handleEmergencyCall = async (target) => {
 
 <style scoped>
 .sos-main-page {
-  min-height: calc(100vh - 55px - 60px);
+  min-height: calc(100vh - 55px - 60px); /* 상단 헤더/하단 탭바 높이에 맞게 필요시 조정 */
 }
 
-/* 주요 기능 카드 스타일 */
+/* 카드(상단 2개) */
 .feature-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 140px;
+  height: 180px; /* 카드 높이 고정 */
   padding: 20px;
   border-radius: 12px;
-  border: 2px solid;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; /* 오버레이용 */
+  overflow: hidden;
+}
+.feature-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,.1); }
+
+/* 카드 우측 상단에 텍스트를 배치 (m-1 유사 마진) */
+.card-top-right {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  margin: 0;
+  z-index: 3;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
 }
 
-.feature-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+/* 하단 SOS 바: 앱 하단 탭바(약 60px) 위에 겹치지 않도록 bottom 오프셋 */
+.sos-bar {
+  position: fixed; left: 0; right: 0; bottom: 60px; /* ← 하단 탭바 높이만큼 띄움 */
+  z-index: 1030; /* 탭바 위로 */
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 35%);
+  padding-top: 6px;
 }
 
-/* 로딩 오버레이 (loding.png) */
+/* SOS 버튼 스타일 */
+.sos-btn {
+  border: none; border-radius: 16px; color: #fff;
+  padding: 14px 10px; box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+.sos-num { font-size: 24px; font-weight: 900; line-height: 1; }
+.sos-label { font-size: 12px; opacity: .95; }
+
+/* 로딩 오버레이 (기존) */
 .loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 2000;
+  position: fixed; inset: 0; background-color: rgba(0,0,0,.4); z-index: 2000;
+}
+.loading-box { background-color: #fff; padding: 40px; border-radius: 12px; }
+
+.actions-center{
+  min-height: inherit;
+  display: grid;
+  place-items: center;
 }
 
-.loading-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 12px;
-}
 </style>
