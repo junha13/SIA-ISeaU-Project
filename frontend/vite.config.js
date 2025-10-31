@@ -12,11 +12,11 @@ export default defineConfig({
     vueDevTools(),
     VitePWA({
           strategies: 'injectManifest',
-
-          // 🚨 추가: Service Worker 소스 파일 지정
           srcDir: 'public',
           filename: 'firebase-messaging-sw.js',
-
+        injectManifest: {
+            maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        },
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
           manifest: {
               name: 'ISeaU PWA App',

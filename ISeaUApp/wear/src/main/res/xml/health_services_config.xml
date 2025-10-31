@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<health-services-config>
+    <background-activities>
+        <activity class="com.lx.iseau.presentation.SafetyMonitoringService" />
+    </background-activities>
+</health-services-config>
