@@ -2,7 +2,6 @@
   <div class="group-main-page" style="position: relative;">
 
     <template v-if="hasGroup">
-      
       <div ref="mapEl" style="width:100%;height:300px;"></div>
 
       <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
@@ -21,27 +20,31 @@
       
       <div class="group-actions p-3">
         
-        <div class="button-row position-absolute d-flex justify-content-between w-100 px-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          
           <button
-            class="btn fw-bold rounded-pill shadow-sm notification-button" 
-            style="background-color: #e9ecef;" 
+            class="btn fw-bold rounded-pill shadow-sm action-button notification-button" 
             @click="handleNotificationSettings">
-            <i class="fas fa-bell me-2"></i> 알림 설정
+            <i class="fas fa-bell me-1"></i> 알림
           </button>
-          <button
-            class="btn fw-bold text-white rounded-pill shadow-sm invite-button" 
-            :style="{ backgroundColor: mainColor }" 
-            @click="showInviteModal = true">
-            <i class="fas fa-user-plus me-2"></i> 그룹 초대
-          </button>
+          
+          <div class="d-flex gap-2">
+            <button
+              class="btn fw-bold text-white rounded-pill shadow-sm action-button" 
+              :style="{ backgroundColor: mainColor }" 
+              @click="showInviteModal = true">
+              <i class="fas fa-user-plus me-1"></i> 그룹 초대
+            </button>
+            
+            <button 
+              class="btn fw-bold rounded-pill shadow-sm action-button btn-outline-danger" 
+              @click="confirmDeleteGroup">
+              <i class="fas fa-trash me-1"></i> 그룹 삭제
+            </button>
+          </div>
         </div>
 
-        <button class="btn btn-outline-danger btn-sm w-100 mt-3 mb-4" @click="confirmDeleteGroup">
-            <i class="fas fa-trash me-2"></i> 그룹 삭제
-        </button>
-
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
-        
         <div class="member-list">
           <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
             <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
@@ -86,11 +89,6 @@
 </template>
 
 <script setup>
-// ---------------------------------
-// 이 컴포넌트의 작동 로직 (보이지 않는 부분)
-// ---------------------------------
-
-// 사용할 도구들(Vue 기능, Axios 등)을 가져옵니다.
 import { ref, onMounted, computed, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router'; 
 import { useConfirmModal } from '@/utils/modalUtils';
@@ -104,35 +102,28 @@ import { storeToRefs } from 'pinia'
 const store = useStore();
 const { } = storeToRefs(store);
 
-// 'mapEl' 이름표를 붙인 HTML 태그(div)를 담을 상자
 const mapEl = ref(null);
-// Naver Map 객체를 담을 상자
 let map;
 
-const router = useRouter(); // 페이지 이동(새로고침) 기능
-const { showConfirmModal } = useConfirmModal(); // '정말요?' 확인 팝업창 기능
+const router = useRouter(); 
+const { showConfirmModal } = useConfirmModal(); 
 
-// 디자인에 사용할 색상 값
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-// --- State (컴포넌트의 핵심 기억 상자들) ---
-const myGroupList = ref([]); // 내 그룹 정보 (1개 또는 0개)
-const activeGroupLocations = ref([]); // 현재 그룹 멤버들의 위치 정보
-const showInviteModal = ref(false); // 초대 팝업창 스위치 (true: 보임, false: 숨김)
-const showCreateGroupModal = ref(false); // 생성 팝업창 스위치
+// --- State ---
+const myGroupList = ref([]); 
+const activeGroupLocations = ref([]);
+const showInviteModal = ref(false); 
+const showCreateGroupModal = ref(false); 
 
-// --- Computed (자동 계산기) ---
-
-// 'hasGroup' 계산기: 'myGroupList' 상자에 그룹이 1개라도 들어있는지?(true/false)
+// --- Getters & Computed ---
 const hasGroup = computed(() => myGroupList.value.length > 0);
 
-// 'activeGroupId' 계산기: 'hasGroup'이 true면, 'myGroupList'의 첫 번째 그룹 ID를 사용
 const activeGroupId = computed(() => {
   return hasGroup.value ? myGroupList.value[0].id : null;
 });
 
-// 'groupLocations' 계산기: 'activeGroupLocations' 목록에서 중복된 멤버를 제거한 최종 목록
 const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
     const uniqueMembers = {};
@@ -145,19 +136,16 @@ const groupLocations = computed(() => {
 });
 
 
-// --- Actions (컴포넌트가 하는 일) ---
-
-// '알림 설정' 버튼을 누르면 실행되는 일 (지금은 콘솔에 로그만 찍음)
+// --- Actions ---
 const handleNotificationSettings = () => {
     console.log("알림 설정 버튼 클릭됨");
 };
 
-// [일 1] 'fetchGroups': 서버에게 "내 그룹 목록 줘!"라고 요청하는 일
 const fetchGroups = async () => {
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`; 
         const response = await axios.get(url, { withCredentials: true });
-        myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
+        myGroupList.value = response.data.data.result; 
         
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
         if (hasGroup.value) {
@@ -166,13 +154,11 @@ const fetchGroups = async () => {
 
     } catch (error) {
         console.error('그룹 목록 조회 실패:', error, error.response);
-        myGroupList.value = []; // 실패하면 비워버림
+        myGroupList.value = []; 
     }
 };
 
-// [일 2] 'fetchLocations': 서버에게 "활성화된 그룹 멤버들 위치 줘!"라고 요청하는 일
 const fetchLocations = async () => {
-    // 'activeGroupId'가 없으면(null) 일을 시작하지 않음
     if (!activeGroupId.value) {
         console.warn("[FetchLocations] Aborted: activeGroupId is null.");
         return;
@@ -183,33 +169,29 @@ const fetchLocations = async () => {
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
-        activeGroupLocations.value = response.data.data.result; // 결과를 'activeGroupLocations' 상자에 저장
+        activeGroupLocations.value = response.data.data.result;
     } catch (error) {
         console.error('그룹 위치 정보 조회 실패:', error);
-        activeGroupLocations.value = []; // 실패하면 비워버림
+        activeGroupLocations.value = []; 
     }
 };
 
-// [일 3] 'handleGroupCreated': 그룹 생성 팝업창이 "성공!" 신호를 보냈을 때 하는 일
 const handleGroupCreated = (newGroupId) => {
-    showCreateGroupModal.value = false; // 생성 팝업창 스위치를 끔
+    showCreateGroupModal.value = false; 
     console.log(`[GroupCreate] 새 그룹 생성됨: ${newGroupId}. 그룹 목록 갱신...`);
-    fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 있음' 상태로 바꾸기 위해)
+    fetchGroups(); 
 };
 
-// [일 4] 'confirmDeleteGroup': '그룹 삭제' 버튼을 눌렀을 때 하는 일
 const confirmDeleteGroup = () => {
   if (!activeGroupId.value) return;
   
-  // '정말 삭제할거야?'라고 물어보는 팝업창을 띄웁니다.
   showConfirmModal(
     '그룹 삭제',
     '정말로 이 그룹을 삭제하시겠습니까? 모든 멤버의 연결이 끊어집니다.',
-    () => deleteGroup() // '확인'을 누르면 [일 5]를 실행
+    () => deleteGroup() 
   );
 };
 
-// [일 5] 'deleteGroup': 'confirmDeleteGroup'에서 '확인'을 눌렀을 때 진짜로 삭제하는 일
 const deleteGroup = async () => {
     if (!activeGroupId.value) return;
     
@@ -217,11 +199,11 @@ const deleteGroup = async () => {
     
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups/${activeGroupId.value}`; 
-        await axios.delete(url, { withCredentials: true }); // 서버에 "이 그룹 삭제해줘!" 요청
+        await axios.delete(url, { withCredentials: true }); 
         
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
-        activeGroupLocations.value = []; // 멤버 위치 목록 비우기
-        fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 없음' 상태로 바꾸기 위해)
+        activeGroupLocations.value = []; 
+        fetchGroups(); 
         
     } catch (error) {
         console.error('그룹 삭제 실패:', error);
@@ -229,32 +211,27 @@ const deleteGroup = async () => {
     }
 };
 
-// --- Lifecycle & Watchers (자동으로 실행되는 코드) ---
-
-// 'loadGroupData'라는 작은 일 (fetchLocations 실행)
+// --- Lifecycle & Watchers ---
 const loadGroupData = () => {
   if (activeGroupId.value) {
     fetchLocations(); 
   }
 }
 
-// [자동] 'onMounted': 이 페이지(컴포넌트)가 화면에 처음 나타났을 때 *단 한 번* 실행
 onMounted(() => {
-  fetchGroups(); // [일 1] 실행 (그룹 있는지 확인)
-  getLocation(); // 내 핸드폰 위치 켜기
-  requestGeoLocation(null); // (500 오류 방지를 위해 'test' 대신 null 전달)
+  fetchGroups(); 
+  getLocation();
+  requestGeoLocation(null); // 500 에러 방지
 });
 
-// [자동] 'watch': 'activeGroupId' 상자를 *계속 지켜봅니다.*
 watch(activeGroupId, (newId, oldId) => {
-    // 'activeGroupId' 상자의 값이 바뀌면 (예: 그룹 생성 직후)
     if (newId) {
         console.log(`[Watcher] activeGroupId 변경됨: ${oldId} -> ${newId}. 위치 로드 시작...`);
-        loadGroupData(); // 'loadGroupData' 일을 실행
+        loadGroupData();
     }
-}, { immediate: true }); // immediate: true (페이지 로드 시에도 일단 한 번 실행)
+}, { immediate: true }); 
 
-// 'markerStyle': 더미 마커의 스타일(색상, 위치)을 랜덤으로 정해주는 함수
+// 더미 마커 스타일 함수
 const markerStyle = (color) => ({
   backgroundColor: color || 'blue', 
   width: '12px',
@@ -267,37 +244,32 @@ const markerStyle = (color) => ({
 
 
 /* 지도 부분 */
-const latitude = ref('') // 내 위치(위도) 기억 상자
-const longitude = ref('') // 내 위치(경도) 기억 상자
+const latitude = ref('') 
+const longitude = ref('') 
 
-// [자동] 'watchEffect': 지도 그리기에 필요한 재료들을(위도, 경도, 지도 영역, 그룹 상태) 계속 지켜봄
 watchEffect(() => {
   const lat = latitude.value
   const lng = longitude.value
 
-  // 재료가 하나라도 준비 안 됐거나, 그룹이 없으면(hasGroup: false) 지도를 그리지 않음
   if (!hasGroup.value || !lat || !lng || !mapEl.value || !window.naver?.maps) return
 
-  // 재료가 다 준비되면 Naver 지도 API를 사용해 지도를 그림
   const pos = new window.naver.maps.LatLng(lat, lng)
 
   if (!map) {
-    // (지도 그린 적 없으면) 새로 그림
     map = new window.naver.maps.Map(mapEl.value, {
       center: pos,
       zoom: 15
     })
     
-    // 💡 GeoServer 요청 (주석 없음 - 사용자 요청)
-     window.naver.maps.Event.once(map, 'init', testLoadBoundary)
-    loadBoundary()
+    // 💡 GeoServer (CORS/404 오류로 주석 처리)
+    // window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+    // loadBoundary()
   } else {
-    // (지도 그린 적 있으면) 중심 위치만 이동
     map.setCenter(pos)
   }
 })
 
-// --- GeoServer / Location (사용자 요청으로 주석 제외) ---
+// --- GeoServer / Location (코드는 유지하되, 호출은 주석 처리됨) ---
 
 const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
   `?service=WFS` +
@@ -378,7 +350,6 @@ function testDrawBoundaryRings() {
 }
 
 
-// [일] 'getLocation': 핸드폰 GPS에게 "현재 위도/경도 줘!"라고 요청하는 일
 function getLocation() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
@@ -388,7 +359,6 @@ function getLocation() {
   )
 }
 
-// [일] 'requestGeoLocation': 서버에 내 위치를 전송하는 일 (현재는 500 오류 유발)
 function requestGeoLocation(value) {
   if (!navigator.geolocation) return;
 
@@ -442,10 +412,6 @@ function requestGeoLocation(value) {
 </script>
 
 <style scoped>
-/* --------------------------------- */
-/* 이 컴포넌트의 디자인 (CSS) */
-/* --------------------------------- */
-
 .group-main-page {
   min-height: calc(100vh - 55px - 60px);
 }
@@ -474,36 +440,45 @@ function requestGeoLocation(value) {
   border-radius: 25px;
 }
 
-/* 💡 [디자인 복구] 스크린샷의 버튼 배치를 위한 스타일 */
+/* 💡 [디자인 수정] 버튼들을 지도 아래로 내림 */
 .group-actions {
   position: relative; 
-  padding-top: 40px; 
+  padding-top: 1rem; 
 }
 
+/* 💡 [제거] button-row의 position: absolute 관련 스타일 제거 */
 .button-row {
-  z-index: 100; /* 지도 위에 오도록 */
-  top: -20px; /* 버튼을 지도와 겹치도록 위로 올림 */
-  left: 0;
+  /* z-index, top, left 제거 */
 }
+
+/* 💡 [수정] 3개 버튼 공통 스타일 (flex-grow 제거) */
+.action-button {
+  font-size: 0.9rem;
+  padding: 8px 12px; 
+  height: 42px;       /* 높이 통일 */
+  /* flex-grow: 1;    💡 [제거] 버튼이 늘어나는 원인 */
+  text-align: center;
+  border-width: 1px;
+  min-width: 90px; /* 💡 최소 너비로 크기 고정 */
+  /* flex-basis: 0;   💡 [제거] */
+}
+
 .notification-button {
-  font-size: 0.95rem;
-  padding: 10px 15px;
-  height: 45px;
-  min-width: 120px; 
   color: v-bind(darkColor); 
   border: 1px solid #dee2e6; 
   background-color: #e9ecef; 
+  /* flex-grow: 1; 💡 [제거] */
 }
+
 .invite-button {
-  font-size: 0.95rem;
-  padding: 10px 15px;
-  height: 45px;
-  min-width: 120px; 
+  /* flex-grow: 1; 💡 [제거] */
 }
 
 .btn-outline-danger {
   border-color: #dc3545;
   color: #dc3545;
+  background-color: white; 
+  /* flex-grow: 1; 💡 [제거] */
 }
 
 .btn-outline-danger:hover {
