@@ -17,7 +17,7 @@
               <li><a v-for="categorie in postCategories" :key="categorie" class="dropdown-item"  @click.prevent="postCategory = categorie">{{ categorie}}</a></li>
             </ul>
 
-          <div class="input-group w-100 mw-500px border border-gray-500 rounded-2">
+          <div class="input-group w-100 mw-500px border border-gray-500">
 
             <!-- 검색 입력 필드 -->
             <input type="text"
@@ -25,8 +25,17 @@
                    placeholder="검색어를 입력하세요"
                    v-model="searchQuery"
                    @keyup.enter="searchPosts"
-                   style="height: 40px;"/>
+                   :style="{height: 40,
+                   borderTopLeftRadius: 0, borderBottomLeftRadius: 0}"/>
           </div>
+          <button
+            class="btn"
+            type="button"
+            @click="searchPosts"
+            :style="{ backgroundColor: 'black', color: 'white', border: 'none', borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }"
+          >
+            <i class="fas fa-search"></i>
+          </button>
         </div>
 
         <!-- 카테고리 필터 및 글쓰기 버튼 -->
@@ -34,7 +43,7 @@
           <!-- 카테고리 버튼 -->
           <div class="d-flex overflow-auto flex-nowrap me-3">
           </div>
-          <button class="btn btn-dark btn-sm fw-bold text-nowrap" @click="goWrite">글쓰기</button>
+          <button class="btn btn-dark btn-sm fw-bold text-nowrap mt-n2" @click="goWrite">글쓰기</button>
         </div>
 
         <!-- 게시글 테이블 -->
@@ -42,18 +51,17 @@
           <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
             <thead>
             <tr class="fw-normal fs-8 text-gray-500 border-bottom border-gray-200">
-              <th class="text-start" style="width: 10%;">분류</th>
-              <th class="text-start" style="width: 50%;">제목</th>
-              <th class="text-start cursor-pointer" style="width: 8%;" @click="sortBy('author')">글쓴이</th>
-              <th class="text-end cursor-pointer" style="width: 7%;" @click="sortBy('likes')">
+              <th class="text-start " style="width: 40%;"><div class="ms-2">제목</div></th>
+              <th class="text-start cursor-pointer" style="width: 15%;" @click="sortBy('author')">회원</th>
+              <th class="text-start cursor-pointer" style="width: 13%;" @click="sortBy('likes')">
                 추천
                 <i v-if="sortColumn === 'likes'" :class="sortDirection === 'asc' ? 'ki-duotone ki-up fs-7' : 'ki-duotone ki-down fs-7'"></i>
               </th>
-              <th class=" text-end cursor-pointer" style="width: 8%;" @click="sortBy('views')">
+              <th class=" text-start cursor-pointer" style="width: 13%;" @click="sortBy('views')">
                 조회
                 <i v-if="sortColumn === 'views'" :class="sortDirection === 'asc' ? 'ki-duotone ki-up fs-7' : 'ki-duotone ki-down fs-7'"></i>
               </th>
-              <th class=" text-start cursor-pointer" style="width: 17%;" @click="sortBy('date')">
+              <th class=" text-start cursor-pointer" style="width: 20%;" @click="sortBy('date')">
                 시간
                 <i v-if="sortColumn === 'date'" :class="sortDirection === 'asc' ? 'ki-duotone ki-up fs-7' : 'ki-duotone ki-down fs-7'"></i>
               </th>
@@ -63,55 +71,37 @@
             <tr v-for="post in posts" :key="post.postNumber" @click="goDetail(post.postNumber)" style="cursor:pointer"
                 :class="{ 'bg-hover-light-primary': post.category === '공지' }">
               <td class="text-start">
-                <span class="fw-bold">{{ post.boardName }}</span>
-              </td>
-              <td class="text-start">
-                <a href="#" class="text-gray-800 fw-bold text-hover-primary fs-6 me-2">
-                  {{ post.postTitle }}
-                </a>
+                 <span class="text-gray-800 fw-bold text-hover-primary fs-7">
+                  <div class="ms-2">
+                  [ {{ post.boardName }} ] {{ post.postTitle }}
+                  </div>
+                </span>
               </td>
               <td class="text-start"><span class="text-gray-600 fw-semibold d-block fs-7">{{ post.id }}</span></td>
-              <td class="text-end">
+              <td class="text-start">
                 <span class="text-gray-600 fw-semibold d-block fs-7">
                   <i class="ki-duotone ki-heart fs-7 me-1 text-danger"></i>
                   {{ post.recommendCount }}
                 </span>
               </td>
-              <td class="text-end">
+              <td class="text-start">
                 <span class="text-gray-600 fw-semibold d-block fs-7">
                   <i class="ki-duotone ki-eye fs-7 me-1 text-info"></i>
                   {{ post.viewCount }}
                 </span>
               </td>
-              <td class="text-start"><span class="text-gray-600 fw-semibold d-block fs-7">{{ post.createdAt }}</span></td>
+              <td class="text-start"><span class="text-gray-600 fw-semibold d-block fs-7">{{ post.createdAt.slice(2, 10) }}</span></td>
             </tr>
             </tbody>
           </table>
         </div>
-      </div>
-
-      <!-- 페이지네이션 -->
-      <div class="card-footer pt-0 px-3">
-        <nav>
-          <ul class="pagination justify-content-center">
-            <li class="page-item previous disabled">
-              <a href="#" class="page-link" style="border-radius: 50%; width: 30px; height: 30px; padding: 0; line-height: 28px; text-align: center;"><i class="ki-duotone ki-left fs-5"></i></a>
-            </li>
-            <li v-for="page in 5" :key="page" class="page-item" :class="{ 'active': page === 1 }">
-              <button class="page-link rounded-circle fw-bold mx-1" style="width: 30px; height: 30px; padding: 0; line-height: 28px; text-align: center;">{{ page }}</button>
-            </li>
-            <li class="page-item next">
-              <a href="#" class="page-link" style="border-radius: 50%; width: 30px; height: 30px; padding: 0; line-height: 28px; text-align: center;"><i class="ki-duotone ki-right fs-5"></i></a>
-            </li>
-          </ul>
-        </nav>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 
 

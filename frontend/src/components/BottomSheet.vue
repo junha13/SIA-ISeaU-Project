@@ -2,7 +2,7 @@
   <BottomSheet
     v-model="isOpen"
 
-    :snap-points="[64, '70%']"
+    :snap-points="[80, '75%']"
     :initial-snap-point="0"
     
     :blocking="false"              
@@ -25,7 +25,6 @@
       style="
         flex:1;
         overflow-y: scroll;
-        padding:16px;
         font-size:14px;
         line-height:1.4;
       "

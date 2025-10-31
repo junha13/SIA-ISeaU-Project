@@ -6,32 +6,6 @@
       <div class="card card-flush shadow-sm mx-3 mb-5">
         <div class="card-body p-5">
 
-          <!-- 지역 선택
-          <div class="mb-8">
-            <label class="form-label fw-bold text-gray-800">지역 선택</label>
-            <div class="d-flex flex-wrap gap-2">
-              <button v-for="region in regions" :key="region"
-                      class="btn btn-sm fw-semibold rounded-pill"
-                      :class="boardData.regionName === region ? 'btn-dark text-white' : 'btn-outline-secondary text-gray-700'"
-                      @click="boardData.regionName = region">
-                {{ region }}
-              </button>
-            </div>
-          </div>
-
-          카테고리 선택
-          <div class="mb-8">
-            <label class="form-label fw-bold text-gray-800">예술 분류 선택</label>
-            <div class="d-flex flex-wrap gap-2">
-              <button v-for="cat in artCategories" :key="cat"
-                      class="btn btn-sm fw-semibold rounded-pill"
-                      :class="boardData.boardCategoryName === cat ? 'btn-dark text-white' : 'btn-outline-secondary text-gray-700'"
-                      @click="boardData.boardCategoryName = cat">
-                {{ cat }}
-              </button>
-            </div>
-          </div> -->
-
           <!-- 지역 선택 -->
           <div class="mb-8">
             <label class="form-label fw-bold text-gray-800">게시글 분류 선택</label>
@@ -61,8 +35,8 @@
             <label class="form-label fw-bold text-gray-800">내용</label>
             <QuillForm ref="editorRef"/>
           </div>
-
-          <!-- 태그 -->
+          <!-- 
+          태그
           <div class="mb-10">
             <label class="form-label fw-bold text-gray-800">태그</label>
             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -72,7 +46,7 @@
                   class="badge bg-secondary text-white p-2 rounded-pill fs-7 fw-semibold"
               >
                 #{{ tag }}
-                <!-- 태그 삭제 아이콘 색상을 text-danger로 변경하여 시인성 확보 -->
+                태그 삭제 아이콘 색상을 text-danger로 변경하여 시인성 확보
                 <i class="ki-duotone ki-cross-circle fs-5 ms-1 text-danger" style="cursor: pointer;" @click="removeTag(index)"></i>
               </span>
             </div>
@@ -83,7 +57,7 @@
                 class="form-control bg-white text-dark rounded-2 border border-gray-400"
                 placeholder="태그를 입력하고 Enter를 누르세요"
             />
-          </div>
+          </div> -->
 
           <!-- 버튼: 텍스트 동적 변경 및 등록/수정 로직 호출 -->
           <div class="d-flex justify-content-end gap-3">
@@ -243,7 +217,7 @@ import QuillForm from '@/components/Editor.vue'
         const postNumber = response.data.result.PostNumber
         alert(`게시글 등록이 완료되었습니다.`)
 
-        router.push(`/post/${postNumber}`)
+        router.replace(`/post/${postNumber}`)
 
     } catch (e) {
       console.error('[Detail] load error:', e)

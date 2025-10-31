@@ -61,7 +61,6 @@ import { useGroupStore } from '@/stores/groupStore';
 import GroupCreateModal from '@/components/GroupCreateModal.vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia';
-
 import axios from 'axios'; // 1. Axios를 직접 import 합니다.
 
 const store = useStore();
@@ -84,9 +83,11 @@ const fetchGroupsDirectly = async () => {
   console.log('[LOG-DIRECT] 1. fetchGroupsDirectly: Axios로 직접 API 호출 시작...');
 
   try {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
 
     // 3. 캐시(Cache) 문제를 피하기 위해 timestamp 추가
-    const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
+    const url = `${baseUrl}/api/groups?timestamp=${new Date().getTime()}`;
 
     const response = await axios.get(url, {
       withCredentials: true, // 4. 세션(로그인)을 위해 필수

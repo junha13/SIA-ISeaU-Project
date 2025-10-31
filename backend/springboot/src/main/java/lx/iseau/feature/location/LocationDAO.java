@@ -11,4 +11,5 @@ public interface LocationDAO {
 	
 	ResponseUserLocationDTO selectTestCheck(RequestUserLocationDTO dto);
 
+	int updateUserLocation(RequestUserLocationDTO dto);
 }

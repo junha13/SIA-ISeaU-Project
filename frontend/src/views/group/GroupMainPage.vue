@@ -66,14 +66,13 @@ import GroupInviteModal from '@/components/GroupInviteModal.vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
-const { header, beach } = storeToRefs(store)
+const { header} = storeToRefs(store)
 
 const mapEl = ref(null)
 let map, marker
 
 const route = useRoute();
-const router = useRouter(); 
-const { showConfirmModal } = useConfirmModal(); 
+const router = useRouter();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -94,6 +93,12 @@ const activeGroupName = computed(() =>
 /**
  * [수정됨] 최종적으로 UI에 표시될 그룹 멤버 목록 (중복 제거 로직)
  */
+
+ /**
+ * =============================================================
+ *         이게 언제 실행되는건지?
+ * =============================================================
+ */ 
 const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
     const uniqueMembers = {};
@@ -130,9 +135,12 @@ const fetchGroups = async () => {
     }
 };
 
+
 /**
- * 활성화된 그룹의 멤버 위치 정보를 가져옵니다.
- */
+ * =============================================================
+ *          활성화된 그룹의 멤버 위치 정보를 가져옵니다.
+ * =============================================================
+ */ 
 const fetchLocations = async () => {
     if (!activeGroupId.value) return;
 
@@ -143,6 +151,7 @@ const fetchLocations = async () => {
         
         // State 업데이트
         activeGroupLocations.value = response.data.data.result;
+        console.log(response.data.data.result)
 
     } catch (error) {
         console.error('그룹 위치 정보 조회 실패:', error);
@@ -168,7 +177,7 @@ const loadGroupData = () => {
 
 onMounted(() => {
   // 그룹 목록을 먼저 로드 (그룹 이름을 표시하기 위해 필요)
-  fetchGroups(); 
+  //fetchGroups(); 
 
   getLocation() // 내 위치 로드
 
@@ -177,6 +186,12 @@ onMounted(() => {
 
 });
 
+
+/**
+ * ============================================
+ *          이게 온마운트 기능인가? 
+ * ============================================
+ */ 
 // URL의 그룹 ID가 변경될 때마다 데이터 다시 로드
 watch(activeGroupId, loadGroupData, { immediate: true });
 
@@ -193,9 +208,9 @@ const markerStyle = (color) => ({
 
 
 /*
-
-지도 부분 
-
+========================================================
+                        지도 부분 
+========================================================
 */
 
 const latitude = ref('')
@@ -233,6 +248,77 @@ watchEffect(() => {
   }
 })
 
+/**
+ * ============================================
+ *          지오로케이션 내 위치 보기
+ * ============================================
+ */ 
+function getLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
+    (err) => { console.error('위치 실패: ' + err.message); },
+    { enableHighAccuracy: true }
+  )
+}
+
+
+/**
+ * ============================================
+ *  내 위치 해안선 or 테스트 폴리곤 비교하고 거리 받기 
+ * ============================================
+ */ 
+function requestGeoLocation(value) {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      // 1) 값 넣고
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
+
+      // 2) 서버로 보냄
+      const payload = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      console.log('sending to server:', payload)
+
+      let axiosUrl;
+      if ( value === "test") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
+      }
+      if ( value === "boundary") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
+      }
+
+      try {
+        const res = await axios.post(
+          axiosUrl,
+          payload,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 5000,
+          }
+        )
+        console.log('OK', res.data)
+      } catch (e) {
+        console.error('send error', e)
+      }
+    },
+    (err) => {
+      console.error('위치 실패:', err.message)
+    },
+    { enableHighAccuracy: true }
+  )
+}
+
+/**
+ * ================================================
+ *                  폴리곤 만들기
+ * ================================================
+ */
 const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
   `?service=WFS` +
   `&version=1.0.0` +
@@ -328,64 +414,6 @@ function testDrawBoundaryRings() {
     map.fitBounds(bounds);
   }
 }
-
-
-// 지오로케이션 내 위치 보기
-function getLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
-    (err) => { console.error('위치 실패: ' + err.message); },
-    { enableHighAccuracy: true }
-  )
-}
-
-function requestGeoLocation(value) {
-  if (!navigator.geolocation) return;
-
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      // 1) 값 넣고
-      latitude.value = pos.coords.latitude
-      longitude.value = pos.coords.longitude
-
-      // 2) 서버로 보냄
-      const payload = {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      }
-      console.log('sending to server:', payload)
-
-      let axiosUrl;
-      if ( value === "test") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
-      }
-      if ( value === "boundary") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
-      }
-
-      try {
-        const res = await axios.post(
-          axiosUrl,
-          payload,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            withCredentials: true,
-            timeout: 5000,
-          }
-        )
-        console.log('OK', res.data)
-      } catch (e) {
-        console.error('send error', e)
-      }
-    },
-    (err) => {
-      console.error('위치 실패:', err.message)
-    },
-    { enableHighAccuracy: true }
-  )
-}
-
 </script>
 
 <style scoped>

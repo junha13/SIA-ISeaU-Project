@@ -50,5 +50,14 @@
 	    ST_Distance(u.geom, ST_Boundary(b.geom)) AS distance    
 	  FROM user_pt u, testlayer b;
 	</select>
+	
+	<update id="updateUserLocation" parameterType="RequestUserLocationDTO">
+		UPDATE tb_user
+		    SET location = ST_SetSRID(
+		        ST_MakePoint(#{longitude}, #{latitude}),
+		        4326
+		    )
+		    WHERE user_number = #{userNumber};
+	</update>
 
 </mapper>
