@@ -6,7 +6,7 @@ import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
 
 // Spring Boot static 폴더 (frontend 기준 상대경로)
-const springBootStatic = '../../backend/springboot/src/main/resources/static'
+const springBootStatic = path.resolve(__dirname, '../../backend/springboot/src/main/resources/static')
 
 export default defineConfig({
     base: './',
@@ -52,10 +52,10 @@ export default defineConfig({
             },
         },
     },
-    build: {
-        outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
-        emptyOutDir: true,         // 기존 내용 삭제 후 빌드
-    },
+    // build: {
+    //     outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
+    //     emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+    // },
     define: {
         __API_BASE_URL__: JSON.stringify(process.env.VITE_API_BASE_URL)
     }
