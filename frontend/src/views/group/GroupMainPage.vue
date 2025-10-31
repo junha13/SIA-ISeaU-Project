@@ -155,8 +155,8 @@ const handleNotificationSettings = () => {
  * 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
  */
 const fetchGroups = async () => {
-    try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
 
