@@ -968,9 +968,9 @@ VALUES
 
 -- 회원정보 넣기
 INSERT INTO tb_user (user_name, email, mobile, id, password, birth_date, role_number, location)
-VALUES ('사람일', 'person1@lxmail.com', '010-1111-1111', 'imperson1', 'person1234', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(26.8795001, 37.4915885),4326)),
-		('1', '2@2', '1', '1', '1', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(26.8795001, 37.4915885),4326)),
-		('13', '2@2', '2', '2', '2', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(26.8795001, 37.4915885),4326));
+VALUES ('사람일', 'person1@lxmail.com', '010-1111-1111', 'imperson1', 'person1234', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(126.8795001, 37.4915885),4326)),
+		('1', '2@2', '1', '1', '1', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(126.8795001, 37.4915885),4326)),
+		('13', '2@2', '2', '2', '2', '2003-10-28', 2, ST_SetSRID(ST_MakePoint(126.8795001, 37.4915885),4326));
 
 -- 응급처치 데이터 넣기
 insert into tb_first_aid (first_aid_case_num, first_aid_case_name,

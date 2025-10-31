@@ -236,7 +236,7 @@ const loadGroupData = () => {
 onMounted(() => {
   fetchGroups(); // [일 1] 실행 (그룹 있는지 확인)
   getLocation(); // 내 핸드폰 위치 켜기
-  requestGeoLocation(null); // (500 오류 방지를 위해 'test' 대신 null 전달)
+  requestGeoLocation("test"); // (500 오류 방지를 위해 'test' 대신 null 전달)
 });
 
 // [자동] 'watch': 'activeGroupId' 상자를 *계속 지켜봅니다.*
@@ -260,134 +260,78 @@ const markerStyle = (color) => ({
 });
 
 
-/* 지도 부분 */
-const latitude = ref('') // 내 위치(위도) 기억 상자
-const longitude = ref('') // 내 위치(경도) 기억 상자
+/*
+========================================================
+                        지도 부분 
+========================================================
+*/
 
-// [자동] 'watchEffect': 지도 객체 초기화 및 중심 설정
+const latitude = ref('')
+const longitude = ref('')
+let marker=null
+
 watchEffect(() => {
+  // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
   const lat = latitude.value
   const lng = longitude.value
 
-  // 재료가 하나라도 준비 안 됐거나, 그룹이 없으면(hasGroup: false) 지도를 그리지 않음
-  if (!hasGroup.value || !lat || !lng || !mapEl.value || !window.naver?.maps) return
+  // 아직 준비 안 된 경우 바로 종료
+  if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
 
-  // 재료가 다 준비되면 Naver 지도 API를 사용해 지도를 그림
+  // 네이버 지도에서 쓰는 좌표 객체 생성
   const pos = new window.naver.maps.LatLng(lat, lng)
 
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
   if (!map) {
-    // (지도 그린 적 없으면) 새로 그림
-    map = new window.naver.maps.Map(mapEl.value, { center: pos, zoom: 15 })
-    
-    // GeoServer 요청 (사용자 요청으로 유지)
-    window.naver.maps.Event.once(map, 'init', testLoadBoundary)
-    loadBoundary()
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 15
+    })
+    marker = new window.naver.maps.Marker({
+      position: pos,
+      map
+    })
+
+  //window.naver.maps.Event.once(map, 'init', loadBoundary)
+  window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+  loadBoundary()
+    // 이미 map이 만들어져 있으면 새로 안 만들고 중심 좌표와 마커 위치만 업데이트
   } else {
-    // (지도 그린 적 있으면) 중심 위치만 이동
     map.setCenter(pos)
+    marker.setPosition(pos)
   }
 })
 
-// --- GeoServer / Location (사용자 요청에 따라 유지됨) ---
-
-const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_boundary` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
-let boundaryRings = [];
-
-async function loadBoundary() {
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    boundaryRings = []; 
-    (data.features || []).forEach(f => {
-      const geom = f.geometry;
-      if (!geom) return;
-      geom.coordinates.forEach(poly => {
-        const outerRing = poly[0]; 
-        boundaryRings.push(outerRing);
-      });
-    });
-    console.log('[boundaryRings]', boundaryRings);
-  } catch(e) {
-    console.error("GeoServer 'tb_boundary' load failed:", e)
-  }
-}
-
-const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_test_layer` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
-let testBoundaryRings = []
-
-async function testLoadBoundary() {
-  try {
-    const testRes = await fetch(test_url);
-    const testData = await testRes.json();
-    testBoundaryRings = []; 
-    (testData.features || []).forEach(f => {
-      const geom = f.geometry;
-      if (!geom) return;
-      geom.coordinates.forEach(poly => {
-        const outerRing = poly[0]; 
-        testBoundaryRings.push(outerRing);
-      });
-    });
-    console.log('[testBoundaryRings]', testBoundaryRings);
-    testDrawBoundaryRings() 
-  } catch(e) {
-    console.error("GeoServer 'tb_test_layer' load failed:", e)
-  }
-}
-
-function testDrawBoundaryRings() {
-  if (!map) return;
-  testBoundaryRings.forEach(ring => {
-    const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon));
-    new window.naver.maps.Polyline({
-      map,
-      path,
-      strokeColor: '#0092BA',
-      strokeWeight: 3,
-      strokeOpacity: 0.9,
-    });
-  });
-  const bounds = new window.naver.maps.LatLngBounds();
-  testBoundaryRings.forEach(ring => {
-    ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon)));
-  });
-  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
-    map.fitBounds(bounds);
-  }
-}
-
-
-// [API] 내 위치 가져오기
+/**
+ * ============================================
+ *          지오로케이션 내 위치 보기
+ * ============================================
+ */ 
 function getLocation() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
-    (err) => { console.error('위치 실패:', err.message); },
+    (err) => { console.error('위치 실패: ' + err.message); },
     { enableHighAccuracy: true }
   )
 }
 
-// [API] 서버에 내 위치를 전송하는 테스트 로직 (500 에러 유발 가능성 있음)
+
+/**
+ * ============================================
+ *  내 위치 해안선 or 테스트 폴리곤 비교하고 거리 받기 
+ * ============================================
+ */ 
 function requestGeoLocation(value) {
   if (!navigator.geolocation) return;
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
+      // 1) 값 넣고
       latitude.value = pos.coords.latitude
       longitude.value = pos.coords.longitude
 
+      // 2) 서버로 보냄
       const payload = {
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
@@ -395,17 +339,11 @@ function requestGeoLocation(value) {
       console.log('sending to server:', payload)
 
       let axiosUrl;
-      
       if ( value === "test") {
         axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
       }
       if ( value === "boundary") {
         axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
-      }
-
-      if (!axiosUrl) {
-        console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
-        return;
       }
 
       try {
@@ -428,6 +366,107 @@ function requestGeoLocation(value) {
     },
     { enableHighAccuracy: true }
   )
+}
+
+/**
+ * ================================================
+ *                  폴리곤 만들기
+ * ================================================
+ */
+const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_boundary` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+// 해안선 가져오기
+let boundaryRings = [];
+
+async function loadBoundary() {
+  const res = await fetch(url);
+  const data = await res.json();
+
+  boundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (data.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      boundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', boundaryRings);
+}
+
+// =========== 테스트 데이터 (공카데미) ==========
+const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_test_layer` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+let testBoundaryRings = []
+
+async function testLoadBoundary() {
+  const testRes = await fetch(test_url);
+  const testData = await testRes.json();
+
+  testBoundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (testData.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      testBoundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', testBoundaryRings);
+
+  testDrawBoundaryRings() 
+}
+
+function testDrawBoundaryRings() {
+  if (!map) return;
+
+  testBoundaryRings.forEach(ring => {
+    // lon,lat → naver LatLng
+    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon));
+
+    new naver.maps.Polyline({
+      map,
+      path,
+      strokeColor: '#0092BA',
+      strokeWeight: 3,
+      strokeOpacity: 0.9,
+    });
+  });
+
+  // 보기 좋게 화면도 경계로 맞춰주자
+  const bounds = new naver.maps.LatLngBounds();
+  testBoundaryRings.forEach(ring => {
+    ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon)));
+  });
+  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
+    map.fitBounds(bounds);
+  }
 }
 
 </script>

@@ -44,38 +44,22 @@ const routes = [
     {
         path: '/login',
         name: 'Login',
-        component: LoginPage,
-        meta: {
-            enter: 'animate__animated animate__fadeInUp',
-            leave: 'animate__animated animate__fadeOutDown',
-        },
+        component: LoginPage
     },
     {
         path: '/register',
         name: 'Register',
-        component: RegisterPage,
-        meta: {
-            enter: 'animate__animated animate__fadeInUp',
-            leave: 'animate__animated animate__fadeOutDown',
-        },
+        component: RegisterPage
     },
     {
         path: '/find-account',
         name: 'FindAccount',
-        component: FindIdPasswordPage,
-        meta: {
-            enter: 'animate__animated animate__fadeInUp',
-            leave: 'animate__animated animate__fadeOutDown',
-        },
+        component: FindIdPasswordPage
     },
     {
         path: '/reset-password',
         name: 'ResetPassword',
-        component: ResetPasswordPage,
-        meta: {
-            enter: 'animate__animated animate__fadeInUp',
-            leave: 'animate__animated animate__fadeOutDown',
-        },
+        component: ResetPasswordPage
     },
 
     // ----------------------------------------------------
@@ -86,30 +70,12 @@ const routes = [
         component: AppLayout, // 레이아웃 적용
         children: [
             // 메인 및 기본 기능
-            { path: '', name: 'Main', component: MainPage,
-                meta: {
-                    enter: 'animate__animated animate__fadeIn',
-                    leave: 'animate__animated animate__fadeOut',
-                }
-            },
-            { path: 'safety-guide', name: 'SafetyGuide', component: SafetyGuidePage,
-                meta: {
-                    enter: 'animate__animated animate__fadeIn',
-                    leave: 'animate__animated animate__fadeOut',
-                }
-             },
+            { path: '', name: 'Main', component: MainPage},
+            { path: 'safety-guide', name: 'SafetyGuide', component: SafetyGuidePage},
 
             // 해수욕장
-            { path: 'beach-list', name: 'BeachList', component: BeachListPage,
-                meta: {
-                    enter: 'animate__animated animate__fadeIn',
-                    leave: 'animate__animated animate__fadeOut',
-                } },
-            { path: 'beach/:beachNumber', name: 'beachDetail', component: BeachDetailPage,
-                meta: {
-                    enter: 'animate__animated animate__fadeIn',
-                    leave: 'animate__animated animate__fadeOut',
-                }},
+            { path: 'beach-list', name: 'BeachList', component: BeachListPage },
+            { path: 'beach/:beachNumber', name: 'beachDetail', component: BeachDetailPage},
             // 그룹
             { path: 'group', name: 'GroupMain', component: GroupMainPage },
             { path: 'firebase', name: 'Firebase', component: FirebaseTest },
