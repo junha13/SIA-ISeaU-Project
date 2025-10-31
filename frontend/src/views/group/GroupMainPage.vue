@@ -267,8 +267,6 @@ async function loadBoundary() {
   console.log('[boundaryRings]', boundaryRings);
 }
 
-
-
 // =========== 테스트 데이터 (공카데미) ==========
 const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
   `?service=WFS` +
@@ -359,20 +357,11 @@ function requestGeoLocation(value) {
       console.log('sending to server:', payload)
 
       let axiosUrl;
-      
-      // 🚨 [버그 수정] = (할당)이 아닌 === (비교)를 사용해야 합니다.
       if ( value === "test") {
         axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
       }
-      // 🚨 [버그 수정] else if를 사용하거나, 여기서도 === 를 사용해야 합니다.
       if ( value === "boundary") {
         axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
-      }
-
-      // 🚨 axiosUrl이 설정되지 않았으면(value가 "test"도 "boundary"도 아니면) 실행 중지
-      if (!axiosUrl) {
-        console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
-        return;
       }
 
       try {
