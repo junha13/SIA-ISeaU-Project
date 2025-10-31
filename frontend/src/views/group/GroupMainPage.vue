@@ -45,6 +45,7 @@
         </div>
 
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
+        
         <div class="member-list">
           <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
             <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
@@ -89,6 +90,9 @@
 </template>
 
 <script setup>
+// ---------------------------------
+// 🐬 작동 로직 (JavaScript)
+// ---------------------------------
 import { ref, onMounted, computed, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router'; 
 import { useConfirmModal } from '@/utils/modalUtils';
@@ -111,19 +115,21 @@ const { showConfirmModal } = useConfirmModal();
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
-// --- State ---
+// --- State (기억 상자) ---
 const myGroupList = ref([]); 
 const activeGroupLocations = ref([]);
 const showInviteModal = ref(false); 
 const showCreateGroupModal = ref(false); 
 
-// --- Getters & Computed ---
+// --- Computed (자동 계산기) ---
 const hasGroup = computed(() => myGroupList.value.length > 0);
 
+// 그룹이 있으면 첫 번째 그룹의 ID를 활성 ID로 사용
 const activeGroupId = computed(() => {
   return hasGroup.value ? myGroupList.value[0].id : null;
 });
 
+// 멤버 목록에서 중복 제거
 const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
     const uniqueMembers = {};
@@ -136,29 +142,34 @@ const groupLocations = computed(() => {
 });
 
 
-// --- Actions ---
+// --- Actions (하는 일) ---
 const handleNotificationSettings = () => {
     console.log("알림 설정 버튼 클릭됨");
 };
 
+// [API] 내 그룹 목록을 서버에서 가져와 'myGroupList'를 채우는 일
+// 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
 const fetchGroups = async () => {
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`; 
         const response = await axios.get(url, { withCredentials: true });
-        myGroupList.value = response.data.data.result; 
+        myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
         
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
+        // 🐬 그룹이 존재하면 ID를 확정하여 활성 상태로 전환합니다.
         if (hasGroup.value) {
             console.log("[FetchGroups] 활성 그룹 ID:", activeGroupId.value);
         }
 
     } catch (error) {
         console.error('그룹 목록 조회 실패:', error, error.response);
-        myGroupList.value = []; 
+        myGroupList.value = []; // 실패하면 비워버림
     }
 };
 
+// [API] 현재 활성 그룹의 멤버 위치를 서버에서 가져오는 일
 const fetchLocations = async () => {
+    // 'activeGroupId'가 없으면(null) 일을 시작하지 않음
     if (!activeGroupId.value) {
         console.warn("[FetchLocations] Aborted: activeGroupId is null.");
         return;
@@ -169,69 +180,75 @@ const fetchLocations = async () => {
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
-        activeGroupLocations.value = response.data.data.result;
+        activeGroupLocations.value = response.data.data.result; // 결과를 'activeGroupLocations' 상자에 저장
     } catch (error) {
         console.error('그룹 위치 정보 조회 실패:', error);
-        activeGroupLocations.value = []; 
+        activeGroupLocations.value = []; // 실패하면 비워버림
     }
 };
 
+// [이벤트] 그룹 생성 성공 후 처리 (목록 갱신)
 const handleGroupCreated = (newGroupId) => {
-    showCreateGroupModal.value = false; 
+    showCreateGroupModal.value = false; // 생성 팝업창 스위치를 끔
     console.log(`[GroupCreate] 새 그룹 생성됨: ${newGroupId}. 그룹 목록 갱신...`);
-    fetchGroups(); 
+    fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 있음' 상태로 바꾸기 위해)
 };
 
-/**
- * 💡 [수정] 그룹 삭제 확인 - 로그 확인을 위해 모달을 건너뛰고 deleteGroup을 바로 호출합니다.
- */
+
 const confirmDeleteGroup = () => {
   if (!activeGroupId.value) return;
+  
+  // 🚨 deleteGroup을 호출합니다.
+  console.log(`[ConfirmDelete] 그룹 ID ${activeGroupId.value} 삭제 확인 건너뛰고 즉시 실행.`);
   deleteGroup(); 
 };
 
+// [API] 그룹 삭제 (서버 통신)
 const deleteGroup = async () => {
     if (!activeGroupId.value) return;
     
-    // 💡 [핵심] 이 로그가 찍히는지 확인하세요.
-    console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 시도 (API 호출 예정)...`);
+    console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출 시작...`);
     
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups/${activeGroupId.value}`; 
-        await axios.delete(url, { withCredentials: true }); 
+        await axios.delete(url, { withCredentials: true }); // 서버에 "이 그룹 삭제해줘!" 요청
         
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
-        activeGroupLocations.value = []; 
-        fetchGroups(); 
+        activeGroupLocations.value = []; // 멤버 위치 목록 비우기
+        fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 없음' 상태로 바꾸기 위해)
         
     } catch (error) {
-        // 🚨 500 에러는 여기서 잡힙니다.
-        console.error('[DeleteGroup] API 호출 실패 (서버 500 등):', error);
+        console.error('그룹 삭제 실패:', error);
         alert('그룹 삭제에 실패했습니다.');
     }
 };
 
-// --- Lifecycle & Watchers ---
+// --- Lifecycle & Watchers (자동으로 실행되는 코드) ---
+
+// 'loadGroupData'라는 작은 일 (fetchLocations 실행)
 const loadGroupData = () => {
   if (activeGroupId.value) {
     fetchLocations(); 
   }
 }
 
+// [자동] 'onMounted': 이 페이지(컴포넌트)가 화면에 처음 나타났을 때 *단 한 번* 실행
 onMounted(() => {
-  fetchGroups(); 
-  getLocation();
-  requestGeoLocation(null); 
+  fetchGroups(); // [일 1] 실행 (그룹 있는지 확인)
+  getLocation(); // 내 핸드폰 위치 켜기
+  requestGeoLocation(null); // (500 오류 방지를 위해 'test' 대신 null 전달)
 });
 
+// [자동] 'watch': 'activeGroupId' 상자를 *계속 지켜봅니다.*
 watch(activeGroupId, (newId, oldId) => {
+    // 'activeGroupId' 상자의 값이 바뀌면 (예: 그룹 생성 직후)
     if (newId) {
         console.log(`[Watcher] activeGroupId 변경됨: ${oldId} -> ${newId}. 위치 로드 시작...`);
-        loadGroupData();
+        loadGroupData(); // 'loadGroupData' 일을 실행
     }
-}, { immediate: true }); 
+}, { immediate: true }); // immediate: true (페이지 로드 시에도 일단 한 번 실행)
 
-// 더미 마커 스타일 함수
+// 'markerStyle': 더미 마커의 위치와 스타일을 정해주는 함수
 const markerStyle = (color) => ({
   backgroundColor: color || 'blue', 
   width: '12px',
@@ -244,32 +261,34 @@ const markerStyle = (color) => ({
 
 
 /* 지도 부분 */
-const latitude = ref('') 
-const longitude = ref('') 
+const latitude = ref('') // 내 위치(위도) 기억 상자
+const longitude = ref('') // 내 위치(경도) 기억 상자
 
+// [자동] 'watchEffect': 지도 객체 초기화 및 중심 설정
 watchEffect(() => {
   const lat = latitude.value
   const lng = longitude.value
 
+  // 재료가 하나라도 준비 안 됐거나, 그룹이 없으면(hasGroup: false) 지도를 그리지 않음
   if (!hasGroup.value || !lat || !lng || !mapEl.value || !window.naver?.maps) return
 
+  // 재료가 다 준비되면 Naver 지도 API를 사용해 지도를 그림
   const pos = new window.naver.maps.LatLng(lat, lng)
 
   if (!map) {
-    map = new window.naver.maps.Map(mapEl.value, {
-      center: pos,
-      zoom: 15
-    })
+    // (지도 그린 적 없으면) 새로 그림
+    map = new window.naver.maps.Map(mapEl.value, { center: pos, zoom: 15 })
     
-    // GeoServer 요청 (주석 없음 - 사용자 요청)
+    // GeoServer 요청 (사용자 요청으로 유지)
     window.naver.maps.Event.once(map, 'init', testLoadBoundary)
     loadBoundary()
   } else {
+    // (지도 그린 적 있으면) 중심 위치만 이동
     map.setCenter(pos)
   }
 })
 
-// --- GeoServer / Location (코드는 유지하되, 호출은 주석 처리됨) ---
+// --- GeoServer / Location (사용자 요청에 따라 유지됨) ---
 
 const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
   `?service=WFS` +
@@ -350,15 +369,17 @@ function testDrawBoundaryRings() {
 }
 
 
+// [API] 내 위치 가져오기
 function getLocation() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
-    (err) => { console.error('위치 실패: ' + err.message); },
+    (err) => { console.error('위치 실패:', err.message); },
     { enableHighAccuracy: true }
   )
 }
 
+// [API] 서버에 내 위치를 전송하는 테스트 로직 (500 에러 유발 가능성 있음)
 function requestGeoLocation(value) {
   if (!navigator.geolocation) return;
 
@@ -412,6 +433,10 @@ function requestGeoLocation(value) {
 </script>
 
 <style scoped>
+/* --------------------------------- */
+/* 🐬 디자인 (CSS) */
+/* --------------------------------- */
+
 .group-main-page {
   min-height: calc(100vh - 55px - 60px);
 }
@@ -450,7 +475,7 @@ function requestGeoLocation(value) {
 .action-button {
   font-size: 0.9rem;
   padding: 8px 12px; 
-  height: 42px;       
+  height: 42px;       /* 높이 통일 */
   text-align: center;
   border-width: 1px;
   min-width: 90px; /* 최소 너비로 크기 고정 */
