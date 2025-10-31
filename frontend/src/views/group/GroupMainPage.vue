@@ -20,7 +20,7 @@
       
       <div class="group-actions p-3">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 gap-2">
           
           <button
             class="btn fw-bold rounded-pill shadow-sm action-button notification-button" 
@@ -33,13 +33,13 @@
               class="btn fw-bold text-white rounded-pill shadow-sm action-button" 
               :style="{ backgroundColor: mainColor }" 
               @click="showInviteModal = true">
-              <i class="fas fa-user-plus me-1"></i> 그룹 초대
+              <i class="fas fa-user-plus me-1"></i> 초대
             </button>
             
             <button 
               class="btn fw-bold rounded-pill shadow-sm action-button btn-outline-danger" 
               @click="confirmDeleteGroup">
-              <i class="fas fa-trash me-1"></i> 그룹 삭제
+              <i class="fas fa-trash me-1"></i> 삭제
             </button>
           </div>
         </div>
@@ -182,20 +182,19 @@ const handleGroupCreated = (newGroupId) => {
     fetchGroups(); 
 };
 
+/**
+ * 💡 [수정] 그룹 삭제 확인 - 로그 확인을 위해 모달을 건너뛰고 deleteGroup을 바로 호출합니다.
+ */
 const confirmDeleteGroup = () => {
   if (!activeGroupId.value) return;
-  
-  showConfirmModal(
-    '그룹 삭제',
-    '정말로 이 그룹을 삭제하시겠습니까? 모든 멤버의 연결이 끊어집니다.',
-    () => deleteGroup() 
-  );
+  deleteGroup(); 
 };
 
 const deleteGroup = async () => {
     if (!activeGroupId.value) return;
     
-    console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 시도...`);
+    // 💡 [핵심] 이 로그가 찍히는지 확인하세요.
+    console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 시도 (API 호출 예정)...`);
     
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/groups/${activeGroupId.value}`; 
@@ -206,7 +205,8 @@ const deleteGroup = async () => {
         fetchGroups(); 
         
     } catch (error) {
-        console.error('그룹 삭제 실패:', error);
+        // 🚨 500 에러는 여기서 잡힙니다.
+        console.error('[DeleteGroup] API 호출 실패 (서버 500 등):', error);
         alert('그룹 삭제에 실패했습니다.');
     }
 };
@@ -221,7 +221,7 @@ const loadGroupData = () => {
 onMounted(() => {
   fetchGroups(); 
   getLocation();
-  requestGeoLocation(null); // 500 에러 방지
+  requestGeoLocation(null); 
 });
 
 watch(activeGroupId, (newId, oldId) => {
@@ -261,9 +261,9 @@ watchEffect(() => {
       zoom: 15
     })
     
-    // 💡 GeoServer (CORS/404 오류로 주석 처리)
-    // window.naver.maps.Event.once(map, 'init', testLoadBoundary)
-    // loadBoundary()
+    // GeoServer 요청 (주석 없음 - 사용자 요청)
+    window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+    loadBoundary()
   } else {
     map.setCenter(pos)
   }
@@ -446,39 +446,26 @@ function requestGeoLocation(value) {
   padding-top: 1rem; 
 }
 
-/* 💡 [제거] button-row의 position: absolute 관련 스타일 제거 */
-.button-row {
-  /* z-index, top, left 제거 */
-}
-
-/* 💡 [수정] 3개 버튼 공통 스타일 (flex-grow 제거) */
+/* 💡 [추가] 3개 버튼 공통 스타일 (크기 고정) */
 .action-button {
   font-size: 0.9rem;
   padding: 8px 12px; 
-  height: 42px;       /* 높이 통일 */
-  /* flex-grow: 1;    💡 [제거] 버튼이 늘어나는 원인 */
+  height: 42px;       
   text-align: center;
   border-width: 1px;
-  min-width: 90px; /* 💡 최소 너비로 크기 고정 */
-  /* flex-basis: 0;   💡 [제거] */
+  min-width: 90px; /* 최소 너비로 크기 고정 */
 }
 
 .notification-button {
   color: v-bind(darkColor); 
   border: 1px solid #dee2e6; 
   background-color: #e9ecef; 
-  /* flex-grow: 1; 💡 [제거] */
-}
-
-.invite-button {
-  /* flex-grow: 1; 💡 [제거] */
 }
 
 .btn-outline-danger {
   border-color: #dc3545;
   color: #dc3545;
   background-color: white; 
-  /* flex-grow: 1; 💡 [제거] */
 }
 
 .btn-outline-danger:hover {
