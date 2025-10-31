@@ -133,7 +133,7 @@ async function fetchRipCurrentData(beachNumber) {
 
 // 파고 데이터 가져오기
 async function fetchWaveData(beachNumber) {
-  const API_URL = `http://localhost:8080/api/beach/detail/${beachNumber}/danger`;
+  const API_URL = `http://172.168.10.15:8080/api/beach/detail/${beachNumber}/danger`;
 
   waveChartData.value = [];
   currentWaveHeight.value = null;

@@ -114,7 +114,7 @@ watch(
 async function requestBeachDetail(beachNumber) {
     try {
 const response = await axios.get(
-  `http://localhost:8080/api/beach/detail/${beachNumber}/info`,
+  `http://172.168.10.15:8080/api/beach/detail/${beachNumber}/info`,
    { headers: { Accept: 'application/json' }, timeout: 5000 }
   )
       beach.value = response.data.data.result

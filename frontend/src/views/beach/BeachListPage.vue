@@ -186,7 +186,7 @@ const apiError = ref(null);
 
 // 수정하기
 const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
-const BEACH_LIST_API_URL = 'http://localhost:8080/api/beach/beaches';
+const BEACH_LIST_API_URL = 'http://172.168.10.15:8080/api/beach/beaches';
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -235,7 +235,7 @@ async function loadData() {
 // 즐겨찾기
 const fetchFavoriteIds = async () => {
   try {
-    const res = await axios.get('http://localhost:8080/api/beach/favorites/my');
+    const res = await axios.get('http://172.168.10.15:8080/api/beach/favorites/my');
 
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
