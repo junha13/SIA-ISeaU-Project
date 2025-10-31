@@ -4,23 +4,6 @@
     :options="state.editorOption" 
     @change="onEditorChange($event)" 
   ></quill-editor>
-  <div>
-    <!-- <button
-      style="
-        border: none;
-        border-radius: 7px;
-        width: 100px;
-        height: 35px;
-        font-size: 23px;
-        margin-top: 30px;
-        background-color: rgb(209, 209, 209);
-        color: #2c3e50;
-      "
-      @click="submit(state, title)"
-    >
-      올리기
-    </button> -->
-  </div>
 </template>
 
 <script>
@@ -37,7 +20,6 @@ export default {
         modules: {
           toolbar: [
             ['bold', 'italic', 'underline', 'strike'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
             [{ size: ['small', false, 'large', 'huge'] }],
             [{ color: [] }, { background: [] }],
             [{ align: [] }],
@@ -86,10 +68,13 @@ export default {
 <style>
 .ql-toolbar {
   width: 100% !important;
+  border: 1px solid #ced4da !important;
 }
 .ql-container {
   width: 100% !important;
   height: 500px !important;
+  border: 1px solid #ced4da !important;
+  border-top: none;
 }
 .ql-editor {
   height: 500px;

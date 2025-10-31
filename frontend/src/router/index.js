@@ -14,7 +14,6 @@ import BeachDetailPage from '@/views/beach/BeachDetailPage.vue'
 import SafetyGuidePage from '@/views/safeguide/SafetyGuidePage.vue'
 
 // ✅ Views (Group)
-import GroupListPage from '@/views/group/GroupListPage.vue'
 import GroupMainPage from '@/views/group/GroupMainPage.vue'
 import FirebaseTest from '@/views/group/Firebase.vue'
 
@@ -45,22 +44,22 @@ const routes = [
     {
         path: '/login',
         name: 'Login',
-        component: LoginPage,
+        component: LoginPage
     },
     {
         path: '/register',
         name: 'Register',
-        component: RegisterPage,
+        component: RegisterPage
     },
     {
         path: '/find-account',
         name: 'FindAccount',
-        component: FindIdPasswordPage,
+        component: FindIdPasswordPage
     },
     {
         path: '/reset-password',
         name: 'ResetPassword',
-        component: ResetPasswordPage,
+        component: ResetPasswordPage
     },
 
     // ----------------------------------------------------
@@ -71,15 +70,14 @@ const routes = [
         component: AppLayout, // 레이아웃 적용
         children: [
             // 메인 및 기본 기능
-            { path: '', name: 'Main', component: MainPage },
-            { path: 'safety-guide', name: 'SafetyGuide', component: SafetyGuidePage },
+            { path: '', name: 'Main', component: MainPage},
+            { path: 'safety-guide', name: 'SafetyGuide', component: SafetyGuidePage},
 
             // 해수욕장
             { path: 'beach-list', name: 'BeachList', component: BeachListPage },
             { path: 'beach/:beachNumber', name: 'beachDetail', component: BeachDetailPage},
             // 그룹
-            { path: 'group', name: 'GroupList', component: GroupListPage },
-            { path: 'group/:id', name: 'GroupMain', component: GroupMainPage },
+            { path: 'group', name: 'GroupMain', component: GroupMainPage },
             { path: 'firebase', name: 'Firebase', component: FirebaseTest },
 
             // SOS

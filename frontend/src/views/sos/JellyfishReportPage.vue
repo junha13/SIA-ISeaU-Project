@@ -35,7 +35,7 @@
       <label class="fw-bold mb-2" :style="{ color: darkColor }">지도로 위치 조정</label>
       <div class="map-wrap rounded-3">
         <div ref="mapEl" class="map-box"></div>
-        <div class="center-pin">🤸‍♂️</div>
+        <div class="center-pin">📍</div>
       </div>
     </div>
 
@@ -60,7 +60,7 @@ const store = useStore();
 const { header } = storeToRefs(store)
 
 onMounted(() => {
-  header.value = '유해생물 제보'
+  header.value = '해파리 제보'
 })
 
 

@@ -19,6 +19,8 @@ import {
 
 import { CanvasRenderer } from 'echarts/renderers'
 
+import 'animate.css'
+
 use([
   BarChart, LineChart, PieChart, ScatterChart, MapChart,   // 차트 타입
   GridComponent, TooltipComponent, LegendComponent, TitleComponent,
