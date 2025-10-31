@@ -14,7 +14,6 @@ import BeachDetailPage from '@/views/beach/BeachDetailPage.vue'
 import SafetyGuidePage from '@/views/safeguide/SafetyGuidePage.vue'
 
 // ✅ Views (Group)
-import GroupListPage from '@/views/group/GroupListPage.vue'
 import GroupMainPage from '@/views/group/GroupMainPage.vue'
 import FirebaseTest from '@/views/group/Firebase.vue'
 
@@ -112,8 +111,7 @@ const routes = [
                     leave: 'animate__animated animate__fadeOut',
                 }},
             // 그룹
-            { path: 'group', name: 'GroupList', component: GroupListPage },
-            { path: 'group/:id', name: 'GroupMain', component: GroupMainPage },
+            { path: 'group', name: 'GroupMain', component: GroupMainPage },
             { path: 'firebase', name: 'Firebase', component: FirebaseTest },
 
             // SOS

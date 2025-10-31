@@ -171,4 +171,20 @@
         g.group_member = #{userNumber} -- 현재 로그인한 사용자
         AND g.group_accepted = 'N'     -- 'N' (초대 대기) 상태인 것만
 </select>
+<delete id="deleteGroupAsLeader" parameterType="int">
+        DELETE FROM tb_group g1
+        USING tb_group g2
+        WHERE
+            g2.group_number = #{groupId}
+            AND g1.group_leader = g2.group_leader
+            AND g1.group_name = g2.group_name
+    </delete>
+
+    <delete id="leaveGroupAsMember" parameterType="map">
+        DELETE FROM tb_group
+        WHERE
+            group_number = #{groupId}
+            AND group_member = #{userNumber}
+            AND group_leader != #{userNumber}
+    </delete>
 </mapper>

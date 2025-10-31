@@ -29,17 +29,24 @@ public class GroupsService {
 	
 	private final HttpSession session;
 
-	// 그룹생성
+	// Group
 	@Transactional
-	public Map<String, Object> createGroup(RequestGroupDTO dto) { // 파라미터는 유지하되 내부에서 임시 ID 사용
-		Map<String, Object> map = new HashMap<>();
-		dto.setGroupName(dto.getGroupName().trim());
-		dto.setUserId((Integer) session.getAttribute("userNumber"));
-		int num = dao.insertGroup(dto);
-		
-		
-		map.put("result", num == 1 ? "true" : "false");
-		return map;
+	public Map<String, Object> createGroup(RequestGroupDTO dto) {
+	    Map<String, Object> map = new HashMap<>();
+	    dto.setGroupName(dto.getGroupName().trim());
+	    dto.setUserId((Integer) session.getAttribute("userNumber"));
+	    
+	    int num = dao.insertGroup(dto); // ⬅️ 이 DTO에 새 ID가 담깁니다.
+	    
+	    if (num == 1) {
+	        map.put("result", "true");
+	        // 💡 [추가] DTO에 저장된 새 그룹 ID를 응답에 포함
+	        map.put("newGroupId", dto.getUserId()); 
+	    } else {
+	        map.put("result", "false");
+	    }
+	    
+	    return map;
 	}
 	
 	// 그룹명 더블체크
@@ -227,25 +234,71 @@ public class GroupsService {
 		map.put("result", locationList);
 		return map;
 	}
+	// GroupsService.java
+
+    /**
+     * 💡 [추가/수정] 그룹 삭제 또는 탈퇴
+     * - 로그인한 사용자가 그룹장이면 그룹 전체 삭제 (deleteGroupAsLeader)
+     * - 로그인한 사용자가 멤버이면 본인만 탈퇴 (leaveGroupAsMember)
+     */
+    @Transactional
+    public Map<String, Object> deleteOrLeaveGroup() {
+        // 1. 현재 로그인한 사용자 번호 가져오기
+        Integer userNumber = getLoggedInUserNumber();
+        if (userNumber == null) {
+            return createErrorResponse("로그인이 필요합니다.");
+        }
+
+        // 2. 현재 사용자가 보고 있는 그룹 ID(group_number) 찾기
+        // (싱글 그룹 정책이므로, 사용자의 첫 번째 그룹 ID를 가져옵니다)
+        List<ResponseGroupListItemDTO> groups = dao.findGroupsByUserNumber(userNumber);
+        if (groups.isEmpty()) {
+            return createErrorResponse("소속된 그룹이 없습니다.");
+        }
+        
+        int groupId = groups.get(0).getId(); // 사용자의 group_number PK
+
+        // 3. 이 그룹의 리더가 누구인지 확인
+        Integer groupLeaderNumber = dao.findGroupLeaderByGroupId(groupId);
+        if (groupLeaderNumber == null) {
+            return createErrorResponse("그룹 정보를 찾을 수 없습니다.");
+        }
+
+        // 4. [핵심] 리더와 본인 비교
+        if (userNumber.equals(groupLeaderNumber)) {
+            // 시나리오 1: 내가 그룹장이다 -> 그룹 전체 삭제
+            dao.deleteGroupAsLeader(groupId);
+        } else {
+            // 시나리오 2: 내가 그룹원이다 -> 나만 탈퇴
+            Map<String, Object> map = new HashMap<>();
+            map.put("groupId", groupId); // 나의 group_number(PK)
+            map.put("userNumber", userNumber); // 나의 userNumber
+            dao.leaveGroupAsMember(map);
+        }
+
+        Map<String, Object> successResponse = new HashMap<>();
+        successResponse.put("success", true);
+        return successResponse;
+    }
 	/**
 	 * [헬퍼 메서드]
 	 * 세션에서 현재 로그인된 사용자의 고유번호(userNumber)를 가져옵니다.
 	 * (이 메서드가 서비스 클래스 내에 이미 있는지 확인하세요.)
 	 * * @return 로그인된 사용자의 userNumber, 비로그인 시 null
 	 */
+	// GroupsService.java 내의 getLoggedInUserNumber() 헬퍼 메서드
 	private Integer getLoggedInUserNumber() {
-		Object userNumberObj = session.getAttribute("userNumber");
-		if (userNumberObj == null) {
-			return null; // 비로그인 상태
-		}
-		try {
-			// 500 에러(NPE)를 유발하는 (Integer) 형변환을 안전하게 처리
-			return (Integer) userNumberObj;
-		} catch (ClassCastException e) {
-			// 세션 데이터가 손상된 비정상적 경우
-			session.invalidate(); 
-			return null;
-		}
+	    Object userNumberObj = session.getAttribute("userNumber");
+	    if (userNumberObj == null) {
+	        return null; // ⬅️ 세션에 값이 없으면 안전하게 null 반환
+	    }
+	    try {
+	        // ⬅️ (Integer)로 안전하게 형변환
+	        return (Integer) userNumberObj; 
+	    } catch (ClassCastException e) {
+	        session.invalidate(); // 세션 데이터 손상 시 초기화
+	        return null;
+	    }
 	}
 	/**
 	 * 공통: 에러 응답 Map 생성

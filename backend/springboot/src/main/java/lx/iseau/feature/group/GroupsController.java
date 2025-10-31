@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 // import org.springframework.web.bind.annotation.RequestAttribute; // 임시 제거
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -140,4 +141,15 @@ public class GroupsController {
                 .header("api", "Groups/invitations/pending")
                 .body(Map.of("data", result));
     }
+    @RequestMapping("/{id}") 
+    public ResponseEntity<?> deleteGroup(@PathVariable("id") int id) {
+        // @PathVariable("id")는 받지만, 
+        // 서비스는 세션 ID를 기준으로만 동작하게 합니다.        
+        Map<String, Object> result = service.deleteOrLeaveGroup();
+        return ResponseEntity
+                .ok()
+                .header("api", "Groups/deleteGroup") // ⬅️ 헤더 추가
+                .body(Map.of("data", result));
+    }
+    
 }
