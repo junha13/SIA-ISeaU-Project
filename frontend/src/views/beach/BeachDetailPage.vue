@@ -7,7 +7,7 @@
         <button
             v-for="(tab, i) in tabs"
             :key="i"
-            class="btn flex-fill fw-bold py-2"
+            class="btn btn-sm flex-fill fw-bold"
             :class="{'text-white': activeTab===tab.key}"
             :style="{
               backgroundColor: activeTab === tab.key ? mainColor : 'transparent',
@@ -92,10 +92,10 @@ const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
 const tabs = [
-  { key: 'info', label: '상세정보', comp: BeachInfoTab },
-  { key: 'danger', label: '위험정보', comp: BeachDangerTab },
-  { key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
-  { key: 'depth', label: '수심지도', comp: BeachDepthTab },
+  { key: 'info', label: '상세', comp: BeachInfoTab },
+  { key: 'danger', label: '위험', comp: BeachDangerTab },
+  { key: 'weather', label: '날씨', comp: BeachWeatherTab },
+  { key: 'depth', label: '수심', comp: BeachDepthTab },
   { key: 'cctv', label: 'CCTV', comp: BeachCctvTab },
   { key: 'pest', label: '유해생물', comp: BeachJellyFish }
 ];
