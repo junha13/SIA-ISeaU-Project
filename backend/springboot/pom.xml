@@ -149,7 +149,11 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <nodeVersion>v22.17.1</nodeVersion> <npmVersion>10.9.2</npmVersion>    <arguments>install --legacy-peer-deps</arguments>
+                            <nodeVersion>v22.17.1</nodeVersion>
+                            <npmVersion>10.9.2</npmVersion>
+                            <arguments>install --legacy-peer-deps</arguments>
+                            <workingDirectory>../../frontend</workingDirectory>
+                            <installDirectory>${project.basedir}/../../frontend</installDirectory>
                         </configuration>
                     </execution>
                     <execution>
