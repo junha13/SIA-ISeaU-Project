@@ -62,7 +62,7 @@
 
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
-      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupList')">
+      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
         <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
       </div>
     </div>
