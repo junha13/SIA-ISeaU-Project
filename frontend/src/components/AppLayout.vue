@@ -75,9 +75,17 @@
       </div>
     </header>
 
-    <!-- ✅ Main Content -->
-    <main class="flex-grow-1 container-fluid p-0">
-      <router-view />
+        <!-- ✅ Main Content -->
+    <main class="flex-grow-1 container-fluid p-0 main-scroll">
+      <router-view v-slot="{ Component, route }" >
+        <transition
+          enter-active-class="animate__animated animate__fadeIn fast-route"
+          leave-active-class="animate__animated animate__fadeOut fast-route"
+          mode="out-in"
+        >
+          <component :is="Component" :key="route.fullPath" />
+        </transition>
+      </router-view>
     </main>
 
     <!-- ✅ Footer -->
@@ -113,7 +121,7 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
 import { useBeachStore } from '@/stores/beachStore'
@@ -262,10 +270,47 @@ function clickAlert() {
 function clickHam() {
   alert('햄버거 떠야할듯')
 }
+
+
+const isBack = ref(false)
+const stack = ref([])
+
+onMounted(() => {
+  // 1) 현재 페이지 먼저 넣어둔다
+  stack.value = [router.currentRoute.value.fullPath]
+
+  // 2) 이후부터는 이동마다 판단
+  router.beforeEach((to, from, next) => {
+    // 같은 데 또 가는 거면 그냥 통과
+    if (to.fullPath === from.fullPath) {
+      isBack.value = false
+      return next()
+    }
+
+    const i = stack.value.indexOf(to.fullPath)
+
+    if (i !== -1) {
+      // 이미 갔던 곳 → 뒤로가기
+      isBack.value = true
+      stack.value = stack.value.slice(0, i + 1)
+    } else {
+      // 처음 가는 곳 → 앞으로가기
+      isBack.value = false
+      stack.value.push(to.fullPath)
+    }
+    next()
+  })
+})
 </script>
 
 <style scoped>
 /* (이전 스타일 유지) */
+.main-scroll {
+  height: calc(100vh - 55px - 60px);
+  overflow-y: scroll;               
+  scrollbar-gutter: stable;           /* ✅ 크롬/엣지에서 덜 흔들리게 */
+  -webkit-overflow-scrolling: touch;  /* 모바일 부드럽게 */
+}
 #app {
   font-family: Arial, sans-serif;
   padding-bottom: 60px;
@@ -297,4 +342,18 @@ function clickHam() {
   background-color: rgba(0, 146, 186, 0.2);
 }
 
+.route-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.route-page {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fast-route {
+  animation-duration: .12s !important;
+}
 </style>

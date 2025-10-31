@@ -163,6 +163,9 @@ const goToPage = (pageName) => {
 </script>
 
 <style scoped>
+html, body {
+  overflow: hidden;   /* 바깥 스크롤 죽이기 */
+}
 /* Main Page Custom Styles */
 .main-page {
   /* App.vue의 padding-bottom만큼 고려하여 높이 설정 */
