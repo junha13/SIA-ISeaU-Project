@@ -3,7 +3,172 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="lx.iseau.feature.post.PostDAO">
+<mapper namespace="lx.iseau.feature.group.GroupsDAO">
 
+    <insert id="insertGroup" parameterType="RequestGroupDTO">
+		INSERT INTO tb_group (
+            group_leader, group_member, group_name,
+            group_accepted, marker_color
+        )
+		VALUES (
+            #{userId}, #{userId}, #{groupName},
+            'Y', 'blue'
+        )
+	</insert>
 
+    <select id="SelectdoubleCheckByGroupName" parameterType="RequestGroupDTO" resultType="Integer">
+        SELECT COUNT(*) AS cnt
+        FROM tb_group
+        WHERE
+        	group_leader = #{userId}
+        	AND group_name = #{groupName}
+    </select>
+
+    <select id="findUserNumberById" parameterType="string" resultType="Integer">
+        SELECT user_number
+        FROM tb_user
+        WHERE id = #{userId}
+    </select>
+
+    <select id="findGroupsByUserNumber" parameterType="int" resultType="ResponseGroupListItemDTO">
+        SELECT
+            g.group_number AS id,
+            g.group_name AS name,
+            (SELECT COUNT(*)
+             FROM tb_group gm
+             WHERE gm.group_leader = g.group_leader
+               AND gm.group_name = g.group_name
+               AND gm.group_accepted = 'Y' -- 수락한 멤버만 카운트
+            ) AS memberCount
+        FROM
+            tb_group g
+        WHERE
+            g.group_member = #{userNumber} -- 내가 멤버로 속한
+            AND g.group_accepted = 'Y' -- 수락된 그룹만
+        GROUP BY
+            g.group_number, g.group_name, g.group_leader
+        ORDER BY
+            g.group_name
+    </select>
+
+    <insert id="insertInvitation" parameterType="RequestGroupInviteDTO">
+        INSERT INTO tb_group (
+            group_leader,   group_member,   group_name,     group_accepted, marker_color
+        )
+        SELECT
+            g.group_leader,        -- 현재 그룹(groupId)의 리더
+            #{targetUserNumber},   -- 초대 대상자 (DTO에서 받음)
+            g.group_name,          -- 현재 그룹(groupId)의 이름
+            'N',                   -- 상태: 'N' (초대 대기)
+            #{markerColor}         -- DTO에서 받음
+        FROM tb_group g
+        WHERE g.group_number = #{groupId}
+        LIMIT 1 </insert>
+
+    <select id="findInvitationById" parameterType="int" resultType="InvitationDTO">
+        SELECT
+            g.group_number        AS invitationId,    g.group_number        AS groupId,
+            g.group_leader        AS inviterUserNumber, g.group_member        AS targetUserNumber,  'PENDING'             AS status,          g.marker_color        AS markerColor,
+            g.group_name          AS groupName
+            -- u.user_name AS inviterName (필요시 tb_user JOIN 추가)
+        FROM
+             tb_group g
+        WHERE
+            g.group_number = #{invitationId}
+            AND g.group_accepted = 'N' -- 'N' (초대 대기) 상태인 것만
+    </select>
+
+    <update id="updateInviteStatus" parameterType="map">
+        <if test="status == 'ACCEPTED'">
+            UPDATE tb_group
+            SET group_accepted = 'Y'
+            WHERE
+                group_number = #{invitationId}
+                AND group_accepted = 'N'
+        </if>
+        <if test="status == 'REJECTED'">
+            DELETE FROM tb_group
+            WHERE
+                group_number = #{invitationId}
+                AND group_accepted = 'N'
+        </if>
+    </update>
+
+    <insert id="insertGroupMember" parameterType="RequestGroupDTO">
+        INSERT INTO tb_group (
+            group_leader, group_member, group_name,
+            group_accepted, marker_color
+        ) VALUES (
+            #{groupLeader}, #{groupMember}, #{groupName},
+            'Y', #{markerColor}
+        )
+    </insert>
+
+   <select id="findGroupMemberLocations" parameterType="int" resultType="ResponseGroupMemberLocationDTO">
+        WITH CurrentGroup AS (
+            -- 1. 현재 groupId(PK)로 이 그룹의 논리적 키(group_leader, group_name)를 찾습니다.
+            SELECT
+                group_leader,
+                group_name
+            FROM
+                tb_group
+            WHERE
+                group_number = #{groupId}
+            LIMIT 1
+        )
+        -- 2. 위에서 찾은 논리적 키(leader, name)와 일치하는 모든 멤버를 조회합니다.
+        SELECT
+            u.user_number AS id,
+            ST_Y(u.location::geometry) AS lat,
+            ST_X(u.location::geometry) AS lng,
+            u.user_name AS name,
+            g.marker_color AS color,
+
+            -- 🚨 [핵심 수정]
+            -- group_accepted 값에 따라 status를 'online' 또는 'pending'으로 분기합니다.
+            CASE
+                WHEN g.group_accepted = 'Y' THEN 'online'
+                WHEN g.group_accepted = 'N' THEN 'pending'
+                ELSE 'unknown'
+            END AS status,
+
+            (NOW() AT TIME ZONE 'UTC')::TIMESTAMP AS lastUpdate
+        FROM
+            tb_group g
+        JOIN
+            tb_user u ON g.group_member = u.user_number
+        JOIN
+            CurrentGroup cg ON g.group_leader = cg.group_leader AND g.group_name = cg.group_name
+
+        -- 🚨 [핵심 수정]
+        -- 'Y'인 멤버만 필터링하는 WHERE 절을 삭제해야 'N'인 멤버도 보입니다.
+        -- WHERE
+        --    g.group_accepted = 'Y'
+
+    </select>
+
+    <select id="findGroupLeaderByGroupId" resultType="int" parameterType="int">
+    SELECT
+        group_leader
+    FROM
+        tb_group
+    WHERE
+        group_number = #{groupId} LIMIT 1
+</select>
+<select id="findPendingInvitationsByMember" parameterType="int" resultType="InvitationDTO">
+    SELECT
+        g.group_number        AS invitationId,
+        g.group_number        AS groupId,
+        g.group_leader        AS inviterUserNumber,
+        g.group_member        AS targetUserNumber,
+        'PENDING'             AS status,
+        g.marker_color        AS markerColor,
+        g.group_name          AS groupName,
+        (SELECT u.user_name FROM tb_user u WHERE u.user_number = g.group_leader) AS inviterName
+    FROM
+         tb_group g
+    WHERE
+        g.group_member = #{userNumber} -- 현재 로그인한 사용자
+        AND g.group_accepted = 'N'     -- 'N' (초대 대기) 상태인 것만
+</select>
 </mapper>

@@ -36,20 +36,24 @@
       </div>
     </div>
 
-    <!-- 해파리 탭 -->
+    <!-- 해파리 탭 해파리면 'jelly'여야하지않나 -->
     <div v-else-if="active === 'jelly'">
       <h6 class="fw-bold mb-3">
-        해파리 출현 정보:
-        <span :style="{ color: dangerData?.jelly === '주의' ? '#EB725B' : '#8482FF' }">
-          {{ dangerData?.jelly || '정보 없음' }}
+        현재 수온:
+        <span :style="{ color: '#0092BA' }">
+          {{ typeof currentTemp === 'number' ? currentTemp.toFixed(1) + '°C' : '정보 없음' }}
         </span>
       </h6>
-      <div class="border rounded p-3 text-center small">
-        <p>최근 신고 건수 및 위험 구역 표시</p>
+      <div class="border rounded p-2">
+        <v-chart
+          class="chart"
+          :option="seaSurfaceTemperatureChartOption"
+          style="width: 100%; height: 220px"
+          autoresize
+        />
       </div>
     </div>
 
-    <!-- 파고 탭 -->
     <div v-else>
       <h6 class="fw-bold mb-3">
         파고 높이:
@@ -100,7 +104,7 @@ const route = useRoute();
 const active = ref('rip');
 const dangerTabs = [
   { key: 'rip', label: '이안류', color: '#8482FF' },
-  { key: 'jelly', label: '해파리', color: '#EB725B' },
+  { key: 'temp', label: '수온', color: '#0092BA' },
   { key: 'wave', label: '파고', color: '#FFB354' },
 ];
 const tabStyle = (tab) => ({
@@ -112,6 +116,7 @@ const tabStyle = (tab) => ({
 
 // --- 데이터 상태 ---
 const currentWaveHeight = ref(null);
+const currentTemp = ref(null);
 const dangerData = computed(() => props.detailData?.danger);
 
 // 이안류 차트 데이터 (더미)
@@ -119,10 +124,10 @@ const ripChartData = ref(
   Array.from({ length: 12 }, (_, i) => [i, Math.floor(Math.random() * 2)])
 );
 
-// 파고 차트 데이터
-const waveChartData = ref([]); // Y축 값 배열
-// [수정] X축 레이블 (0시 ~ 23시, 2시간 간격 12개)
-const waveChartHours = ref(Array.from({ length: 12 }, (_, i) => `${i * 2}시`));
+// 차트 데이터
+const waveChartData = ref([]); // 파고 Y축
+const tempChartData = ref([]); // 수온 Y축
+const waveChartHours = ref(Array.from({ length: 24 }, (_, i) => `${i}시`)); // X축 (24개)
 
 // --- API 호출 ---
 
@@ -131,30 +136,33 @@ async function fetchRipCurrentData(beachNumber) {
   console.warn('[DangerTab] (Rip) 이안류 API 미구현. 더미 데이터 사용.');
 }
 
-// 파고 데이터 가져오기
+// 파고 및 수온 데이터 가져오기
 async function fetchWaveData(beachNumber) {
-  const API_URL = `http://localhost:8080/api/beach/detail/${beachNumber}/danger`;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/detail/${beachNumber}/danger`;
 
+  // 데이터 리셋
   waveChartData.value = [];
+  tempChartData.value = [];
   currentWaveHeight.value = null;
+  currentTemp.value = null;
 
   try {
-    console.log(`[DangerTab] (Wave) API 요청: ${API_URL}`);
+    console.log(`[DangerTab] (Wave/Temp) API 요청: ${API_URL}`);
     const response = await axios.get(API_URL);
-    console.log("[DangerTab] (Wave) API 전체 응답:", response);
+    console.log("[DangerTab] (Wave/Temp) API 전체 응답:", response);
 
     const history = response.data.data.result;
-    console.log("[DangerTab] (Wave) 파싱된 'history' 데이터:", history);
+    console.log("[DangerTab] (Wave/Temp) 파싱된 'history' 데이터:", history);
 
     if (!Array.isArray(history) || history.length === 0) {
-      console.warn(`[DangerTab] (Wave) 유효한 파고 데이터 없음.`);
+      console.warn(`[DangerTab] (Wave/Temp) 유효한 데이터 없음.`);
       return;
     }
 
     // 시간순 정렬
     history.sort((a, b) => new Date(a.forecastTime) - new Date(b.forecastTime));
 
-    // 현재 파고 높이 설정 (현재 시간과 가장 가까운 데이터)
+    // 현재 파고 및 수온 설정 (가장 가까운 데이터)
     const now = new Date();
     let closestData = null;
     let minDiff = Infinity;
@@ -170,6 +178,8 @@ async function fetchWaveData(beachNumber) {
         }
       } catch (e) { /* ignore */ }
     });
+
+    // 현재 파고 설정
     if (closestData && typeof closestData.waveHeight === 'number') {
       currentWaveHeight.value = closestData.waveHeight;
       console.log(`[DangerTab] (Wave) 현재 파고 높이 설정: ${currentWaveHeight.value}m`);
@@ -177,24 +187,40 @@ async function fetchWaveData(beachNumber) {
        console.warn(`[DangerTab] (Wave) 현재 파고 높이 찾기 실패.`);
     }
 
-    // --- [수정] 차트 데이터 생성 (단순화) ---
-    // API에서 받은 데이터 (history)에서 waveHeight 값만 추출 (최대 12개)
-    const chartData = history
-        .slice(0, 24) // 오늘 하루치 데이터 (최대 24개)
-        .filter((_, index) => index % 2 === 0) // 2시간 간격으로 데이터 선택 (12개)
-        .map(item => typeof item.waveHeight === 'number' ? item.waveHeight : undefined); // waveHeight 추출
-
-    // 만약 데이터가 12개 미만이면 나머지는 undefined로 채움
-    while (chartData.length < 12) {
-        chartData.push(undefined);
+    // 현재 수온 설정
+    if (closestData && typeof closestData.seaSurfaceTemperature === 'number') {
+      currentTemp.value = closestData.seaSurfaceTemperature;
+      console.log(`[DangerTab] (Temp) 현재 수온 설정: ${currentTemp.value}°C`);
+    } else {
+       console.warn(`[DangerTab] (Temp) 현재 수온 찾기 실패.`);
     }
 
-    console.log("[DangerTab] (Wave) 최종 차트 데이터 (Y축, 12개):", chartData);
-    waveChartData.value = chartData;
-    // waveChartHours는 고정값 사용
+    // --- 차트 데이터 생성 (파고/수온 분리) ---
+
+    // 1. 파고 차트 데이터 (1시간 간격, 24개)
+    const waveChartValues = history
+        .slice(0, 24)
+        .map(item => typeof item.waveHeight === 'number' ? item.waveHeight : undefined);
+
+    while (waveChartValues.length < 24) {
+        waveChartValues.push(undefined);
+    }
+    console.log("[DangerTab] (Wave) 최종 차트 데이터 (Y축, 24개):", waveChartValues);
+    waveChartData.value = waveChartValues;
+
+    // 2. 수온 차트 데이터 (1시간 간격, 24개)
+    const tempChartValues = history
+        .slice(0, 24)
+        .map(item => typeof item.seaSurfaceTemperature === 'number' ? item.seaSurfaceTemperature : undefined);
+
+    while (tempChartValues.length < 24) {
+        tempChartValues.push(undefined);
+    }
+    console.log("[DangerTab] (Temp) 최종 차트 데이터 (Y축, 24개):", tempChartValues);
+    tempChartData.value = tempChartValues;
 
   } catch (e) {
-    console.error("[DangerTab] 파고 데이터 로딩 실패:", e);
+    console.error("[DangerTab] 파고/수온 데이터 로딩 실패:", e);
   }
 }
 
@@ -289,30 +315,13 @@ const ripChartOption = computed(() => {
   };
 });
 
-// 파고 차트 옵션 (Line Chart)
+// 파고 차트 옵션 (변경 없음)
 const waveChartOption = computed(() => {
-  const data = waveChartData.value; // Y축 데이터 (API 결과)
-  const hours = waveChartHours.value; // X축 레이블 (0시, 2시, ...)
-
-  // 현재 시간에 해당하는 데이터 인덱스 찾기 (markPoint용)
+  const data = waveChartData.value; // Y축 (24개)
+  const hours = waveChartHours.value; // X축 (24개)
   const now = new Date();
   const currentHour = now.getHours();
-  let nowIndex = -1;
-   // '0시', '2시' ... 레이블과 현재 시간을 비교하여 가장 가까운 인덱스 찾기
-   let minHourDiff = Infinity;
-   hours.forEach((hourLabel, index) => {
-       const hourNum = parseInt(hourLabel.replace('시', ''));
-       const diff = Math.abs(currentHour - hourNum);
-       if (diff < minHourDiff) {
-           minHourDiff = diff;
-           nowIndex = index;
-       }
-       // 시간이 같으면 현재 시간이 더 가까운 쪽 선택 (오후 시간대 처리)
-        else if (diff === minHourDiff && hourNum > parseInt(hours[nowIndex].replace('시', ''))) {
-            nowIndex = index;
-        }
-   });
-
+  const nowIndex = currentHour;
 
   return {
     tooltip: {
@@ -335,15 +344,14 @@ const waveChartOption = computed(() => {
     },
     xAxis: [{ // X축 (시간)
       type: 'category',
-      data: hours, // '0시', '2시', ...
+      data: hours, // 24개
       position: 'bottom',
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
         color: '#6B7280',
         fontSize: 10,
-        interval: 0, // 모든 레이블 표시
-         // 'Now' 표시 제거 (X축 레이블만 사용)
+        interval: 1, // 2시간 간격
       },
       splitLine: { show: true, lineStyle: { color: '#EFEFEF', type: 'solid', opacity: 0.8 } },
     }],
@@ -357,10 +365,14 @@ const waveChartOption = computed(() => {
         fontWeight: 'bold', fontSize: 12, margin: 15,
         formatter: '{value}m'
       },
+      min: 0,
+      max: (value) => {
+        return Math.max(value.max, 1.5);
+      }
     },
-    series: [{ // 선 그래프
+    series: [{
       type: 'line',
-      data: data, // 파고 높이 배열
+      data: data, // 24개 데이터
       smooth: true,
       showSymbol: false,
       itemStyle: { color: '#FFB354' },
@@ -371,12 +383,92 @@ const waveChartOption = computed(() => {
           { offset: 1, color: 'rgba(255, 179, 84, 0.05)' }
         ])
       },
-      markPoint: { // 현재 값 표시 점
+      markPoint: {
         symbol: 'circle', symbolSize: 10,
         data: [{
-            // 현재 시간 인덱스를 사용하여 좌표 설정
             coord: nowIndex !== -1 && data[nowIndex] !== undefined ? [nowIndex, data[nowIndex]] : undefined,
-             itemStyle: { color: '#FFB354', borderColor: '#fff', borderWidth: 2 }
+            itemStyle: { color: '#FFB354', borderColor: '#fff', borderWidth: 2 }
+        }],
+        label: { show: false }
+      },
+      emphasis: { focus: 'series' },
+    }],
+  };
+});
+
+// 수온 차트 옵션
+const seaSurfaceTemperatureChartOption = computed(() => {
+  const data = tempChartData.value; // Y축 (24개)
+  const hours = waveChartHours.value; // X축 (24개)
+  const chartColor = '#0092BA';
+  const now = new Date();
+  const currentHour = now.getHours();
+  const nowIndex = currentHour;
+
+  return {
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        const param = params[0];
+        const xIndex = param.dataIndex;
+        const value = param.value;
+        if (value === null || typeof value === 'undefined') {
+          return `<b>${hours[xIndex]}</b><br/>수온: 정보 없음`;
+        }
+        return `<b>${hours[xIndex]}</b><br/>수온: ${value.toFixed(1)}°C`;
+      },
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      borderColor: '#333',
+      textStyle: { color: '#fff', fontSize: 12 },
+    },
+    grid: {
+      top: 20, bottom: 30, left: 50, right: 20,
+    },
+    xAxis: [{
+      type: 'category',
+      data: hours, // 24개
+      position: 'bottom',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: '#6B7280',
+        fontSize: 10,
+        interval: 1, // 2시간 간격
+      },
+      splitLine: { show: true, lineStyle: { color: '#EFEFEF', type: 'solid', opacity: 0.8 } },
+    }],
+    yAxis: { // Y축 (수온)
+      type: 'value',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: '#EFEFEF', type: 'solid', opacity: 0.8 } },
+      axisLabel: {
+        color: '#6B7280',
+        fontWeight: 'bold', fontSize: 12, margin: 15,
+        formatter: '{value}°C'
+      },
+      // [수정] Y축 범위를 10도에서 25도로 고정
+      min: 10,
+      max: 25
+    },
+    series: [{
+      type: 'line',
+      data: data, // 24개 데이터
+      smooth: true,
+      showSymbol: false,
+      itemStyle: { color: chartColor },
+      lineStyle: { width: 3, color: chartColor },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(0, 146, 186, 0.4)' },
+          { offset: 1, color: 'rgba(0, 146, 186, 0.05)' }
+        ])
+      },
+      markPoint: {
+        symbol: 'circle', symbolSize: 10,
+        data: [{
+            coord: nowIndex !== -1 && data[nowIndex] !== undefined ? [nowIndex, data[nowIndex]] : undefined,
+            itemStyle: { color: chartColor, borderColor: '#fff', borderWidth: 2 }
         }],
         label: { show: false }
       },
@@ -401,4 +493,3 @@ onMounted(() => {
   height: 220px;
 }
 </style>
-

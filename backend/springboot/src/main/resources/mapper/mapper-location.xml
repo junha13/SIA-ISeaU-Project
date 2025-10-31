@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lx.iseau.feature.location.LocationDAO">
+
+	<select id="selectBoundaryCheck" parameterType="RequestUserLocationDTO" resultType="ResponseUserLocationDTO"> 
+	  WITH
+	    -- 1) 클라이언트가 보낸 위치 (WGS84 = 4326) → 5186으로 변환
+	    user_pt AS (
+	      SELECT ST_Transform(
+	               ST_SetSRID(
+	                 ST_MakePoint(#{longitude}, #{latitude}), 4326
+	               ),
+	               5186
+	             ) AS geom
+	    ),
+	    -- 2) 경계도 4326로 저장돼 있으니까 여기서만 5186으로 변환
+	    boundary AS (
+	      SELECT ST_Transform(geom, 5186) AS geom
+	      FROM tb_boundary
+	      LIMIT 1
+	    )
+	  SELECT
+	    ST_Intersects(u.geom, b.geom) AS inside,             
+	    ST_Distance(u.geom, ST_Boundary(b.geom)) AS distance    
+	  FROM user_pt u, boundary b;
+	</select>
+	
+	<select id="selectTestCheck" parameterType="RequestUserLocationDTO" resultType="ResponseUserLocationDTO"> 
+	  WITH
+	    -- 1) 클라이언트가 보낸 위치 (WGS84 = 4326) → 5186으로 변환
+	    user_pt AS (
+	      SELECT ST_Transform(
+	               ST_SetSRID(
+	                 ST_MakePoint(#{longitude}, #{latitude}), 4326
+	               ),
+	               5186
+	             ) AS geom
+	    ),
+	    -- 2) 경계도 4326로 저장돼 있으니까 여기서만 5186으로 변환
+	    testlayer AS (
+	      SELECT ST_Transform(geom, 5186) AS geom
+	      FROM tb_test_layer
+	      LIMIT 1
+	    )
+	  SELECT
+	    ST_Intersects(u.geom, b.geom) AS inside,             
+	    ST_Distance(u.geom, ST_Boundary(b.geom)) AS distance    
+	  FROM user_pt u, testlayer b;
+	</select>
+
+</mapper>

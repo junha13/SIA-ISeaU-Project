@@ -15,8 +15,11 @@
       <div class="form-group mb-3">
         <input type="email" class="form-control" placeholder="이메일" v-model="email">
       </div>
-      <div class="form-group mb-3">
-        <input type="tel" class="form-control" placeholder="전화번호" v-model="phone">
+      <div class="form-group mb-3 d-flex gap-2">
+        <!-- 전화번호를 3-4-4로 분리 입력 받음 -->
+        <input type="tel" class="form-control" placeholder="010" v-model="phone1" maxlength="3">
+        <input type="tel" class="form-control" placeholder="1234" v-model="phone2" maxlength="4">
+        <input type="tel" class="form-control" placeholder="5678" v-model="phone3" maxlength="4">
       </div>
       <div class="form-group mb-3">
         <input type="date" class="form-control" placeholder="생년월일" v-model="birthDate">
@@ -27,26 +30,24 @@
         <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="id">
         <button 
           class="btn fw-bold text-white" 
-          :style="{ backgroundColor: isIdChecked ? '#28a745' : mainColor, minWidth: '100px' }" 
+          :style="{ backgroundColor: (isIdChecked && passwordsMatch) ? '#dedede' : (isIdChecked ? '#28a745' : mainColor), minWidth: '100px', opacity: (isIdChecked && passwordsMatch) ? 0.65 : 1 }"
           @click="checkId"
           :disabled="isIdChecked">
           {{ isIdChecked ? '완료됨' : '중복확인' }}
         </button>
       </div>
 
-      <div class="form-group mb-3 d-flex gap-2">
-        <input type="password" class="form-control" placeholder="비밀번호 (영어 + 숫자, 8자 이상)" v-model="password">
-        <button 
-          class="btn fw-bold text-white" 
-          :style="{ backgroundColor: isPasswordValid ? '#28a745' : mainColor, minWidth: '100px' }" 
-          @click="handleCheckPassword"
-          :disabled="isPasswordValid">
-          {{ isPasswordValid ? '완료됨' : '확인' }}
-        </button>
+      <div class="form-group mb-3">
+        <input type="password" class="form-control" placeholder="비밀번호" v-model="password">
       </div>
 
       <div class="form-group mb-4">
         <input type="password" class="form-control" placeholder="비밀번호 확인" v-model="passwordConfirm">
+        <div class="mt-2">
+          <small :class="passwordsMatch ? 'text-success' : (passwordConfirm ? 'text-danger' : 'text-muted')">
+            {{ passwordsMatch ? '비밀번호가 일치합니다.' : (passwordConfirm ? '비밀번호가 일치하지 않습니다.' : '비밀번호 확인을 입력하세요.') }}
+          </small>
+        </div>
       </div>
 
       <!-- Register Button -->
@@ -65,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { authApi } from '@/api/auth';
 
@@ -77,7 +78,9 @@ const dangerColor = '#EB725B';
 
 const name = ref('');
 const email = ref('');
-const phone = ref('');
+const phone1 = ref('010');
+const phone2 = ref('');
+const phone3 = ref('');
 const birthDate = ref('');
 const id = ref('');
 const password = ref('');
@@ -85,17 +88,18 @@ const passwordConfirm = ref('');
 const isIdChecked = ref(false);
 const isCheckingId = ref(false);
 const isRegistering = ref(false);
-const isPasswordValid = ref(false);
+
+// 라이브 비밀번호 일치 상태 (형식 검사는 하지 않음)
+const passwordsMatch = computed(() => {
+  return passwordConfirm.value.length > 0 && password.value === passwordConfirm.value;
+});
 
 // id이 바뀌면 기존 중복확인 상태 초기화
 watch(id, () => {
   isIdChecked.value = false;
 });
 
-// password가 바뀌면 기존 비밀번호 확인 상태 초기화
-watch(password, () => {
-  isPasswordValid.value = false;
-});
+// (기존에는 수동 확인 버튼으로 처리했으나) 실시간으로 유효성/일치 여부를 표시하므로 별도 초기화가 필요 없습니다.
 
 const checkId = async () => {
   console.log('중복확인 버튼 클릭됨');
@@ -144,21 +148,11 @@ const checkId = async () => {
   }
 };
 
-// 비밀번호 유효성 검사
-const handleCheckPassword = () => {
-  if (password.value.length < 8 || !/[a-zA-Z]/.test(password.value) || !/[0-9]/.test(password.value)) {
-    alert('비밀번호는 영어, 숫자를 포함하여 8자 이상이어야 합니다.');
-    isPasswordValid.value = false;
-    return;
-  }
-  isPasswordValid.value = true;
-  alert('비밀번호가 안전합니다.');
-};
 
 
 const handleRegister = async () => {
   // 필수 입력값 검증 추가
-  if (!name.value || !email.value || !phone.value || !birthDate.value) {
+  if (!name.value || !email.value || !phone1.value || !phone2.value || !phone3.value || !birthDate.value) {
     alert('모든 정보를 입력해주세요.');
     return;
   }
@@ -169,9 +163,9 @@ const handleRegister = async () => {
     return;
   }
   
-  // 전화번호 형식 검증 (010-XXXX-XXXX)
-  if (!/^010-\d{4}-\d{4}$/.test(phone.value)) {
-    alert('전화번호는 010-XXXX-XXXX 형식이어야 합니다.');
+  // 전화번호 분리 입력 검증 (3-4-4)
+  if (!/^\d{3}$/.test(phone1.value) || !/^\d{4}$/.test(phone2.value) || !/^\d{4}$/.test(phone3.value)) {
+    alert('전화번호는 3-4-4 숫자 형식으로 입력해야 합니다. 예: 010 1234 5678');
     return;
   }
   
@@ -179,20 +173,25 @@ const handleRegister = async () => {
     alert('아이디 중복 확인이 필요합니다.');
     return;
   }
-  if (!isPasswordValid.value) {
-    alert('비밀번호 확인 버튼을 눌러 유효성을 검사해야 합니다.');
-    return;
-  }
+
   if (password.value !== passwordConfirm.value) {
     alert('비밀번호 확인이 일치하지 않습니다.');
     return;
   }
 
   // 백엔드 RegisterDTO 필드명에 맞게 매핑
+  // 입력된 분리 전화번호를 합쳐서 서버의 RegisterDTO 필드(mobile 또는 mobile1/2/3)로 전송
+  const composedPhone = `${phone1.value}-${phone2.value}-${phone3.value}`;
+
   const userData = {
     userName: name.value,
     email: email.value,
-    mobile: phone.value,
+    // 서버는 RegisterDTO.getMobile()에서 mobile1/2/3을 합쳐 처리하므로
+    // mobile 필드에 합친 문자열을 전송하거나 mobile1/mobile2/mobile3 각각을 전송해도 됩니다.
+    mobile: composedPhone,
+    mobile1: phone1.value,
+    mobile2: phone2.value,
+    mobile3: phone3.value,
     birthDate: birthDate.value,
     id: id.value,
     password: password.value,

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
@@ -13,19 +14,27 @@ public class JellyfishReportService {
 	
 	@Autowired
 	JellyfishReportDAO dao;
+	@Autowired
+    FileStorageService fileStorageService;
+
 
     @Transactional
-    public int createReport(JellyfishReportDTO dto) {
-        if (dto.getLat() == null || dto.getLon() == null)
-            throw new IllegalArgumentException("위도/경도는 필수입니다.");
-        if (dto.getLat() < -90 || dto.getLat() > 90)
-            throw new IllegalArgumentException("lat 범위는 -90~90 입니다.");
-        if (dto.getLon() < -180 || dto.getLon() > 180)
-            throw new IllegalArgumentException("lon 범위는 -180~180 입니다.");
-        if (dto.getAdminApproval() == null)
-            dto.setAdminApproval("N");
+    public Integer createReport(JellyfishReportDTO dto, MultipartFile imageFile) {
+        // 파일 저장 → 접근 가능한 URL 반환 (예: "/files/2025/10/xxx.jpg")
+        String savedUrl = null;
+        if (imageFile != null && !imageFile.isEmpty()) {
+            savedUrl = fileStorageService.store(imageFile);
+        }
+        dto.setImageUrl(savedUrl);                 // DB에는 URL만 저장
 
-        Integer id = dao.insertReport(dto);     // ← RETURNING 값 받기
-        return id;
+        // ✅ 파일이 없으면 빈 문자열로 보정하여 DB NOT NULL/제약을 회피
+        if (dto.getImageUrl() == null) dto.setImageUrl("");
+
+        if (dto.getAdminApproval() == null || dto.getAdminApproval().isBlank()) {
+            dto.setAdminApproval("N");            // 기본값 보완(안전)
+        }
+
+        dao.insertReport(dto);      // useGeneratedKeys로 reportNumber 채워짐
+        return dto.getReportNumber();
     }
 }

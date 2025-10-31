@@ -22,4 +22,6 @@ public class BeachVO {
     private String mobile;
     private LocalDate openDate;
     private LocalDate closeDate;
+    private int reviewCount;
+
 }

@@ -14,4 +14,6 @@ public class BeachListRequest {
     private String region;     
     private String sort;
     private String category;
+    private Integer page;      // 1부터
+    private Integer size;      // 10까지
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364198809841",
+    "project_id": "iseau-87e6d",
+    "storage_bucket": "iseau-87e6d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364198809841:android:bf59c81cc0637936729950",
+        "android_client_info": {
+          "package_name": "com.lx.iseau"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5Ou3UVS90IQIqLrZKWjxvUXHaXaB99AE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

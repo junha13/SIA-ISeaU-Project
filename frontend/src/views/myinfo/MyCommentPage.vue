@@ -79,7 +79,18 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+
+const store = useStore();
+
+const { header } = storeToRefs(store)
+
+onMounted(() => {
+  header.value = '내 댓글 목록'
+})
+
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';

@@ -35,11 +35,11 @@
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
           
-          <h1 v-if="header === mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
-            <img class="mt-n2" src="/public/iseau.ico" style="min-width: 30px; max-width: 30px;">
+          <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
+            <img class="mt-n2" src="/iseau.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}
           </h1>
-          <h1 v-else="header !== mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
+          <h1 v-else="header !== mainHeaderName" class="fw-bolder mb-0" :style="{ color: darkColor, fontSize: '1.5rem' }">
             <i class="ki-duotone ki-arrow-left fs-2" @click="goBack()">
               <span class="path1"></span>
               <span class="pat2"></span>
@@ -48,8 +48,29 @@
           </h1>
         </div>
         <div class="d-flex align-items-center">
-          <i class="fas fa-bell fs-5 me-3" :style="{ color: dangerColor }"></i>
-          <i class="fas fa-bars fs-5"></i>
+          <i class="fas fa-bell fs-1 me-5" :style="{ color: dangerColor }" @click="clickAlert"></i>
+          <button
+            class="bg-transparent border-0 p-2 burger-btn"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sideMenu"
+            aria-controls="sideMenu"
+            aria-label="menu"
+          >
+            <i class="fas fa-bars mt-3 fs-1 me-4 navbar-toggler-icon"></i>
+          </button>
+        </div>
+      </div>
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 38%;">
+        <div class="offcanvas-header border-3 border-bottom shadow-sm">
+          <span class="offcanvas-title fw-bold mt-2" style="font-size: 17px;">메뉴</span>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">해수욕장 목록</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">위험도 / 예보</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">즐겨찾기</a>
+          <a class="d-block mb-3 text-dark text-decoration-none" href="#">마이페이지</a>
         </div>
       </div>
     </header>
@@ -74,9 +95,9 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/group')">그룹</span>
         </div>
 
-        <div class="nav-item-custom" @click="goTo('/beach/1')">
-          <i class="fas fa-swimmer fs-4 mb-1" :style="navIconStyle('/beach/1')"></i>
-          <span class="fs-7 fw-bold" :style="navTextStyle('/beach/1')">해수욕장</span>
+        <div class="nav-item-custom" @click="goToSelectedBeach">
+          <i class="fas fa-swimmer fs-4 mb-1" :style="navIconStyle('/beach')"></i>
+          <span class="fs-7 fw-bold" :style="navTextStyle('/beach')">해수욕장</span>
         </div>
 
         <!-- 내정보 탭 (MyInfo 라우트 연결) -->
@@ -150,6 +171,26 @@ const handleGroupInviteConfirm = (isAccepted) => {
   groupStore.receivedInvitation = null;
 }
 
+// 사용자가 선택한 해수욕장 번호
+const { selectedBeachId } = storeToRefs(beachStore) // 숫자 또는 null
+
+function goToSelectedBeach() {
+  const id = Number(selectedBeachId.value || 0); // 0/null ⇒ 미선택
+  if (id > 0) {
+    // 선택된 해수욕장 상세로 이동
+    router.push(`/beach/${id}`)
+  } else {
+    // 미선택 ⇒ 안내 후 리스트로
+    showConfirmModal({
+      title: '알림',
+      message: '현재 선택된 해수욕장이 없습니다.\n해수욕장 목록 페이지로 이동합니다.',
+      type: 'info',
+      autoHide: true,
+      duration: 1500
+    })
+    router.push({ name: 'BeachList' })
+  }
+}
 
 const goTo = (path) => {
   // 해수욕장 상세 페이지 (선택된 해수욕장 확인 로직)
@@ -187,7 +228,7 @@ const isMyInfoActive = computed(() => route.path.startsWith('/my-info'))
 
 const navIconStyle = (path) => {
   let isActive = false
-  if (path === '/beach/1') {
+  if (path === '/beach') {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
@@ -201,7 +242,7 @@ const navIconStyle = (path) => {
 
 const navTextStyle = (path) => {
   let isActive = false
-  if (path === '/beach/1') {
+  if (path === '/beach') {
     isActive = isBeachActive.value
   } else if (path === '/group') {
     isActive = isGroupActive.value
@@ -211,6 +252,15 @@ const navTextStyle = (path) => {
     isActive = route.path === path
   }
   return { color: isActive ? mainColor : 'white' }
+}
+
+
+function clickAlert() {
+  alert('알림떠야할듯')
+}
+
+function clickHam() {
+  alert('햄버거 떠야할듯')
 }
 </script>
 

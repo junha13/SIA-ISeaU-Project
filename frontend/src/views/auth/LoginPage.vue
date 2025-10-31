@@ -49,7 +49,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
-import { getTokenAndSave} from "../../../fcmUtils.js";
+import { getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -97,6 +97,34 @@ const handleLogin = async () => {
     authStore.userInfo.mobile = userData.mobile || null;
 
     console.log('로그인 후 저장된 정보:', authStore.userInfo);
+
+    // === 세션/로컬 저장소에 로그인 정보 저장 ===
+    // 목적: 페이지 새로고침이나 동일 세션 내에서 로그인 상태를 유지하기 위함
+    // 동작 원리:
+    // - rememberMe 체크 시에는 localStorage에 저장하여 브라우저 종료 후에도 유지
+    // - 체크하지 않으면 sessionStorage에 저장하여 탭/세션이 종료되면 사라짐
+    const sessionPayload = {
+      isAuthenticated: true,
+      userInfo: {
+        userNumber: userData.user_number,
+        id: userData.id,
+        userName: userData.user_name,
+        mobile: userData.mobile || null,
+      }
+    };
+    try {
+      if (rememberMe.value) {
+        // 장기 저장 (브라우저 종료 후에도 유지)
+        localStorage.setItem('auth', JSON.stringify(sessionPayload));
+      } else {
+        // 세션 저장 (탭/브라우저 종료 시 자동 제거)
+        sessionStorage.setItem('auth', JSON.stringify(sessionPayload));
+      }
+      // Pinia 스토어에 saveToSession 헬퍼가 있으면 호출해 동기화 유지
+      if (typeof authStore.saveToSession === 'function') authStore.saveToSession();
+    } catch (e) {
+      console.error('Failed to persist auth info', e);
+    }
 
 
     console.log('FCM에 전달할 userNumber:', userData.user_number);

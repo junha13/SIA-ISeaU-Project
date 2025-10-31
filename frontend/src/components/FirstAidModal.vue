@@ -28,12 +28,29 @@
                 {{ step.firstAidContent || '단계' }}
               </h6>
 
-              <!-- 이미지 -->
-              <div v-if="step.firstAidImage && step.firstAidImage.trim() !== ''"
-                  class="rounded bg-light border d-flex justify-content-center align-items-center mb-2"
-                  style="height: 120px; overflow: hidden;">
-                <img :src="step.firstAidImage" alt="" style="max-height: 100%; max-width: 100%; object-fit: cover;">
+              <!-- 미디어(동영상 or 이미지) -->
+              <div v-if="step.firstAidImage && step.firstAidImage.trim() !== ''" class="mb-2">
+                <!-- 동영상 -->
+                <div v-if="isVideo(step.firstAidImage)" class="media-wrapper rounded bg-light border overflow-hidden">
+                  <video
+                    :key="step.firstAidImage"
+                    :src="toAbs(step.firstAidImage)"
+                    controls
+                    playsinline
+                    muted
+                    preload="metadata"
+                    style="width:100%; height:auto; display:block;"
+                    type="video/mp4"
+                  ></video>
+                </div>
+
+                <!-- 이미지 -->
+                <div v-else class="rounded bg-light border d-flex justify-content-center align-items-center overflow-hidden">
+                  <img :src="toAbs(step.firstAidImage)" alt=""
+                      style="max-height: 100%; max-width: 100%; object-fit: cover;">
+                </div>
               </div>
+
 
               <!-- 회색 가이드 박스: firstAidDescription을 줄 단위로 -->
               <div v-if="splitDesc(step.firstAidDescription).length" class="mb-2">
@@ -105,6 +122,15 @@ const splitDesc = (val) => {
     .map(s => s.replace(/^[•\-\u2022·]\s*/, '').trim()) // 앞 불릿기호 제거
     .filter(Boolean);
 };
+
+const isVideo = (url) => /\.(mp4|webm|ogg)(\?.*)?$/i.test(url || '');
+// 상대경로 → 절대경로(/images/...)로 보정
+const toAbs = (url) => {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;   // 이미 절대 URL이면 그대로
+  return url.startsWith('/') ? url : `/${url}`; // 앞에 / 붙여 절대경로로
+};
+
 </script>
 
 <style scoped>

@@ -1,44 +1,22 @@
 <template>
-  <div class="group-main-page">
-    <!-- 1. Header (뒤로가기 버튼 추가) -->
-    <div class="d-flex align-items-center justify-content-between p-3 border-bottom shadow-sm">
-      <div class="d-flex align-items-center">
-        <!-- 뒤로 가기 버튼 -->
-        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.push({ name: 'GroupList' })" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <!-- 현재 그룹명 표시 -->
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">{{ activeGroupName }} 위치 알림</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
-        <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
-      </div>
+  <div class="group-main-page" style="position: relative;">
+    <div ref="mapEl" style="width:100%;height:300px;"></div>
+
+    <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
+      <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="fetchLocations">
+        내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
+      </button>
+      <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
+        <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
+      </button>
     </div>
 
-    <!-- 2. 지도 영역 -->
-    <div class="map-area position-relative" style="height: 400px; background-color: #f0f0f0;">
-      <!-- 지도 Placeholder -->
-      <div class="h-100 w-100 d-flex justify-content-center align-items-center text-muted fw-bold">
-        지도 영역 (그룹 ID: {{ activeGroupId }})
-      </div>
-
-      <!-- 지도 오버레이 버튼 -->
-      <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
-        <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;">
-          내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
-        </button>
-        <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
-          <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
-        </button>
-      </div>
-
-      <!-- 멤버 마커 (더미) -->
-      <div v-for="member in groupLocations" :key="member.id"
-           :style="markerStyle(member.color)"
-           class="position-absolute rounded-circle shadow-sm">
-      </div>
+    <div v-for="member in groupLocations" :key="member.id"
+         :style="markerStyle(member.color)"
+         class="position-absolute rounded-circle shadow-sm">
     </div>
 
-    <!-- 3. 그룹 액션 & 멤버 리스트 -->
+
     <div class="group-actions p-3">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <button class="btn btn-light-secondary fw-bold rounded-pill" style="background-color: #e9ecef;">
@@ -49,73 +27,154 @@
         </button>
       </div>
 
-      <!-- 그룹 멤버 리스트 -->
       <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
       <div class="member-list">
         <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
-          <!-- 마커 색상 구분 선 -->
           <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
 
-          <!-- 멤버 정보 -->
           <div class="flex-grow-1">
             <h6 class="fw-bolder mb-0 fs-6">{{ member.name }} <span class="small text-muted fw-normal ms-1">{{ member.username }}</span></h6>
             <p class="text-secondary small mb-0">{{ member.phone }}</p>
           </div>
 
-          <!-- 상태 및 액션 -->
           <div class="d-flex align-items-center">
-            <span :class="['small fw-bold', member.status === '활동 중' ? 'text-success' : 'text-danger']">{{ member.status }}</span>
+
+            <span v-if="member.status === 'online'" class="text-success small fw-bold">
+              online
+            </span>
+            <span v-else-if="member.status === 'pending'" class="text-muted small fw-bold">
+              (초대 중)
+            </span>
             <i class="fas fa-comment-dots text-secondary ms-3 me-3" style="cursor: pointer;"></i>
             <i class="fas fa-ellipsis-v text-secondary" style="cursor: pointer;"></i>
           </div>
         </div>
-      </div>
+        </div>
     </div>
 
-    <!-- 그룹원 추가 모달 -->
     <GroupInviteModal v-model:isVisible="showInviteModal" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { useGroupStore } from '@/stores/groupStore.js';
+import { ref, onMounted, computed, watch, watchEffect } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useConfirmModal } from '@/utils/modalUtils';
+import axios from 'axios';
 import GroupInviteModal from '@/components/GroupInviteModal.vue';
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+
+const mapEl = ref(null)
+let map, marker
+
 const route = useRoute();
+const router = useRouter();
+const { showConfirmModal } = useConfirmModal();
+
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const dangerColor = '#EB725B';
 
-const groupStore = useGroupStore();
+// --- State ---
+const myGroupList = ref([]);
+const activeGroupLocations = ref([]);
+const receivedInvitation = ref(null);
 const showInviteModal = ref(false);
 
-// 라우트 파라미터에서 그룹 ID 가져오기
+// --- Getters & Computed ---
 const activeGroupId = computed(() => parseInt(route.params.id) || null);
-// 그룹 스토어의 그룹 목록에서 현재 그룹 이름 찾기
 const activeGroupName = computed(() =>
-    groupStore.getMyGroupList.find(g => g.id === activeGroupId.value)?.name || '그룹 위치 알림'
+    myGroupList.value.find(g => g.id === activeGroupId.value)?.name || '그룹 위치 알림'
 );
 
+/**
+ * [수정됨] 최종적으로 UI에 표시될 그룹 멤버 목록 (중복 제거 로직)
+ */
+const groupLocations = computed(() => {
+    const locations = activeGroupLocations.value;
+    const uniqueMembers = {};
 
-// Pinia에서 그룹 위치 정보 가져오기
-const groupLocations = computed(() => groupStore.getActiveGroupLocations);
+    // id (user_number)를 키로 사용하여 중복 제거
+    locations.forEach(member => {
+        // 중복될 경우, 나중에 들어온 값(일반적으로 더 정확한 리더 정보)으로 덮어씁니다.
+        // (PostgreSQL 쿼리에서 ORDER BY id, order_key를 사용했으므로 안정적입니다)
+        uniqueMembers[member.id] = member;
+    });
+
+    return Object.values(uniqueMembers);
+});
+
+
+// --- Actions ---
+
+/**
+ * 그룹 목록을 API로부터 가져와 업데이트합니다.
+ */
+const fetchGroups = async () => {
+    try {
+        const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
+
+        const response = await axios.get(url, { withCredentials: true });
+        myGroupList.value = response.data.data.result;
+
+    } catch (error) {
+        console.error('그룹 목록 조회 실패:', error, error.response);
+        if (error.response && error.response.status === 401) {
+            console.log('로그인이 필요합니다.');
+            // router.push('/login');
+        }
+    }
+};
+
+/**
+ * 활성화된 그룹의 멤버 위치 정보를 가져옵니다.
+ */
+const fetchLocations = async () => {
+    if (!activeGroupId.value) return;
+
+    try {
+        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
+
+        const response = await axios.get(url, { withCredentials: true });
+
+        // State 업데이트
+        activeGroupLocations.value = response.data.data.result;
+
+    } catch (error) {
+        console.error('그룹 위치 정보 조회 실패:', error);
+        activeGroupLocations.value = [];
+    }
+};
+
+/**
+ * 특정 그룹의 위치 공유 메인 페이지로 이동 (컴포넌트 자체에서는 사용하지 않음)
+ */
+const goToGroupMain = (groupId) => {
+  router.push({ name: 'GroupMain', params: { id: groupId } });
+};
 
 // --- Lifecycle & Watchers ---
 
 const loadGroupData = () => {
   if (activeGroupId.value) {
-    // Pinia Store의 활성 그룹 ID 업데이트
-    groupStore.setActiveGroup(activeGroupId.value);
     // 위치 정보 로드
-    groupStore.fetchLocations();
+    fetchLocations();
   }
 }
 
 onMounted(() => {
-  // 마운트 시 데이터 로드
-  groupStore.fetchGroups(); // 그룹 목록을 먼저 로드
+  // 그룹 목록을 먼저 로드 (그룹 이름을 표시하기 위해 필요)
+  fetchGroups();
+
+  getLocation() // 내 위치 로드
+
+  requestGeoLocation("test")
+
+
 });
 
 // URL의 그룹 ID가 변경될 때마다 데이터 다시 로드
@@ -131,6 +190,201 @@ const markerStyle = (color) => ({
   zIndex: 10,
   border: '2px solid white',
 });
+
+
+/*
+
+지도 부분
+
+*/
+
+const latitude = ref('')
+const longitude = ref('')
+
+watchEffect(() => {
+  // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
+  const lat = latitude.value
+  const lng = longitude.value
+
+  // 아직 준비 안 된 경우 바로 종료
+  if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
+
+  // 네이버 지도에서 쓰는 좌표 객체 생성
+  const pos = new window.naver.maps.LatLng(lat, lng)
+
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
+  if (!map) {
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 15
+    })
+    // marker = new window.naver.maps.Marker({
+    //   position: pos,
+    //   map
+    // })
+
+  //window.naver.maps.Event.once(map, 'init', loadBoundary)
+  window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+  loadBoundary()
+    // 이미 map이 만들어져 있으면 새로 안 만들고 중심 좌표와 마커 위치만 업데이트
+  } else {
+    map.setCenter(pos)
+    marker.setPosition(pos)
+  }
+})
+
+const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_boundary` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+// 해안선 가져오기
+let boundaryRings = [];
+
+async function loadBoundary() {
+  const res = await fetch(url);
+  const data = await res.json();
+
+  boundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (data.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      boundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', boundaryRings);
+}
+
+// =========== 테스트 데이터 (공카데미) ==========
+const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_test_layer` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+
+let testBoundaryRings = []
+
+async function testLoadBoundary() {
+  const testRes = await fetch(test_url);
+  const testData = await testRes.json();
+
+  testBoundaryRings = []; // 초기화
+
+  // 이 데이터는 항상 MultiPolygon이라고 가정
+  (testData.features || []).forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+
+    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
+    // geom.coordinates = [ polygon1, polygon2, ... ]
+    geom.coordinates.forEach(poly => {
+      // poly[0] = 외곽링
+      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
+      testBoundaryRings.push(outerRing);
+    });
+  });
+
+  console.log('[boundaryRings]', testBoundaryRings);
+
+  testDrawBoundaryRings()
+}
+
+function testDrawBoundaryRings() {
+  if (!map) return;
+
+  testBoundaryRings.forEach(ring => {
+    // lon,lat → naver LatLng
+    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon));
+
+    new naver.maps.Polyline({
+      map,
+      path,
+      strokeColor: '#0092BA',
+      strokeWeight: 3,
+      strokeOpacity: 0.9,
+    });
+  });
+
+  // 보기 좋게 화면도 경계로 맞춰주자
+  const bounds = new naver.maps.LatLngBounds();
+  testBoundaryRings.forEach(ring => {
+    ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon)));
+  });
+  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
+    map.fitBounds(bounds);
+  }
+}
+
+
+// 지오로케이션 내 위치 보기
+function getLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
+    (err) => { console.error('위치 실패: ' + err.message); },
+    { enableHighAccuracy: true }
+  )
+}
+
+function requestGeoLocation(value) {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      // 1) 값 넣고
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
+
+      // 2) 서버로 보냄
+      const payload = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      console.log('sending to server:', payload)
+
+      let axiosUrl;
+      if ( value === "test") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
+      }
+      if ( value === "boundary") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
+      }
+
+      try {
+        const res = await axios.post(
+          axiosUrl,
+          payload,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 5000,
+          }
+        )
+        console.log('OK', res.data)
+      } catch (e) {
+        console.error('send error', e)
+      }
+    },
+    (err) => {
+      console.error('위치 실패:', err.message)
+    },
+    { enableHighAccuracy: true }
+  )
+}
 
 </script>
 
@@ -149,5 +403,4 @@ const markerStyle = (color) => ({
   background-color: v-bind(mainColor) !important;
   color: white !important;
 }
-
-</style>ㄷ
+</style>

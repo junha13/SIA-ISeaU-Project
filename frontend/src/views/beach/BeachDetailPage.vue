@@ -7,11 +7,12 @@
         <button
             v-for="(tab, i) in tabs"
             :key="i"
-            class="btn flex-fill fw-bold py-2"
+            class="btn btn-sm flex-fill fw-bold"
             :class="{'text-white': activeTab===tab.key}"
             :style="{
               backgroundColor: activeTab === tab.key ? mainColor : 'transparent',
-              color: activeTab === tab.key ? 'white' : darkColor
+              color: activeTab === tab.key ? 'white' : darkColor,
+              fontSize: '11px'
             }"
             @click="activeTab = tab.key"
         >
@@ -33,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, proxyRefs } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
@@ -91,10 +92,10 @@ const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
 const tabs = [
-  { key: 'info', label: '상세정보', comp: BeachInfoTab },
-  { key: 'danger', label: '위험정보', comp: BeachDangerTab },
-  { key: 'weather', label: '날씨정보', comp: BeachWeatherTab },
-  { key: 'depth', label: '수심지도', comp: BeachDepthTab },
+  { key: 'info', label: '상세', comp: BeachInfoTab },
+  { key: 'danger', label: '위험', comp: BeachDangerTab },
+  { key: 'weather', label: '날씨', comp: BeachWeatherTab },
+  { key: 'depth', label: '수심', comp: BeachDepthTab },
   { key: 'cctv', label: 'CCTV', comp: BeachCctvTab },
   { key: 'pest', label: '유해생물', comp: BeachJellyFish }
 ];
@@ -114,7 +115,7 @@ watch(
 async function requestBeachDetail(beachNumber) {
     try {
 const response = await axios.get(
-  `http://localhost:8080/api/beach/detail/${beachNumber}/info`,
+  `${import.meta.env.VITE_API_BASE_URL}/beach/detail/${beachNumber}/info`,
    { headers: { Accept: 'application/json' }, timeout: 5000 }
   )
       beach.value = response.data.data.result
