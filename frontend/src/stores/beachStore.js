@@ -9,7 +9,7 @@ const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
 export const useBeachStore = defineStore('beach', () => {
     const beaches = ref([]);
     // ✅ 선택 상태를 새로고침 후에도 유지: localStorage에서 초기값 복원
-    const selectedBeachId = ref(Number(localStorage.getItem('selectedBeachId')) || null);
+    const selectedBeachId = ref(Number(localStorage.getItem('selectedBeachId') ?? '0'));
     const favoriteBeachIds = ref([]);
     const isLoading = ref(false);
     const apiError = ref(null);
@@ -23,6 +23,16 @@ export const useBeachStore = defineStore('beach', () => {
 
     // 현재 id가 선택 상태인지?
     const isSelected = (id) => selectedBeachId.value === id
+
+    // 0이면 '미선택' 상태로 간주
+    const NONE = 0;
+
+    // 로컬 저장 헬퍼 (항상 숫자 저장, 미선택은 0으로 저장)
+    const setSelectedLocal = (id) => {
+      const next = Number(id ?? 0);
+      selectedBeachId.value = next;
+      localStorage.setItem('selectedBeachId', String(next));
+    };
 
     // --- Actions ---
     const fetchBeaches = async (params = {}) => {
@@ -45,17 +55,16 @@ export const useBeachStore = defineStore('beach', () => {
         isDetailLoading.value = true;
         currentBeachDetail.value = null;
         try {
-            const url = `/api/beach/detail/${beachNumber}/info`;
-            const { execute: callDetailApi } = useApi('get', url);
-            const result = await callDetailApi();
-            currentBeachDetail.value = result.data.result;
+          const call = beachApi.fetchBeachDetail(beachNumber); // beach.js에서 execute 반환하도록 수정되어 있어야 함
+          const res = await call();
+          currentBeachDetail.value = res?.data?.result ?? res?.result ?? null;
         } catch (error) {
-            console.error('해수욕장 상세 정보 조회 실패:', error);
-            apiError.value = error;
+          console.error('해수욕장 상세 정보 조회 실패:', error);
+          apiError.value = error;
         } finally {
-            isDetailLoading.value = false;
+          isDetailLoading.value = false;
         }
-    };
+      };
 
     const fetchFavoriteIds = async () => {
         try {
@@ -120,60 +129,61 @@ export const useBeachStore = defineStore('beach', () => {
     }
 
   const toggleFavoriteBeach = async (beachNumber) => {
-  const isFav = favoriteBeachIds.value.includes(beachNumber);
 
-  try {
-    if (isFav) {
-      // 삭제
-      await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
-      favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
-      showConfirmModal({
-        title: '즐겨찾기 해제',
-        message: '즐겨찾기에서 해제되었습니다.',
-        type: 'info',
-        autoHide: true,
-        duration: 1000
-      });
-    } else {
-      // 추가
-      await axios.post(FAVORITES_API_URL, { beachNumber });
-      // 중복 409는 catch에서 처리
-      if (!favoriteBeachIds.value.includes(beachNumber)) {
-        favoriteBeachIds.value.push(beachNumber);
+    const isFav = favoriteBeachIds.value.includes(beachNumber);
+
+    try {
+      if (isFav) {
+        // 삭제
+        await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
+        favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+        showConfirmModal({
+          title: '즐겨찾기 해제',
+          message: '즐겨찾기에서 해제되었습니다.',
+          type: 'info',
+          autoHide: true,
+          duration: 1000
+        });
+      } else {
+        // 추가
+        await axios.post(FAVORITES_API_URL, { beachNumber });
+        // 중복 409는 catch에서 처리
+        if (!favoriteBeachIds.value.includes(beachNumber)) {
+          favoriteBeachIds.value.push(beachNumber);
+        }
+        showConfirmModal({
+          title: '즐겨찾기 등록',
+          message: '등록되었습니다.',
+          type: 'success',
+          autoHide: true,
+          duration: 1000
+        });
       }
-      showConfirmModal({
-        title: '즐겨찾기 등록',
-        message: '등록되었습니다.',
-        type: 'success',
-        autoHide: true,
-        duration: 1000
-      });
-    }
-  } catch (error) {
-    if (error.response?.status === 409) {
-      // 이미 등록됨 → UI만 반영
-      if (!favoriteBeachIds.value.includes(beachNumber)) {
-        favoriteBeachIds.value.push(beachNumber);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        // 이미 등록됨 → UI만 반영
+        if (!favoriteBeachIds.value.includes(beachNumber)) {
+          favoriteBeachIds.value.push(beachNumber);
+        }
+        showConfirmModal({
+          title: '이미 등록됨',
+          message: '이미 즐겨찾기에 등록되어 있습니다.',
+          type: 'info',
+          autoHide: true,
+          duration: 1000
+        });
+      } else {
+        console.error('즐겨찾기 API 오류:', error);
+        showConfirmModal({
+          title: '처리 실패',
+          message: '즐겨찾기 처리 중 오류가 발생했습니다.',
+          type: 'error',
+          autoHide: false,
+          duration: 2000
+        });
       }
-      showConfirmModal({
-        title: '이미 등록됨',
-        message: '이미 즐겨찾기에 등록되어 있습니다.',
-        type: 'info',
-        autoHide: true,
-        duration: 1000
-      });
-    } else {
-      console.error('즐겨찾기 API 오류:', error);
-      showConfirmModal({
-        title: '처리 실패',
-        message: '즐겨찾기 처리 중 오류가 발생했습니다.',
-        type: 'error',
-        autoHide: false,
-        duration: 2000
-      });
     }
-  }
-};
+  };
 
     // -------- 댓글 액션 --------
     const loadComments = async (beachNumber) => {

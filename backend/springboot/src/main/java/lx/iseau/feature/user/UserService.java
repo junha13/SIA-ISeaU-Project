@@ -58,5 +58,22 @@ public class UserService {
         
         return map;
     }
-	
+
+    /** ✅ 활동 해수욕장 선택 (1 이상) */
+    public boolean selectBeach(int userNumber, int beachNumber) {
+        // FK가 있으므로 존재하지 않는 beachNumber면 DB에서 에러 발생
+        // 필요하면 사전 체크: if (userDAO.existsBeach(beachNumber) == 0) return false;
+        return dao.setActiveBeach(userNumber, beachNumber) > 0;
+    }
+
+    /** ✅ 활동 해수욕장 해제 (= NULL) */
+    public boolean unselectBeach(int userNumber) {
+        return dao.clearActiveBeach(userNumber) > 0;
+    }
+    /** (선택) 현재 활동 해수욕장 조회 (없으면 null) 
+    @Transactional(readOnly = true)
+    public Integer getActiveBeach(int userNumber) {
+        return dao.findActiveBeach(userNumber);
+    }
+	*/
 }
