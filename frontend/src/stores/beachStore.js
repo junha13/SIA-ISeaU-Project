@@ -4,7 +4,8 @@ import axios from 'axios';
 import { beachApi } from '@/api/beach';
 import { useConfirmModal } from '@/utils/modalUtils';
 
-const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const FAVORITES_API_URL = `${API_BASE_URL}/beach/favorites`;
 
 export const useBeachStore = defineStore('beach', () => {
     const beaches = ref([]);
@@ -86,8 +87,9 @@ export const useBeachStore = defineStore('beach', () => {
     const toggleSelectBeach = async (beachId, beachName) => {
       const prevId = selectedBeachId.value
       const selecting = prevId !== beachId // true=선택, false=해제
+        }
 
-        } else {
+        else {
           await beachApi.unselectBeach()
           showConfirmModal({
             title: '선택 해제',
@@ -97,7 +99,8 @@ export const useBeachStore = defineStore('beach', () => {
             duration: 1000,
           })
         }
-      } catch (e) {
+      }
+      catch (e) {
         // 2) 실패 → 롤백
         selectedBeachId.value = prevId
         if (prevId) localStorage.setItem('selectedBeachId', String(prevId))
@@ -113,7 +116,7 @@ export const useBeachStore = defineStore('beach', () => {
       }
     }
 
-  const toggleFavoriteBeach = async (beachNumber) => {
+    const toggleFavoriteBeach = async (beachNumber) => {
 
     const isFav = favoriteBeachIds.value.includes(beachNumber);
 
