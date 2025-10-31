@@ -24,7 +24,7 @@ export const useGroupStore = defineStore('group', () => {
     const fetchGroups = async () => {
         try {
             const response = await groupApi.fetchGroupList();
-            
+
             // 🚨 [핵심 수정]
             // useApi.js가 반환하는 response.data가 { result: [...] } 입니다.
             // response.data.data.result (X) -> response.data.result (O)
@@ -58,7 +58,7 @@ export const useGroupStore = defineStore('group', () => {
 
         try {
             const response = await groupApi.fetchGroupLocations({ groupId: activeGroupId.value });
-            
+
             // 🚨 [핵심 수정]
             // useApi.js가 반환하는 response.data가 { result: [...] } 입니다.
             // response.data.data.result (X) -> response.data.result (O)
@@ -69,7 +69,7 @@ export const useGroupStore = defineStore('group', () => {
             activeGroupLocations.value = [];
         }
     };
-    
+
     // --- 🚨 [추가된 로직] 초대 모달 관련 ---
 
     /**
@@ -90,7 +90,7 @@ export const useGroupStore = defineStore('group', () => {
             // 🚨 'groupApi'가 아닌 'axios'를 직접 사용했으므로
             // 래핑되지 않은 전체 응답(response)을 받습니다.
             const response = await axios.get(PENDING_URL, { withCredentials: true });
-            
+
             // 🚨 [수정 불필요]
             // axios 원본 응답이므로 response.data.data가 맞습니다.
             const data = response.data.data;
@@ -116,30 +116,30 @@ export const useGroupStore = defineStore('group', () => {
     const acceptInvitation = async (invitation) => {
         if (!invitation) {
             console.log("[수락] invitation 객체가 null입니다.");
-            return; 
+            return;
         }
 
-        console.log(`[수락 시작] invitationId: ${invitation.invitationId} 수락 API 호출 시도...`); 
+        console.log(`[수락 시작] invitationId: ${invitation.invitationId} 수락 API 호출 시도...`);
 
         try {
             // 1. API 호출 (useApi.js가 응답 본문 { data: {...} }를 반환)
             const response = await groupApi.acceptLocationSharing({ invitationId: invitation.invitationId });
-            
-            // 🚨 [수정 완료] 
+
+            // 🚨 [수정 완료]
             // response.data.data.success (X) -> response.data.success (O)
             if (response.data && response.data.success === true) {
-                
+
                 // --- 2. [진짜 성공] ---
-                console.log("[수락 성공] API 응답 받음:", response.data); 
+                console.log("[수락 성공] API 응답 받음:", response.data);
                 showConfirmModal({ title: '초대 수락', message: `${invitation.inviterName} 님의 그룹 초대를 수락했습니다.`, type: 'success', autoHide: true });
-                closeModal(); 
-                
+                closeModal();
+
                 // 3. 그룹 목록 새로고침 (중앙 관리소의 핵심 기능)
-                console.log("[수락 성공] 그룹 목록 새로고침(fetchGroups)을 호출합니다."); 
-                fetchGroups(); 
+                console.log("[수락 성공] 그룹 목록 새로고침(fetchGroups)을 호출합니다.");
+                fetchGroups();
 
             } else {
-                
+
                 // --- 4. [조용한 실패] ---
                 console.error("🚨 [수락 실패] 서버가 success: false를 반환했습니다.", response.data);
                 const failMessage = response.data?.message || '초대 수락에 실패했습니다.';
@@ -149,9 +149,9 @@ export const useGroupStore = defineStore('group', () => {
 
         } catch (error) {
             // --- 5. [진짜 실패] (서버가 4xx, 5xx 에러 반환) ---
-            console.error("🚨 [수락 실패] CATCH 블록 실행됨:", error); 
+            console.error("🚨 [수락 실패] CATCH 블록 실행됨:", error);
             showConfirmModal({ title: '오류', message: '초대 수락 중 서버 오류가 발생했습니다.', type: 'error' });
-            closeModal(); 
+            closeModal();
         }
     };
 
@@ -161,26 +161,26 @@ export const useGroupStore = defineStore('group', () => {
     const rejectInvitation = async (invitation) => {
         if (!invitation) {
             console.log("[거절] invitation 객체가 null입니다.");
-            return; 
+            return;
         }
 
-        console.log(`[거절 시작] invitationId: ${invitation.invitationId} 거절 API 호출 시도...`); 
+        console.log(`[거절 시작] invitationId: ${invitation.invitationId} 거절 API 호출 시도...`);
 
         try {
             // 1. API 호출
             const response = await groupApi.rejectLocationSharing({ invitationId: invitation.invitationId });
-            
-            // 🚨 [수정 완료] 
+
+            // 🚨 [수정 완료]
             // response.data.data.success (X) -> response.data.success (O)
             if (response.data && response.data.success === true) {
 
                 // --- 2. [진짜 성공] ---
                 console.log("[거절 성공] API 응답 받음:", response.data);
                 showConfirmModal({ title: '초대 거절', message: `${invitation.inviterName} 님의 그룹 초대를 거절했습니다.`, type: 'info', autoHide: true });
-                closeModal(); 
+                closeModal();
 
             } else {
-                
+
                 // --- 3. [조용한 실패] ---
                 console.error("🚨 [거절 실패] 서버가 success: false를 반환했습니다.", response.data);
                 const failMessage = response.data?.message || '초대 거절에 실패했습니다.';
@@ -192,10 +192,9 @@ export const useGroupStore = defineStore('group', () => {
             // --- 4. [진짜 실패] ---
             console.error("🚨 [거절 실패] CATCH 블록 실행됨:", error);
             showConfirmModal({ title: '오류', message: '초대 거절 중 서버 오류가 발생했습니다.', type: 'error' });
-            closeModal(); 
+            closeModal();
         }
     };
-    // --- 🚨 [추가된 로직] 끝 ---
 
     // --- Getters ---
     const getActiveGroupLocations = computed(() => activeGroupLocations.value);

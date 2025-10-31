@@ -4,6 +4,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
+import { fileURLToPath, URL } from 'node:url'
+
+// Spring Boot static 폴더 (frontend 기준 상대경로)
+const springBootStatic = path.resolve(__dirname, '../../backend/springboot/src/main/resources/static')
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -60,17 +65,19 @@ export default defineConfig({
   },
     server: {
         port: 5173,
-        host: true,        // 외부에서도 접근 가능하게
-        allowedHosts: [
-            'hellokiyo.ngrok.io'   // ngrok 도메인 허용
-        ],
+        host: true, // 외부에서 접속 가능 (개발용)
         proxy: {
-            // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
-                target: 'http://localhost:8080',
-                changeOrigin: true
-            }
+                target: 'http://172.168.10.15:8080', // 개발 시 로컬 Spring Boot
+                changeOrigin: true,
+                secure: false,
+            },
+        },
+        // build: {
+        //     outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
+        //     emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+        // },
+        define: {
+            __API_BASE_URL__: JSON.stringify(process.env.VITE_API_BASE_URL)
         }
-    }
-  
 })

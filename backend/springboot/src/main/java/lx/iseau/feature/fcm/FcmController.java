@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/fcm")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173"}) // CORS 설정 (application.properties와 일치)
+@CrossOrigin(origins = {"http://localhost:5173", "https://hellokiyo.ngrok.io"}) // CORS 설정 (application.properties와 일치)
 public class FcmController {
 
     // FCM 토큰 저장 및 조회 서비스

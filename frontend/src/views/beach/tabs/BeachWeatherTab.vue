@@ -99,7 +99,7 @@ async function requestWeatherData(beachNumber) {
   try {
     // API_ENDPOINT 대신 URL 하드코딩 유지
     const response = await axios.get(
-      `http://localhost:8080/api/beach/detail/${beachNumber}/weather`
+      `http://172.168.10.15:8080/api/beach/detail/${beachNumber}/weather`
     );
 
     // 실제 컨트롤러 응답 구조에 맞게 경로 수정

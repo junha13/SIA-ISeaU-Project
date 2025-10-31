@@ -35,6 +35,8 @@
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
           
+          <h1 v-if="header === mainHeaderName" class="fs-4 fw-bolder mb-0" :style="{ color: darkColor }">
+            <img class="mt-n2" src="/iseau.ico" style="min-width: 30px; max-width: 30px;">
           <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
             <img class="mt-n2" src="/iseau.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}

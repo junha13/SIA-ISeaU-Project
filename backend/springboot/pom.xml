@@ -51,11 +51,6 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
@@ -96,10 +91,12 @@
             <artifactId>jts-core</artifactId>
             <version>1.18.2</version> <!-- Use the latest stable version -->
         </dependency>
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.6.0</version> <!-- 안정적인 최신 버전으로 설정 -->
+            <version>42.6.0</version>
+<!--            <scope>runtime</scope>-->
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.springframework/spring-webflux -->
 		<dependency>
@@ -113,7 +110,7 @@
             <version>9.2.0</version>
         </dependency>
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -140,7 +137,57 @@
 					</excludes>
 				</configuration>
 			</plugin>
-		</plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.12.0</version>
+                <executions>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v22.17.1</nodeVersion> <npmVersion>10.9.2</npmVersion>    <arguments>install --legacy-peer-deps</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                            <workingDirectory>../../frontend</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../frontend/dist</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                        </configuration>
+                    </execution>
+              </executions>
+            </plugin>
+        </plugins>
 	</build>
 
 </project>

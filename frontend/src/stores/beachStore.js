@@ -19,7 +19,7 @@ export const useBeachStore = defineStore('beach', () => {
 
     // === 댓글 상태 ===
     const comments = ref([]);
-    const isCommentsLoading = ref(false);   
+    const isCommentsLoading = ref(false);
 
     // 현재 id가 선택 상태인지?
     const isSelected = (id) => selectedBeachId.value === id
@@ -59,12 +59,12 @@ export const useBeachStore = defineStore('beach', () => {
           const res = await call();
           currentBeachDetail.value = res?.data?.result ?? res?.result ?? null;
         } catch (error) {
-          console.error('해수욕장 상세 정보 조회 실패:', error);
-          apiError.value = error;
+            console.error('해수욕장 상세 정보 조회 실패:', error);
+            apiError.value = error;
         } finally {
-          isDetailLoading.value = false;
+            isDetailLoading.value = false;
         }
-      };
+    };
 
     const fetchFavoriteIds = async () => {
         try {
@@ -87,21 +87,6 @@ export const useBeachStore = defineStore('beach', () => {
       const prevId = selectedBeachId.value
       const selecting = prevId !== beachId // true=선택, false=해제
 
-      // 1) UI/스토리지 먼저 반영
-      selectedBeachId.value = selecting ? beachId : null
-      if (selecting) localStorage.setItem('selectedBeachId', String(beachId))
-      else localStorage.removeItem('selectedBeachId')
-
-      try {
-        if (selecting) {
-          await beachApi.selectBeach({ beachNumber: beachId })
-          showConfirmModal({
-            title: '활동 해수욕장',
-            message: `${beachName}가 선택되었습니다.`,
-            type: 'success',
-            autoHide: true,
-            duration: 1200,
-          })
         } else {
           await beachApi.unselectBeach()
           showConfirmModal({
@@ -217,7 +202,7 @@ export const useBeachStore = defineStore('beach', () => {
       await call();
       await loadComments(beachNumber);
     };
-    
+
 
 
     // --- Getters ---
@@ -235,7 +220,7 @@ export const useBeachStore = defineStore('beach', () => {
         apiError,
         currentBeachDetail,
         isDetailLoading,
-        comments, 
+        comments,
         isCommentsLoading,
 
         // actions

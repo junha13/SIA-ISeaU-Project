@@ -78,6 +78,7 @@
 
     <div class="mt-3">
       <div v-if="viewMode === 'list'">
+        <!-- 목록 -->
         <div v-if="isLoading" class="text-center p-5">
           <i class="fas fa-spinner fa-spin me-2"></i> 목록을 불러오는 중...
         </div>
@@ -214,10 +215,12 @@ const BEACH_LIST_API_URL = 'http://localhost:8080/api/beach/beaches';
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
+// 보여주는 방식
 const activeTab = ref('all');
 const viewMode = ref('list');
 const currentSort = ref('name');
 
+// 검색조건 - store에서 가져옴
 const tabCondition = tabOptions
 const sortCondition = sortOptions
 const regionCondition = regionOptions
@@ -225,6 +228,7 @@ const regionCondition = regionOptions
 const primaryBtnStyle = { backgroundColor: mainColor, borderColor: mainColor, color: 'white' };
 const dropdownBtnStyle = { backgroundColor: '#f8f9fa', borderColor: '#ced4da', color: darkColor };
 
+// 검색 파라미터
 const searchParams = ref({
   region: '',
   keyword: '',
@@ -277,24 +281,29 @@ async function loadData() {
   }
 }
 
-
+// 즐겨찾기
 const fetchFavoriteIds = async () => {
   try {
     const res = await axios.get('http://localhost:8080/api/beach/favorites/my');
+
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
+
     console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
+
   } catch (error) {
     console.error("즐겨찾기 초기 로딩 실패:", error);
-    favoriteBeachIds.value = [];
+    favoriteBeachIds.value = []; // 실패 시 빈 배열
   }
 };
 
+// 지역 검색조건
 function selectRegion(region) {
   searchParams.value.region = region;
   loadData();
 }
 
+// 거리, 평점 등 검색조건
 function selectSort(sortValue) {
   currentSort.value = sortValue;
   searchParams.value.sort = sortValue;
@@ -363,6 +372,7 @@ async function toggleFavorite(beachNumber) {
       await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
       console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
+      // 즐겨찾기 추가
       await axios.post(FAVORITES_API_URL, { beachNumber });
       console.log(`⭐ ${beachNumber} 즐겨찾기 추가 성공`);
     }
@@ -381,6 +391,7 @@ async function toggleFavorite(beachNumber) {
   }
 }
 
+// 필터된 해수욕장 리스트 (즐겨찾기 탭 포함)
 const filteredBeachList = computed(() => {
   const kw = (searchParams.value.keyword || '').trim().toLowerCase();
 
@@ -421,7 +432,8 @@ const tagClass = tag => ({
   '산책': 'bg-warning', '가족': 'bg-success',
 }[tag] || 'bg-light text-dark');
 
-// 지도 부분 (변경 없음)
+//===================== 지도 부분 ========================
+
 const beachMap = ref(null)
 let map
 let markers = []
@@ -432,17 +444,25 @@ watch(viewMode, (mode) => {
   if (mode !== 'map') { map = null; markers = []; }
 })
 
+// 관련된(함수 내부) 반응형 값들이 바뀌면 이 콜백을 다시 실행해주는 함수
 watchEffect(() => {
   const lat = latitude.value
   const lng = longitude.value
   if (viewMode.value !== 'map' || !lat || !lng || !beachMap.value || !window.naver?.maps) return
   const list = beaches.value
+
+  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
   if (!map) {
+    // 내위치로 센터 맞춤
     const center = new window.naver.maps.LatLng(lat, lng)
     map = new window.naver.maps.Map(beachMap.value, { center, zoom: 15 })
   }
-  markers.forEach(m => m.setMap(null))
+
+  // 기존 마커 있었으면 지도에서 지우고 배열 초기화
+  markers.forEach(m => m.setMap(null)) // marker.setMap(null) 이 지도에서 마커 지우는거임
   markers = []
+
+// 전체 해수욕장 목록 마커 다시 그림
   list.forEach(b => {
     if (!b.latitude || !b.longitude) return
     const pos = new window.naver.maps.LatLng(b.latitude, b.longitude)
@@ -451,8 +471,12 @@ watchEffect(() => {
   })
 })
 
+// ========== Geolocation API ==========
 function getLocation() {
-  if (!navigator.geolocation) return;
+  if (!navigator.geolocation) {
+    //error.value = '이 브라우저는 Geolocation을 지원하지 않아요.'
+    return
+  }
   navigator.geolocation.getCurrentPosition(
     (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
     (err) => { console.error('위치 실패: ' + err.message); }, // err.value 대신 console.error 사용

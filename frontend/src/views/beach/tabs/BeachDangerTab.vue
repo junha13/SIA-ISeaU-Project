@@ -54,6 +54,7 @@
       </div>
     </div>
 
+    <!-- 파고 탭 -->
     <div v-else>
       <h6 class="fw-bold mb-3">
         파고 높이:
@@ -315,7 +316,7 @@ const ripChartOption = computed(() => {
   };
 });
 
-// 파고 차트 옵션 (변경 없음)
+// 파고 차트 옵션 (Line Chart)
 const waveChartOption = computed(() => {
   const data = waveChartData.value; // Y축 (24개)
   const hours = waveChartHours.value; // X축 (24개)
@@ -344,7 +345,7 @@ const waveChartOption = computed(() => {
     },
     xAxis: [{ // X축 (시간)
       type: 'category',
-      data: hours, // 24개
+      data: hours, // '0시', '2시', ...
       position: 'bottom',
       axisLine: { show: false },
       axisTick: { show: false },
@@ -370,9 +371,9 @@ const waveChartOption = computed(() => {
         return Math.max(value.max, 1.5);
       }
     },
-    series: [{
+    series: [{ // 선 그래프
       type: 'line',
-      data: data, // 24개 데이터
+      data: data, // 파고 높이 배열
       smooth: true,
       showSymbol: false,
       itemStyle: { color: '#FFB354' },
@@ -386,6 +387,7 @@ const waveChartOption = computed(() => {
       markPoint: {
         symbol: 'circle', symbolSize: 10,
         data: [{
+            // 현재 시간 인덱스를 사용하여 좌표 설정
             coord: nowIndex !== -1 && data[nowIndex] !== undefined ? [nowIndex, data[nowIndex]] : undefined,
             itemStyle: { color: '#FFB354', borderColor: '#fff', borderWidth: 2 }
         }],
@@ -493,3 +495,4 @@ onMounted(() => {
   height: 220px;
 }
 </style>
+
