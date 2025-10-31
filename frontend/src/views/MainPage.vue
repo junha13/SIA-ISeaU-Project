@@ -73,10 +73,16 @@
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">신고</p>
         </div>
       </div>
-            <!-- 카드 5: 게시글 리스트 -->
+      <!-- 카드 5: 게시글 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">게시글 리스트</p>
+        </div>
+      </div>
+      <!-- 카드 6: 응급대처법 -->
+      <div class="col-6">
+        <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.firstAid})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('FirstAid')">
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">응급대처법</p>
         </div>
       </div>
     </div>
@@ -108,10 +114,11 @@ const lightGrayColor = '#E9ECEF'; // 인디케이터 비활성 색상
 // 카드별 배경 이미지 매핑 (경로는 public 디렉터리 기준)
 const cardImages = {
   BeachList: '/images/mainButton/beachList3.png',
-  SafetyGuide: '/images/mainButton/firstAid3.png',
+  SafetyGuide: '/images/mainButton/safeGuide3.png',
   GroupList: '/images/mainButton/group3.png',
   SOSMain: '/images/mainButton/report3.png',
-  PostList: '/images/mainButton/postingList3.png'
+  PostList: '/images/mainButton/postingList3.png',
+  firstAid: '/images/mainButton/firstAid3.png',
 };
 
 // pagination state for static carousel
