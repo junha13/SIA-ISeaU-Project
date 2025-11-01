@@ -1,6 +1,6 @@
 <template>
   <div v-if="viewMode === 'list'" class="beach-list-page p-3">
-    <div class="sticky-top bg-white pt-1 pb-3" style="z-index: 900;">
+    <div class="sticky-top bg-white mt-n1 p-1" style="z-index: 1000;">
       <div class="d-flex align-items-center mb-3">
         <div class="dropdown me-2">
           <button
@@ -210,8 +210,8 @@ const size = ref(10);                  // 페이지 크기(백엔드와 동일)
 const hasMore = ref(true);             // 더 가져올 수 있는지
 const infiniteId = ref(0);             // 변경되면 InfiniteLoading이 초기화됨
 
-const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
-const BEACH_LIST_API_URL = 'http://localhost:8080/api/beach/beaches';
+// const FAVORITES_API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/favorites`;
+// const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/beaches`;
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -260,7 +260,7 @@ async function loadData() {
       // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
     };
 
-    const response = await axios.post(BEACH_LIST_API_URL, payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/beach/beaches`, payload);
     beaches.value = response.data.result
   } catch (error) {
     apiError.value = error;
@@ -272,7 +272,7 @@ async function loadData() {
 
 const fetchFavoriteIds = async () => {
   try {
-    const res = await axios.get('http://localhost:8080/api/beach/favorites/my');
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/my`);
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
     console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
@@ -352,7 +352,7 @@ async function toggleFavorite(beachNumber) {
   // 2. API 요청 보내기
   try {
     if (isCurrentlyFavorite) {
-      await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/${beachNumber}`);
       console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
       await axios.post(FAVORITES_API_URL, { beachNumber });

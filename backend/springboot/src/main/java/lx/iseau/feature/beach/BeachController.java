@@ -89,8 +89,6 @@ public class BeachController {
 	@PostMapping("/detail/{beachNumber}/comments")
 	public ResponseEntity<?> addBeachComment(@PathVariable int beachNumber,
 	                                    @RequestBody ResponseBeachCommentDTO dto) {
-	    // 임시 사용자
-	    dto.setUserNumber(1);
 	    dto.setBeachNumber(beachNumber);
 	    int inserted = service.addBeachComment(dto);
 	    return ResponseEntity.ok(Map.of("success", inserted > 0));
@@ -103,7 +101,6 @@ public class BeachController {
 	                                       //@AuthenticationPrincipal user, 로그인 후 추가
 	                                       @RequestBody ResponseBeachCommentDTO dto) {
 	    // 임시 사용자 (로그인 기능 후 @AuthenticationPrincipal 교체)
-	    dto.setUserNumber(1); // dto.setUserNumber(user.getUserNumber());
 	    dto.setBeachNumber(beachNumber);
 	    dto.setBeachCommentNumber(beachCommentNumber);
 
@@ -121,8 +118,7 @@ public class BeachController {
 
 	@GetMapping("/favorites/my")
 	public ResponseEntity<?> getBeachFavorites() {
-	    int userNumber = 1; 
-	    Map<String, Object> favoritesMap = service.getBeachFavorites(userNumber);
+	    Map<String, Object> favoritesMap = service.getBeachFavorites();
 	    // result 안에 이미 List<Integer>가 들어 있음
 	    return ResponseEntity
 	            .ok()

@@ -10,11 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import lx.iseau.feature.location.LocationDAO;
+
 @Service
+@RequiredArgsConstructor
 public class BeachService  { 
 
-    @Autowired
-    BeachDAO dao;
+    private final BeachDAO dao;
+    
+    private final HttpSession session;
     
     @Transactional(readOnly = true)
     public Map<String, Object> getBeachList(BeachListRequest request) {
@@ -107,11 +113,13 @@ public class BeachService  {
 		return map;
 	}
 	@Transactional(readOnly = true)
-	public Map<String, Object> getBeachFavorites(int userNumber) {
+	public Map<String, Object> getBeachFavorites() {
+		
 	    Map<String, Object> map = new HashMap<>();
 
 	    // DB에서 즐겨찾기 목록 가져오기
-	    List<ResponseFavoritesDTO> favoritesList = dao.getBeachFavorites(userNumber);
+	    List<ResponseFavoritesDTO> favoritesList = 
+	    		dao.getBeachFavorites((Integer) session.getAttribute("userNumber"));
 
 	    List<Integer> beachNumbers = new ArrayList<>();
 	    favoritesList.forEach(fav -> beachNumbers.add(fav.getBeachNumber()));
@@ -166,12 +174,14 @@ public class BeachService  {
     }
 	// 방문자 리뷰 등록
     public int addBeachComment(ResponseBeachCommentDTO dto) {
+    	dto.setUserNumber((Integer) session.getAttribute("userNumber"));
         // 간단 검증
         if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
         return dao.insertBeachComment(dto);
     }
     // 방문자 리뷰 수정    
     public int editBeachComment(ResponseBeachCommentDTO dto) {
+    	dto.setUserNumber((Integer) session.getAttribute("userNumber"));
         if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
         return dao.updateBeachComment(dto);
     }

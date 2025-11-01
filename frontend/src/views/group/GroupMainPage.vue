@@ -151,8 +151,19 @@ const handleNotificationSettings = () => {
 // 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
 const fetchGroups = async () => {
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`; 
-        const response = await axios.get(url, { withCredentials: true });
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`, 
+          { withCredentials: true }
+        );
+
+
+        if(response.data.data === "login") {
+
+          const goLogin = confirm('현재 회원정보를 인식할 수 없습니다. 로그인 하시겠습니까?')
+          router.replace(goLogin ? '/login' : '/');
+          
+          myGroupList.value = [];
+        }
         myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
         
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);

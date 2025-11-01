@@ -1,13 +1,8 @@
 <template>
   <div class="my-comment-page container-fluid p-0">
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-start p-3 border-bottom shadow-sm">
-      <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-      <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">내 댓글 목록</h5>
-    </div>
 
     <!-- Filter & Sort Bar (Sticky) -->
-    <div class="sticky-top bg-white p-3 border-bottom d-flex justify-content-between align-items-center" style="top: 55px; z-index: 900;">
+    <div class="sticky-top bg-white p-3 border-bottom d-flex justify-content-between align-items-center" style=" z-index: 900;">
       <!-- 댓글 유형 탭 -->
       <div class="d-flex align-items-center">
         <span
