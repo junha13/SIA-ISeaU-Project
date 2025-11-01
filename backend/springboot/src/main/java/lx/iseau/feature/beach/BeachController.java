@@ -23,7 +23,7 @@ public class BeachController {
 	@Autowired
 	private BeachService service; 
 
-	@PostMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
+	@RequestMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
 	public ResponseEntity<?> getBeachList(@RequestBody BeachListRequest request) {
 	    String sort = (request.getSort() != null) ? request.getSort().toLowerCase() : "";
 
@@ -77,26 +77,48 @@ public class BeachController {
 	}
 	
 	// 해수욕장 리뷰 목록 조회
-	@GetMapping("/detail/{beachNumber}/comments")
-	public ResponseEntity<?> getComments(@PathVariable int beachNumber) {
-	    var list = service.getListBeachComments(beachNumber);
+	@RequestMapping("/detail/{beachNumber}/comments")
+	public ResponseEntity<?> getBeachComments(@PathVariable int beachNumber) {
+		Map<String, Object> result = service.getBeachComments(beachNumber);
 	    return ResponseEntity.ok()
-	        .header("api", "Beach/detail/comments")
-	        .body(Map.of("result", list));
+	        .body(Map.of("data", result));
 	}
 	
 	// 해수욕장 리뷰 등록
-	@PostMapping("/detail/{beachNumber}/comments")
-	public ResponseEntity<?> addBeachComment(@PathVariable int beachNumber,
-	                                    @RequestBody ResponseBeachCommentDTO dto) {
-	    dto.setBeachNumber(beachNumber);
-	    int inserted = service.addBeachComment(dto);
-	    return ResponseEntity.ok(Map.of("success", inserted > 0));
+	@RequestMapping("/detail/{beachNumber}/comments/insert")
+	public ResponseEntity<?> insertBeachComment(@PathVariable int beachNumber, @RequestBody ResponseBeachCommentDTO dto) {
+		dto.setBeachNumber(beachNumber);
+		Map<String, Object> result = service.insertBeachComment(dto);
+	    return ResponseEntity
+	    		.ok()
+		        .body(Map.of("data", result));
 	}
 
 	// 해수욕장 리뷰 수정
+	@RequestMapping("/detail/{beachNumber}/comments/update/{beachCommentNumber}")
+	public ResponseEntity<?> updateBeachComment(@PathVariable int beachNumber, @PathVariable int beachCommentNumber,
+			@RequestBody ResponseBeachCommentDTO dto) {
+		dto.setBeachNumber(beachNumber);
+		dto.setBeachCommentNumber(beachCommentNumber);
+		Map<String, Object> result = service.updateBeachComment(dto);
+	    return ResponseEntity
+	    		.ok()
+		        .body(Map.of("data", result));
+	}
+	
+	// 해수욕장 리뷰 삭제
+	@RequestMapping("/detail/{beachNumber}/comments/delete/{beachCommentNumber}")
+	public ResponseEntity<?> deleteBeachComment(@PathVariable int beachCommentNumber, @RequestBody ResponseBeachCommentDTO dto) {
+		dto.setBeachCommentNumber(beachCommentNumber);
+		Map<String, Object> result = service.deleteBeachComment(dto);
+		return ResponseEntity
+				.ok()
+				.body(Map.of("data", result));
+	}
+
+	/* 해수욕장 리뷰 수정 (세션말고 토큰할때)
 	@PutMapping("/detail/{beachNumber}/comments/{beachCommentNumber}")
-	public ResponseEntity<?> editBeachComment(@PathVariable int beachNumber,
+	public ResponseEntity<?> updateBeachComment(@PathVariable int beachNumber,
 	                                       @PathVariable("beachCommentNumber") int beachCommentNumber,
 	                                       //@AuthenticationPrincipal user, 로그인 후 추가
 	                                       @RequestBody ResponseBeachCommentDTO dto) {
@@ -104,16 +126,11 @@ public class BeachController {
 	    dto.setBeachNumber(beachNumber);
 	    dto.setBeachCommentNumber(beachCommentNumber);
 
-	    int updated = service.editBeachComment(dto);
+	    int updated = service.updateBeachComment(dto);
 	    return ResponseEntity.ok(Map.of("success", updated > 0));
 	}
-
-	// 해수욕장 리뷰 삭제
-	@DeleteMapping("/detail/comments/{beachCommentNumber}")
-	public ResponseEntity<?> removeBeachComment(@PathVariable("beachCommentNumber") int beachCommentNumber) {
-	    int deleted = service.removeBeachComment(beachCommentNumber);
-	    return ResponseEntity.ok(Map.of("success", deleted > 0));
-	}
+	 */
+	
 	
 
 	@GetMapping("/favorites/my")

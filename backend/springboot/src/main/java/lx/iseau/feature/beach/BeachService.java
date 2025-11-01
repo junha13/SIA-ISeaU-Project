@@ -22,6 +22,12 @@ public class BeachService  {
     
     private final HttpSession session;
     
+    /* 공통: 로그인 사용자 번호 가져오기 (없으면 0 던짐) */
+    private int requireLoginUserNumber() {
+        Integer userNumber = (Integer) session.getAttribute("userNumber");
+        return userNumber == null ? 0 : userNumber;
+    }
+    
     @Transactional(readOnly = true)
     public Map<String, Object> getBeachList(BeachListRequest request) {
         // 1) 기본값 보정
@@ -78,7 +84,8 @@ public class BeachService  {
 	/*
 	 * ========= 하나의 해수욕장의 값을 보내주면 딤 =========
 	 */
-	@Transactional	public Map<String, Object> getBeachDetailInfo(int beachNumber) {
+	@Transactional	
+	public Map<String, Object> getBeachDetailInfo(int beachNumber) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
 		ResponseBeachDTO beach = dao.getBeachDetailInfo(beachNumber);
@@ -89,7 +96,7 @@ public class BeachService  {
 
 	
 	/*
-	 * ========= 하나의 해수욕장에 대한 여러 시간대 danget 상황 보내주기 (이안류, 풍속, 파고) =========
+	 * ========= 하나의 해수욕장에 대한 여러 시간대 danger 상황 보내주기 (이안류, 풍속, 파고) =========
 	 */
 	@Transactional
 	public Map<String, Object> getBeachDetailDanger(int beachNumber) {
@@ -169,26 +176,53 @@ public class BeachService  {
      * 해수욕장 방문자 리뷰
      */
     // 방문자 리뷰 목록
-    public List<ResponseBeachCommentDTO> getListBeachComments(int beachNumber) {
-        return dao.listBeachComments(beachNumber);
+    public Map<String, Object> getBeachComments(int beachNumber) {
+    	Map<String, Object> map = new HashMap<>();
+    	map.put("result", dao.getBeachComments(beachNumber));
+        return map;
     }
+    
+    
+    
+    
 	// 방문자 리뷰 등록
-    public int addBeachComment(ResponseBeachCommentDTO dto) {
-    	dto.setUserNumber((Integer) session.getAttribute("userNumber"));
-        // 간단 검증
-        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
-        return dao.insertBeachComment(dto);
+    public Map<String, Object> insertBeachComment(ResponseBeachCommentDTO dto) {
+    	Map<String, Object> map = new HashMap<>();
+    	
+    	if (requireLoginUserNumber() == 0) return Map.of("result", "login");
+    	
+    	dto.setUserNumber(requireLoginUserNumber());
+    	
+        map.put("result", dao.insertBeachComment(dto));
+        return map;
     }
+    
+    
+    
+    
+    
     // 방문자 리뷰 수정    
-    public int editBeachComment(ResponseBeachCommentDTO dto) {
-    	dto.setUserNumber((Integer) session.getAttribute("userNumber"));
-        if (dto.getRating() < 1 || dto.getRating() > 5) dto.setRating(5);
-        return dao.updateBeachComment(dto);
+    public Map<String, Object> updateBeachComment(ResponseBeachCommentDTO dto) {	
+    	Map<String, Object> map = new HashMap<>();
+    	
+    	dto.setUserNumber(requireLoginUserNumber());
+    	
+        map.put("result", dao.updateBeachComment(dto));
+        return map;
     }
+    
+    
+    
     // 방문자 리뷰 삭제
-    public int removeBeachComment(int beachCommentNumber) {
-        return dao.deleteBeachComment(beachCommentNumber);
+    public Map<String, Object> deleteBeachComment(ResponseBeachCommentDTO dto) {
+    	Map<String, Object> map = new HashMap<>();
+    	
+    	dto.setUserNumber(requireLoginUserNumber());
+    	
+        map.put("result", dao.deleteBeachComment(dto));
+        return map;
     }
+    
     
     
 }

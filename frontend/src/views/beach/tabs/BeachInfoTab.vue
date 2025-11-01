@@ -33,14 +33,25 @@
         ></textarea>
 
         <div class="d-flex justify-content-between align-items-center">
-          <!-- 평점 선택 -->
-          <select class="form-select form-select-sm" style="width:auto" v-model.number="newRating">
-            <option :value="5">⭐ 5</option>
-            <option :value="4">⭐ 4</option>
-            <option :value="3">⭐ 3</option>
-            <option :value="2">⭐ 2</option>
-            <option :value="1">⭐ 1</option>
-          </select>
+
+          <!-- 평점 선택: 별 5개 -->
+          <div class="d-flex align-items-center">
+            <i
+              v-for="n in 5"
+              :key="'new-'+n"
+              class="bi"
+              :class="[
+                (displayNew >= n ? 'bi-star-fill star active' : 'bi-star star'), 
+                'fs-5', 
+                'me-1'
+              ]"
+              role="button"
+              @click="newRating = n"
+              style="cursor:pointer;"
+              aria-label="별점 선택"
+            ></i>
+            <small class="ms-2 text-muted">{{ newRating }}점</small>
+          </div>
 
           <button
             class="btn btn-sm text-white"
@@ -64,14 +75,32 @@
             :key="c.beachCommentNumber"
             class="border rounded p-3 mb-2"
           >
-            <div class="fw-bold">
+            <div class="d-flex justify-content-between fw-bold">
               {{ c.userName ?? ('사용자 ' + c.userNumber) }}
-              <small class="text-muted ms-2">{{ (c.createdTime ?? '').toString().slice(0,16) }}</small>
-              <span class="ms-2">⭐ {{ c.rating }}</span>
+              <small class="text-muted ms-2">{{ (c.createdTime).toString().replace('T', ' ').slice(2,19) }}</small>
             </div>
-            <p class="mb-1 small text-secondary">{{ c.commentContent }}</p>
 
-            <!-- 본인 댓글 가정(userNumber === 1)일 때만 노출 -->
+            <div class="d-flex align-items-center fs-8">
+              <i
+                v-for="n in 5"
+                :key="'show-'+c.beachCommentNumber+'-'+n"
+                class="bi"
+                :class="[
+                  (c.rating >= n ? 'bi-star-fill star active' : 'bi-star star'),
+                  'me-1',
+                  'fs-9',
+                  'mt-1',
+                  'mb-2'
+                ]"
+                aria-hidden="true"
+              ></i>
+              <!--
+              <small class="ms-2 text-muted">{{ c.rating }}점</small>
+              -->
+            </div>
+            <div class="mb-1 small text-secondary">{{ c.commentContent }}</div>
+
+            <!-- 본인 댓글 가정(userNumber === 1)일 때만 노출 
             <div v-if="c.userNumber === 1" class="mt-1">
               <button class="btn btn-outline-secondary btn-sm me-2" @click="startEdit(c)">
                 수정
@@ -80,18 +109,24 @@
                 삭제
               </button>
             </div>
-
-            <!-- 인라인 수정 UI (선택사항) -->
+            -->
+            <!-- 
+             인라인 수정 UI 
             <div v-if="editingId === c.beachCommentNumber" class="mt-2">
               <textarea class="form-control mb-2" rows="2" v-model="editContent"></textarea>
               <div class="d-flex align-items-center justify-content-between">
-                <select class="form-select form-select-sm" style="width:auto" v-model.number="editRating">
-                  <option :value="5">⭐ 5</option>
-                  <option :value="4">⭐ 4</option>
-                  <option :value="3">⭐ 3</option>
-                  <option :value="2">⭐ 2</option>
-                  <option :value="1">⭐ 1</option>
-                </select>
+                <div class="d-flex align-items-center">
+                  <i
+                    v-for="n in 5"
+                    :key="'edit-'+n"
+                    :class="['bi', (displayEdit >= n ? 'bi-star-fill' : 'bi-star'), 'fs-5', 'me-1']"
+                    role="button"
+                    @click="editRating = n"
+                    style="cursor:pointer;"
+                    aria-label="별점 선택"
+                  ></i>
+                  <small class="ms-2 text-muted">{{ editRating }}점</small>
+                </div>
                 <div>
                   <button class="btn btn-sm btn-primary me-2" @click="confirmEdit(c)">
                     저장
@@ -100,6 +135,7 @@
                 </div>
               </div>
             </div>
+            -->
 
           </div>
         </div>
@@ -117,7 +153,7 @@ import { useStore } from '@/stores/store.js'
 import { useBeachStore } from '@/stores/beachStore'
 
 const ui = useStore()
-const { header, beach } = storeToRefs(ui) // 지도/소개/주소는 기존대로 beach 사용
+const { beach } = storeToRefs(ui) // 지도/소개/주소는 기존대로 beach 사용
 
 // ===== 댓글/상세는 beachStore 사용 =====
 const route = useRoute()
@@ -151,35 +187,38 @@ const submitComment = async () => {
   }
 }
 
-// 삭제
-const remove = async (c) => {
-  if (!confirm('이 댓글을 삭제할까요?')) return
-  await beachStore.deleteComment(c.beachCommentNumber, beach.value.beachNumber)
-}
+const displayNew = computed(() => newRating.value)
 
-// 수정 (인라인)
-const editingId = ref(null)
-const editContent = ref('')
-const editRating = ref(5)
 
-const startEdit = (c) => {
-  editingId.value = c.beachCommentNumber
-  editContent.value = c.commentContent
-  editRating.value = c.rating
-}
-const cancelEdit = () => {
-  editingId.value = null
-  editContent.value = ''
-  editRating.value = 5
-}
-const confirmEdit = async (c) => {
-  await beachStore.editComment(
-    beach.value.beachNumber,
-    c.beachCommentNumber,
-    { commentContent: editContent.value, rating: editRating.value }
-  )
-  cancelEdit()
-}
+// // 수정 (인라인)
+// const editingId = ref(null)
+// const editContent = ref('')
+// const editRating = ref(5)
+
+// const startEdit = (c) => {
+//   editingId.value = c.beachCommentNumber
+//   editContent.value = c.commentContent
+//   editRating.value = c.rating
+// }
+// const cancelEdit = () => {
+//   editingId.value = null
+//   editContent.value = ''
+//   editRating.value = 5
+// }
+// const confirmEdit = async (c) => {
+//   await beachStore.editComment(
+//     beach.value.beachNumber,
+//     c.beachCommentNumber,
+//     { commentContent: editContent.value, rating: editRating.value }
+//   )
+//   cancelEdit()
+// }
+
+// // 삭제
+// const remove = async (c) => {
+//   if (!confirm('이 댓글을 삭제할까요?')) return
+//   await beachStore.deleteComment(c.beachCommentNumber, beach.value.beachNumber)
+// }
 
 // ===== 지도 =====
 const mapEl = ref(null)
@@ -200,3 +239,8 @@ watchEffect(() => {
   }
 })
 </script>
+
+<style scoped>
+.star { color: #6c757d; }
+.star.active { color: #ffc107; } 
+</style>

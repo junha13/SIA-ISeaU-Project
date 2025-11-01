@@ -201,7 +201,7 @@
 
 
   <!-- 댓글 -->
-  <select id="listBeachComments" parameterType="int" resultType="ResponseBeachCommentDTO">
+  <select id="getBeachComments" parameterType="int" resultType="ResponseBeachCommentDTO">
     <![CDATA[
     SELECT c.beach_comment_number AS beachCommentNumber,
            c.comment_content      AS commentContent,
@@ -236,7 +236,7 @@
     ]]>
   </update>
 
-  <delete id="deleteBeachComment" parameterType="int">
+  <delete id="deleteBeachComment" parameterType="ResponseBeachCommentDTO">
     <![CDATA[
     DELETE FROM tb_beach_comment_list
     WHERE beach_comment_number = #{beachCommentNumber}
