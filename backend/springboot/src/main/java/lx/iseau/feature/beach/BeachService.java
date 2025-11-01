@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -176,16 +177,15 @@ public class BeachService  {
      * 해수욕장 방문자 리뷰
      */
     // 방문자 리뷰 목록
+    @Transactional(readOnly = true)
     public Map<String, Object> getBeachComments(int beachNumber) {
     	Map<String, Object> map = new HashMap<>();
     	map.put("result", dao.getBeachComments(beachNumber));
         return map;
     }
-    
-    
-    
-    
+     
 	// 방문자 리뷰 등록
+    @Transactional
     public Map<String, Object> insertBeachComment(ResponseBeachCommentDTO dto) {
     	Map<String, Object> map = new HashMap<>();
     	
@@ -197,11 +197,8 @@ public class BeachService  {
         return map;
     }
     
-    
-    
-    
-    
-    // 방문자 리뷰 수정    
+    // 방문자 리뷰 수정
+    @Transactional // <-- 이거 넣고 빼고 차이 뭐지
     public Map<String, Object> updateBeachComment(ResponseBeachCommentDTO dto) {	
     	Map<String, Object> map = new HashMap<>();
     	
@@ -211,9 +208,8 @@ public class BeachService  {
         return map;
     }
     
-    
-    
     // 방문자 리뷰 삭제
+    @Transactional
     public Map<String, Object> deleteBeachComment(ResponseBeachCommentDTO dto) {
     	Map<String, Object> map = new HashMap<>();
     	
@@ -223,6 +219,27 @@ public class BeachService  {
         return map;
     }
     
-    
+    // 내 방문자 리뷰 목록
+    @Transactional(readOnly = true)
+    public Map<String, Object> getMyBeachComments(String sort) {
+        int userNumber = requireLoginUserNumber();
+        if (userNumber == 0) {
+            // 비로그인 처리 (프론트가 로그인 모달 띄우게)
+            return Map.of("result", List.of(), "login", false);
+        }
+
+        // 허용값만: latest / oldest (디폴트 latest)
+        if (!"oldest".equalsIgnoreCase(sort)) sort = "latest";
+
+        List<ResponseBeachCommentDTO> list = dao.getMyBeachComments(userNumber, sort);
+
+        // 프론트가 "내 댓글"임을 명확히 알 수 있도록 userNumber 포함
+        Map<String, Object> res = new HashMap<>();
+        res.put("result", list);
+        res.put("userNumber", userNumber);
+        res.put("sort", sort);
+        return res;
+    }
+       
     
 }
