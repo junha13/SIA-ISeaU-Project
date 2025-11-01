@@ -22,13 +22,13 @@ const { execute: unselectBeach } = useApi('post', '/user/unselect-beach');
 // 목록
 const fetchComments = (beachNumber) => useApi('get',  `/beach/detail/${beachNumber}/comments`).execute;
 // 등록
-const addComment    = (beachNumber) => useApi('post', `/beach/detail/${beachNumber}/comments`).execute;
+const addComment    = (beachNumber) => useApi('post', `/beach/detail/${beachNumber}/comments/insert`).execute;
 // 수정
 const editComment   = (beachNumber, beachCommentNumber) =>
-  useApi('put', `/beach/detail/${beachNumber}/comments/${beachCommentNumber}`).execute;
+  useApi('put', `/beach/detail/${beachNumber}/comments/update/${beachCommentNumber}`).execute;
 // 삭제 (백엔드 경로 주의: beachNumber 없이 commentNumber만)
 const deleteComment = (beachCommentNumber) =>
-  useApi('delete', `/beach/detail/comments/${beachCommentNumber}`).execute;
+  useApi('delete', `/beach/detail/comments/delete/${beachCommentNumber}`).execute;
 
 
 export const beachApi = {
