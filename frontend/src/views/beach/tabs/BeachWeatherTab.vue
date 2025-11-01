@@ -1,6 +1,7 @@
 <template>
   <div v-if="weatherData && weatherData.length > 0" class="p-3">
 
+    <!-- 1. 실시간 날씨 -->
     <div class="card shadow-sm mb-3 p-3">
       <h6 class="fw-bold mb-1">실시간 날씨</h6>
       <div class="d-flex align-items-center justify-content-between">
@@ -9,12 +10,14 @@
           <small class="text-muted">{{ getWeatherStatus(currentWeather) || '정보 없음' }}</small>
         </div>
         <div class="text-end text-secondary small">
+          <!-- TODO: 체감온도 계산 로직은 백엔드에서 제공하는 것이 정확합니다. 임시 값입니다. -->
           <div>체감온도 {{ Math.round((currentWeather?.temperature || 0) + 2) }}°C</div>
           <div>풍속 {{ currentWeather?.windSpeed || '--' }}m/s</div>
         </div>
       </div>
     </div>
 
+    <!-- 2. 시간별 날씨 (오늘) -->
     <div class="card shadow-sm p-3 mb-3">
       <h6 class="fw-bold mb-2">시간별 날씨 (오늘)</h6>
       <div v-if="hourlyForecastSlice.length > 0" class="d-flex justify-content-around text-center">
@@ -39,9 +42,11 @@
       </div>
     </div>
 
+    <!-- 4. [NEW] 일별 예보 (토글 & 시간별 목록) -->
     <div class="card shadow-sm p-3">
       <h6 class="fw-bold mb-2">일별 예보</h6>
 
+      <!-- 토글 버튼 영역 (트렌디 스타일 적용) -->
       <div class="d-flex justify-content-between mb-3 border-bottom">
         <button
             v-for="day in toggleDays"
@@ -56,8 +61,10 @@
           {{ day.label }} ({{ day.dayOfWeek }})
         </button>
       </div>
-
+      
+      <!-- 선택된 날짜의 시간별 예보 목록 -->
       <div v-if="selectedDayHourlyForecast.length > 0" class="d-flex justify-content-around text-center overflow-x-auto">
+        <!-- selectedDayHourlyForecast는 이미 3시간 단위로 필터링됨 -->
         <div v-for="item in selectedDayHourlyForecast" :key="item.forecastTime" class="p-2" style="min-width: 60px;">
           <div><i :class="getWeatherIcon(item)" class="fs-4" :style="{ color: '#FFB354' }"></i></div>
           <div>{{ formatTimeOnly(item.forecastTime) }}시</div>
@@ -68,48 +75,43 @@
       <div v-else class="text-center text-muted small py-2">
         {{ toggleDays.length > 0 ? '해당 날짜의 예보 정보가 없습니다.' : '다음 날 예보 정보가 없습니다.' }}
       </div>
-
-<!--    <div v-else class="p-3 text-center text-muted">-->
-<!--      <small>날씨 정보를 불러오는 중...</small>-->
-<!--    </div>-->
-
     </div>
+
+  </div>
+  
+  <div v-else class="p-3 text-center text-muted">
+    <small>날씨 정보를 불러오는 중...</small>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useBeachStore } from '@/stores/beachStore';
-import { storeToRefs } from 'pinia';
+import { ref, onMounted, computed } from 'vue'; 
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 // API_BASE_URL 변수가 사용되지 않아 제거됨
 
 const route = useRoute();
-//const weatherData = ref(null); // 백엔드 raw 리스트
+const weatherData = ref(null); // 백엔드 raw 리스트
 
-
-const beachStore = useBeachStore();
-const { weatherData, isWeatherLoading } = storeToRefs(beachStore);
 // --- API 호출 ---
 onMounted(() => {
-  const beachNumber = route.params.beachNumber;
-    if (beachNumber) {
-      requestWeatherData(beachNumber);
-    }
+  const beachNumber = route.params.beachNumber;
+  if (beachNumber) {
+    requestWeatherData(beachNumber);
+  }
 });
 
 async function requestWeatherData(beachNumber) {
-   try {
-     // API_ENDPOINT 대신 URL 하드코딩 유지
-     const response = await axios.get(
-      `http://172.168.10.15:8080/api/beach/detail/${beachNumber}/weather`
+  try {
+    // API_ENDPOINT 대신 URL 하드코딩 유지
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/api/beach/detail/${beachNumber}/weather`
     );
 
     // 실제 컨트롤러 응답 구조에 맞게 경로 수정
     weatherData.value = response.data.data.result;
-   
+    
     // --- [START] 요청하신 콘솔 로그 추가 ---
     if (weatherData.value && weatherData.value.length > 0) {
       const current = weatherData.value[0]; // currentWeather에 해당

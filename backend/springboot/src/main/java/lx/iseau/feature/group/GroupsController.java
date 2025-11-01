@@ -64,7 +64,9 @@ public class GroupsController {
         //   1. 서비스가 "로그인이 필요합니다"라는 메시지를 반환했는지 확인
         if (result.get("message") != null && result.get("message").toString().contains("로그인")) {
              // 500 서버 다운 대신, "401 권한 없음" 에러를 프론트에 반환
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+             return ResponseEntity.ok()
+            		 .header("api", "Groups/getGroupsList")
+                     .body(Map.of("data", "login"));
         }
         return ResponseEntity
                 .ok()

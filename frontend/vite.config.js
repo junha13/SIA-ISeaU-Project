@@ -8,7 +8,6 @@ import { fileURLToPath, URL } from 'node:url'
 // Spring Boot static 폴더 (frontend 기준 상대경로)
 const springBootStatic = path.resolve(__dirname, '../backend/springboot/src/main/resources/static')
 
-const baseUrl =
 // https://vite.dev/config/
 export default defineConfig({
     base: './',

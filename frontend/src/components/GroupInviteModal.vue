@@ -146,7 +146,7 @@ const searchUser = async () => {
     }
 
     try {
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/user/search`;
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`;
 
         const response = await axios.post(apiUrl, payload, {
             headers: { 'Content-Type': 'application/json' },
@@ -183,7 +183,7 @@ const searchUser = async () => {
  */
 const handleInvite = async () => {
 	// Target ID가 undefined인지 확인
-	console.log('Target ID:', searchResult.value?.username); 
+	console.log('Target ID:', searchResult.value?.username);
 
     if (!searchResult.value?.found || !searchResult.value?.username) {
         showConfirmModal({ title: '알림', message: '초대할 사용자를 먼저 조회하세요.', type: 'warning' });
@@ -210,20 +210,19 @@ const handleInvite = async () => {
 		markerColor: selectedMarkerColor.value
 	};
 
-	try {
-		// 4. Axios POST 요청 보내기
-		const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/groups/invite`;
-		const response = await axios.post(apiUrl, payload, {
-			headers: { 'Content-Type': 'application/json' },
-			withCredentials: true,
-			timeout: 5000,
-		});
+    try {
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/groups/invite`;
+        const response = await axios.post(apiUrl, payload, {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 5000,
+        });
 
 		// 5. 🚨 응답 구조 (response.data.data) 확인
 		const responsePayload = response.data.data;
 
 		// 🚨  응답 페이로드의 success 필드를 확인
-		if (responsePayload && responsePayload.success) { 
+		if (responsePayload && responsePayload.success) {
 			showConfirmModal({
 				title: '초대 성공',
 				message: `${searchResult.value.name}님에게 그룹 초대 요청을 보냈습니다.`,
@@ -237,10 +236,10 @@ const handleInvite = async () => {
 		} else {
 			// API는 성공(200 OK)했지만, 백엔드가 success: false 반환 시
 			console.warn('[GroupInviteModal] 초대 API 응답 실패:', responsePayload);
-			showConfirmModal({ 
-				title: '초대 실패', 
-				message: responsePayload.message || '초대 요청에 실패했습니다.', 
-				type: 'error' 
+			showConfirmModal({
+				title: '초대 실패',
+				message: responsePayload.message || '초대 요청에 실패했습니다.',
+				type: 'error'
 			});
 		}
 

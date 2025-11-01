@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <div class="p-3 mt-5 border rounded">
+    <div class="p-1 mt-5 rounded">
 
     <!-- 3. 주요 기능 카드 4개 (Grid Layout) -->
     <div class="row g-3">
@@ -164,13 +164,6 @@ const goToPage = (pageName) => {
 html, body {
   overflow: hidden;   /* 바깥 스크롤 죽이기 */
 }
-/* Main Page Custom Styles */
-.main-page {
-  /* App.vue의 padding-bottom만큼 고려하여 높이 설정 */
-  height: calc(100vh - 55px - 60px); /* 화면 전체 - 헤더 - 푸터 (App.vue의 크기에 따라 조정 필요) */
-  overflow-y: auto;
-}
-
 /* 알림 섹션 */
 .alert-section {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);

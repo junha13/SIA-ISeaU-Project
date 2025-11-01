@@ -1,6 +1,6 @@
 <template>
   <div v-if="viewMode === 'list'" class="beach-list-page p-3">
-    <div class="sticky-top bg-white pt-1 pb-3" style="z-index: 900;">
+    <div class="sticky-top bg-white mt-n1 p-1" style="z-index: 1000;">
       <div class="d-flex align-items-center mb-3">
         <div class="dropdown me-2">
           <button
@@ -78,7 +78,6 @@
 
     <div class="mt-3">
       <div v-if="viewMode === 'list'">
-        <!-- 목록 -->
         <div v-if="isLoading" class="text-center p-5">
           <i class="fas fa-spinner fa-spin me-2"></i> 목록을 불러오는 중...
         </div>
@@ -91,7 +90,7 @@
         <div v-else>
           <div
             v-for="beach in filteredBeachList"
-            :key="beach.beachNumber"
+            :key="beach.beachNumber"  
             class="beach-card card shadow-sm mb-4 rounded-3 border-0"
             @click="goToDetail(beach.beachNumber)"
           >
@@ -260,7 +259,7 @@ async function loadData() {
       // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
     };
 
-    const response = await axios.post(BEACH_LIST_API_URL, payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
     beaches.value = response.data.result
   } catch (error) {
     apiError.value = error;
@@ -272,13 +271,8 @@ async function loadData() {
 // 즐겨찾기
 // storeToRefs를 사용하므로 로컬 favoriteBeachIds.value에 할당할 필요가 없습니다.
 const fetchFavoriteIds = async () => {
-  await beachStore.fetchFavoriteIds();
-  console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
-};
-/*const fetchFavoriteIds = async () => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/my`);
-
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
 
@@ -286,9 +280,9 @@ const fetchFavoriteIds = async () => {
 
   } catch (error) {
     console.error("즐겨찾기 초기 로딩 실패:", error);
-    favoriteBeachIds.value = []; // 실패 시 빈 배열
+    favoriteBeachIds.value = [];
   }
-};*/
+};
 
 // 지역 검색조건
 function selectRegion(region) {
@@ -348,8 +342,39 @@ async function infiniteHandler($state) {
 
 // [수정] 즐겨찾기 토글 (console.log 추가)
 async function toggleFavorite(beachNumber) {
-  await beachStore.toggleFavoriteBeach(beachNumber);
+  const isCurrentlyFavorite = favoriteBeachIds.value.includes(beachNumber);
 
+  // 1. UI 상태 먼저 변경!
+  if (isCurrentlyFavorite) {
+    favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+    console.log('💔 즐겨찾기 제거 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
+  } else {
+    favoriteBeachIds.value.push(beachNumber);
+    console.log('💖 즐겨찾기 추가 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
+  }
+
+  // 2. API 요청 보내기
+  try {
+    if (isCurrentlyFavorite) {
+      await axios.delete(`${FAVORITES_API_URL}/${beachNumber}`);
+      console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
+    } else {
+      await axios.post(FAVORITES_API_URL, { beachNumber });
+      console.log(`⭐ ${beachNumber} 즐겨찾기 추가 성공`);
+    }
+  } catch (error) {
+    console.error("😥 즐겨찾기 토글 API 실패:", error);
+
+    // 3. API 실패 시, UI 상태 원래대로 되돌리기!
+    if (isCurrentlyFavorite) {
+      favoriteBeachIds.value.push(beachNumber);
+      console.log('롤백: 즐겨찾기 다시 추가 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
+    } else {
+      favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
+      console.log('롤백: 즐겨찾기 다시 제거 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
+    }
+    alert("즐겨찾기 변경 중 오류가 발생했습니다. 다시 시도해 주세요.");
+  }
 }
 
 // 필터된 해수욕장 리스트 (즐겨찾기 탭 포함)

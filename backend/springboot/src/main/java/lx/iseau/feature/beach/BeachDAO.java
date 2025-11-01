@@ -31,14 +31,14 @@ public interface BeachDAO {
 	 * 방문자 리뷰
 	 */
 	// 방문자 리뷰 목록 조회
-    List<ResponseBeachCommentDTO> listBeachComments(@Param("beachNumber") int beachNumber);
+    List<ResponseBeachCommentDTO> getBeachComments(int beachNumber);
     // 방문자 리뷰 등록
     int insertBeachComment(ResponseBeachCommentDTO dto);
     // 방문자 리뷰 수정
     int updateBeachComment(ResponseBeachCommentDTO dto);
     // 방문자 리뷰 삭제
-    int deleteBeachComment(@Param("beachCommentNumber") int beachCommentNumber);
-
+    int deleteBeachComment(ResponseBeachCommentDTO dto);
+	
 	
 	//public ResponseBeachPestDTO getBeachDetailPest(int beachNumber);
 }

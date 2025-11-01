@@ -216,7 +216,7 @@ const goTo = (path) => {
 
   // 그룹 페이지: GroupList로 이동
   if (path === '/group') {
-    router.push({ name: 'GroupList' })
+    router.push({ name: 'GroupMain' })
   }
   // 내정보 페이지: MyInfo로 이동
   else if (path === '/my-info') {
@@ -266,11 +266,6 @@ const navTextStyle = (path) => {
 function clickAlert() {
   alert('알림떠야할듯')
 }
-
-function clickHam() {
-  alert('햄버거 떠야할듯')
-}
-
 
 const isBack = ref(false)
 const stack = ref([])

@@ -32,7 +32,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/resources/**")
                 .addResourceLocations("classpath:/resources/");
 
-        // 업로드 파일 서빙: /files/** -> 프로젝트 root의 uploads/
+        // 업로드된 파일 서빙: http://localhost:8080/files/** -> 프로젝트 실행 디렉토리의 uploads/** (해파리 제보 쪽임)
         registry.addResourceHandler("/files/**")
                 .addResourceLocations("file:" + Paths.get("uploads").toAbsolutePath().toString() + "/");
     }
@@ -43,10 +43,8 @@ public class WebMVCConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:8080",   // 로컬 개발용 포트
-                        "https://hellokiyo.ngrok.io" // ngrok 도메인
-                )
+                // [수정] 5173을 프론트엔드 포트인 5174로 변경합니다.
+                .allowedOrigins("http://localhost:5173","http://localhost:8080", "https://hellokiyo.ngrok.io", "https://iseau.kr")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);

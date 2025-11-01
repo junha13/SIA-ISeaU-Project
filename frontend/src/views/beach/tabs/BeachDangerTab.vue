@@ -139,7 +139,7 @@ async function fetchRipCurrentData(beachNumber) {
 
 // 파고 및 수온 데이터 가져오기
 async function fetchWaveData(beachNumber) {
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/detail/${beachNumber}/danger`;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/detail/${beachNumber}/danger`;
 
   // 데이터 리셋
   waveChartData.value = [];

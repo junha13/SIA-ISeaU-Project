@@ -1,43 +1,44 @@
 <template>
   <div class="group-main-page" style="position: relative;">
 
-    <template v-if="hasGroup">
-      <div ref="mapEl" style="width:100%;height:300px;"></div>
+    <div ref="mapEl" style="width:100%;height:300px;"></div>
 
-      <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
-        <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="fetchLocations">
-          내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
-        </button>
-        <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
-          <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
-        </button>
-      </div>
+    <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
+      <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="fetchLocations">
+        내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
+      </button>
+      <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
+        <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
+      </button>
+    </div>
 
-      <div v-for="member in groupLocations" :key="member.id"
-           :style="markerStyle(member.color)"
-           class="position-absolute rounded-circle shadow-sm">
-      </div>
+    <div v-for="member in groupLocations" :key="member.id"
+         :style="markerStyle(member.color)"
+         class="position-absolute rounded-circle shadow-sm">
+    </div>
 
-      <div class="group-actions p-3">
+    <div class="group-actions p-3">
 
+      <template v-if="hasGroup">
+        
         <div class="d-flex justify-content-between align-items-center mb-4 gap-2">
-
+          
           <button
-            class="btn fw-bold rounded-pill shadow-sm action-button notification-button"
+            class="btn fw-bold rounded-pill shadow-sm action-button notification-button" 
             @click="handleNotificationSettings">
             <i class="fas fa-bell me-1"></i> 알림
           </button>
-
+          
           <div class="d-flex gap-2">
             <button
-              class="btn fw-bold text-white rounded-pill shadow-sm action-button"
-              :style="{ backgroundColor: mainColor }"
+              class="btn fw-bold text-white rounded-pill shadow-sm action-button" 
+              :style="{ backgroundColor: mainColor }" 
               @click="showInviteModal = true">
               <i class="fas fa-user-plus me-1"></i> 초대
             </button>
-
-            <button
-              class="btn fw-bold rounded-pill shadow-sm action-button btn-outline-danger"
+            
+            <button 
+              class="btn fw-bold rounded-pill shadow-sm action-button btn-outline-danger" 
               @click="confirmDeleteGroup">
               <i class="fas fa-trash me-1"></i> 삭제
             </button>
@@ -45,7 +46,7 @@
         </div>
 
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
-
+        
         <div class="member-list">
           <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
             <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
@@ -61,30 +62,32 @@
             </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template v-else>
-      <div class="group-actions p-3 d-flex align-items-center justify-content-center" style="min-height: 50vh;">
-        <div class="p-4 border rounded text-center empty-group-card" :style="{ borderColor: mainColor }">
-          <h5 class="fw-bold mb-3">그룹이 없습니다</h5>
-          <p class="text-muted mb-4">위치 공유를 위한 그룹을 생성하세요.</p>
-          <button class="btn fw-bold text-white w-100 create-group-button"
-                  :style="{ backgroundColor: mainColor }"
-                  @click="showCreateGroupModal = true">
-              <i class="fas fa-plus me-2"></i> 그룹 생성하기
-          </button>
+      <template v-else>
+
+        <div class="d-flex justify-content-end align-items-center mb-4 gap-2">
+            <button class="btn fw-bold text-white action-button create-button-full"
+                    :style="{ backgroundColor: mainColor, minWidth: '150px' }"
+                    @click="showCreateGroupModal = true">
+                <i class="fas fa-plus me-2"></i> 그룹 생성하기
+            </button>
         </div>
-      </div>
-    </template>
 
-    <GroupInviteModal
-      v-model:isVisible="showInviteModal"
-      :group-id="activeGroupId"
+        <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 (0명)</h6>
+        <div class="alert alert-info text-center" role="alert" style="color: #666; background-color: #f0f8ff; border-color: #cce5ff;">
+            그룹 생성 후 멤버가 표시됩니다.
+        </div>
+      </template>
+    </div>
+
+    <GroupInviteModal 
+      v-model:isVisible="showInviteModal" 
+      :group-id="activeGroupId" 
     />
-    <GroupCreateModal
-      v-model:isVisible="showCreateGroupModal"
-      @group-created="handleGroupCreated"
+    <GroupCreateModal 
+      v-model:isVisible="showCreateGroupModal" 
+      @group-created="handleGroupCreated" 
     />
   </div>
 </template>
@@ -94,31 +97,32 @@
 // 🐬 작동 로직 (JavaScript)
 // ---------------------------------
 import { ref, onMounted, computed, watch, watchEffect } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'; 
 import { useConfirmModal } from '@/utils/modalUtils';
 import axios from 'axios'; 
+
 import GroupInviteModal from '@/components/GroupInviteModal.vue';
-import GroupCreateModal from '@/components/GroupCreateModal.vue';
+import GroupCreateModal from '@/components/GroupCreateModal.vue'; 
 
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
-const { header, beach } = storeToRefs(store)
+const { } = storeToRefs(store);
 
 const mapEl = ref(null);
 let map;
 
-const router = useRouter();
+const router = useRouter(); 
 const { showConfirmModal } = useConfirmModal(); 
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
 // --- State (기억 상자) ---
-const myGroupList = ref([]);
+const myGroupList = ref([]); 
 const activeGroupLocations = ref([]);
-const showInviteModal = ref(false);
-const showCreateGroupModal = ref(false);
+const showInviteModal = ref(false); 
+const showCreateGroupModal = ref(false); 
 
 // --- Computed (자동 계산기) ---
 const hasGroup = computed(() => myGroupList.value.length > 0);
@@ -133,10 +137,7 @@ const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
     const uniqueMembers = {};
     
-    // id (user_number)를 키로 사용하여 중복 제거
     locations.forEach(member => {
-        // 중복될 경우, 나중에 들어온 값(일반적으로 더 정확한 리더 정보)으로 덮어씁니다.
-        // (PostgreSQL 쿼리에서 ORDER BY id, order_key를 사용했으므로 안정적입니다)
         uniqueMembers[member.id] = member;
     });
 
@@ -149,17 +150,14 @@ const handleNotificationSettings = () => {
     console.log("알림 설정 버튼 클릭됨");
 };
 
-/**
- * 그룹 목록을 API로부터 가져와 업데이트합니다.
- * [API] 내 그룹 목록을 서버에서 가져와 'myGroupList'를 채우는 일
- * 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
- */
+// [API] 내 그룹 목록을 서버에서 가져와 'myGroupList'를 채우는 일
+// 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
 const fetchGroups = async () => {
-  try {
-    const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`;
+    try {
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`;
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
-
+        
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
         // 🐬 그룹이 존재하면 ID를 확정하여 활성 상태로 전환합니다.
         if (hasGroup.value) {
@@ -172,25 +170,25 @@ const fetchGroups = async () => {
     }
 };
 
-/**
- * 활성화된 그룹의 멤버 위치 정보를 가져옵니다.
- */
+// [API] 현재 활성 그룹의 멤버 위치를 서버에서 가져오는 일
 const fetchLocations = async () => {
     // 'activeGroupId'가 없으면(null) 일을 시작하지 않음
     if (!activeGroupId.value) {
         console.warn("[FetchLocations] Aborted: activeGroupId is null.");
         return;
     }
-
+    
     console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회 시작...`);
 
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
         activeGroupLocations.value = response.data.data.result; // 결과를 'activeGroupLocations' 상자에 저장
+        // 💡 [추가] 마커 업데이트 로직 호출 (updateMapMarkers)
     } catch (error) {
         console.error('그룹 위치 정보 조회 실패:', error);
         activeGroupLocations.value = []; // 실패하면 비워버림
+        // 💡 [추가] 실패 시에도 마커 클리어 로직 호출
     }
 };
 
@@ -201,10 +199,10 @@ const handleGroupCreated = (newGroupId) => {
     fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 있음' 상태로 바꾸기 위해)
 };
 
-
+// [이벤트] 그룹 삭제 확인 팝업창 표시
 const confirmDeleteGroup = () => {
   if (!activeGroupId.value) return;
-
+  
   // 🚨 deleteGroup을 호출합니다.
   console.log(`[ConfirmDelete] 그룹 ID ${activeGroupId.value} 삭제 확인 건너뛰고 즉시 실행.`);
   deleteGroup();
@@ -213,17 +211,17 @@ const confirmDeleteGroup = () => {
 // [API] 그룹 삭제 (서버 통신)
 const deleteGroup = async () => {
     if (!activeGroupId.value) return;
-
+    
     console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출 시작...`);
-
+    
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/${activeGroupId.value}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`;
         await axios.delete(url, { withCredentials: true }); // 서버에 "이 그룹 삭제해줘!" 요청
-
+        
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
         activeGroupLocations.value = []; // 멤버 위치 목록 비우기
         fetchGroups(); // [일 1]을 다시 실행 (UI를 '그룹 없음' 상태로 바꾸기 위해)
-
+        
     } catch (error) {
         console.error('그룹 삭제 실패:', error);
         alert('그룹 삭제에 실패했습니다.');
@@ -235,7 +233,6 @@ const deleteGroup = async () => {
 // 'loadGroupData'라는 작은 일 (fetchLocations 실행)
 const loadGroupData = () => {
   if (activeGroupId.value) {
-    // 위치 정보 로드
     fetchLocations(); 
   }
 }
@@ -256,57 +253,48 @@ watch(activeGroupId, (newId, oldId) => {
     }
 }, { immediate: true }); // immediate: true (페이지 로드 시에도 일단 한 번 실행)
 
-// 'markerStyle': 더미 마커의 위치와 스타일을 정해주는 함수
+// 'markerStyle': 더미 마커의 위치와 스타일을 정하는 함수
 const markerStyle = (color) => ({
-  backgroundColor: color || 'blue',
+  backgroundColor: color || 'blue', 
   width: '12px',
   height: '12px',
-  top: `${Math.random() * 80 + 10}%`,
+  top: `${Math.random() * 80 + 10}%`, 
   left: `${Math.random() * 80 + 10}%`,
   zIndex: 10,
   border: '2px solid white',
 });
 
 
-/*
-========================================================
-                        지도 부분
-========================================================
-*/
+/* 지도 부분 */
+const latitude = ref('') // 내 위치(위도) 기억 상자
+const longitude = ref('') // 내 위치(경도) 기억 상자
 
-const latitude = ref('')
-const longitude = ref('')
-let marker=null
-
+// [자동] 'watchEffect': 지도 객체 초기화 및 중심 설정
 watchEffect(() => {
   // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
   const lat = latitude.value
   const lng = longitude.value
 
-  // 아직 준비 안 된 경우 바로 종료
+  // [중요] 지도를 그리기 위해 위치 재료가 준비되었는지 확인
   if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
 
-  // 네이버 지도에서 쓰는 좌표 객체 생성
+  // 재료가 다 준비되면 Naver 지도 API를 사용해 지도를 그림
   const pos = new window.naver.maps.LatLng(lat, lng)
 
   // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
   if (!map) {
+    // (지도 그린 적 없으면) 새로 그림
     map = new window.naver.maps.Map(mapEl.value, {
       center: pos,
       zoom: 15
     })
-    marker = new window.naver.maps.Marker({
-      position: pos,
-      map
-    })
 
-  //window.naver.maps.Event.once(map, 'init', loadBoundary)
-  window.naver.maps.Event.once(map, 'init', testLoadBoundary)
-  loadBoundary()
-    // 이미 map이 만들어져 있으면 새로 안 만들고 중심 좌표와 마커 위치만 업데이트
+    // GeoServer 요청 (사용자 요청으로 유지)
+    window.naver.maps.Event.once(map, 'init', testLoadBoundary)
+    loadBoundary()
   } else {
+    // (지도 그린 적 있으면) 중심 위치만 이동
     map.setCenter(pos)
-    marker.setPosition(pos)
   }
 })
 
@@ -333,159 +321,156 @@ function getLocation() {
 function requestGeoLocation(value) {
   if (!navigator.geolocation) return;
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      // 1) 값 넣고
-      latitude.value = pos.coords.latitude
-      longitude.value = pos.coords.longitude
+  const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+      `?service=WFS` +
+      `&version=1.0.0` +
+      `&request=GetFeature` +
+      `&typeName=iseau:tb_boundary` +
+      `&outputFormat=application/json` +
+      `&srsName=EPSG:4326`
+  let boundaryRings = [];
 
-      // 2) 서버로 보냄
-      const payload = {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      }
-      console.log('sending to server:', payload)
+  async function loadBoundary() {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      boundaryRings = [];
+      (data.features || []).forEach(f => {
+        const geom = f.geometry;
+        if (!geom) return;
+        geom.coordinates.forEach(poly => {
+          const outerRing = poly[0];
+          boundaryRings.push(outerRing);
+        });
+      });
+      console.log('[boundaryRings]', boundaryRings);
+    } catch (e) {
+      console.error("GeoServer 'tb_boundary' load failed:", e)
+    }
+  }
 
-      let axiosUrl;
-      if ( value === "test") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
-      }
-      if ( value === "boundary") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
-      }
+  const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+      `?service=WFS` +
+      `&version=1.0.0` +
+      `&request=GetFeature` +
+      `&typeName=iseau:tb_test_layer` +
+      `&outputFormat=application/json` +
+      `&srsName=EPSG:4326`
+  let testBoundaryRings = []
 
-      try {
-        const res = await axios.post(
-          axiosUrl,
-          payload,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            withCredentials: true,
-            timeout: 5000,
+  async function testLoadBoundary() {
+    try {
+      const testRes = await fetch(test_url);
+      const testData = await testRes.json();
+      testBoundaryRings = [];
+      (testData.features || []).forEach(f => {
+        const geom = f.geometry;
+        if (!geom) return;
+        geom.coordinates.forEach(poly => {
+          const outerRing = poly[0];
+          testBoundaryRings.push(outerRing);
+        });
+      });
+      console.log('[testBoundaryRings]', testBoundaryRings);
+      testDrawBoundaryRings()
+    } catch (e) {
+      console.error("GeoServer 'tb_test_layer' load failed:", e)
+    }
+  }
+
+  function testDrawBoundaryRings() {
+    if (!map) return;
+    testBoundaryRings.forEach(ring => {
+      const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon));
+      new window.naver.maps.Polyline({
+        map,
+        path,
+        strokeColor: '#0092BA',
+        strokeWeight: 3,
+        strokeOpacity: 0.9,
+      });
+    });
+    const bounds = new window.naver.maps.LatLngBounds();
+    testBoundaryRings.forEach(ring => {
+      ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon)));
+    });
+    if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
+      map.fitBounds(bounds);
+    }
+  }
+
+
+  function getLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latitude.value = pos.coords.latitude;
+          longitude.value = pos.coords.longitude;
+        },
+        (err) => {
+          console.error('위치 실패:', err.message);
+        },
+        {enableHighAccuracy: true}
+    )
+  }
+
+  function requestGeoLocation(value) {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          latitude.value = pos.coords.latitude
+          longitude.value = pos.coords.longitude
+
+          const payload = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
           }
-        )
-        console.log('OK', res.data)
-      } catch (e) {
-        console.error('send error', e)
-      }
-    },
-    (err) => {
-      console.error('위치 실패:', err.message)
-    },
-    { enableHighAccuracy: true }
-  )
-}
+          console.log('sending to server:', payload)
 
-/**
- * ================================================
- *                  폴리곤 만들기
- * ================================================
- */
-const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_boundary` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
+          let axiosUrl;
 
-// 해안선 가져오기
-let boundaryRings = [];
+          if (value === "test") {
+            axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`;
+          }
+          if (value === "boundary") {
+            axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`;
+          }
 
-async function loadBoundary() {
-  const res = await fetch(url);
-  const data = await res.json();
+          if (!axiosUrl) {
+            console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
+            return;
+          }
 
-  boundaryRings = []; // 초기화
-
-  // 이 데이터는 항상 MultiPolygon이라고 가정
-  (data.features || []).forEach(f => {
-    const geom = f.geometry;
-    if (!geom) return;
-
-    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
-    // geom.coordinates = [ polygon1, polygon2, ... ]
-    geom.coordinates.forEach(poly => {
-      // poly[0] = 외곽링
-      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
-      boundaryRings.push(outerRing);
-    });
-  });
-
-  console.log('[boundaryRings]', boundaryRings);
-}
-
-// =========== 테스트 데이터 (공카데미) ==========
-const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_test_layer` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
-
-let testBoundaryRings = []
-
-async function testLoadBoundary() {
-  const testRes = await fetch(test_url);
-  const testData = await testRes.json();
-
-  testBoundaryRings = []; // 초기화
-
-  // 이 데이터는 항상 MultiPolygon이라고 가정
-  (testData.features || []).forEach(f => {
-    const geom = f.geometry;
-    if (!geom) return;
-
-    // 👇 멀티폴리곤 한 개 = 여러 폴리곤
-    // geom.coordinates = [ polygon1, polygon2, ... ]
-    geom.coordinates.forEach(poly => {
-      // poly[0] = 외곽링
-      const outerRing = poly[0]; // [[lon,lat], [lon,lat], ...]
-      testBoundaryRings.push(outerRing);
-    });
-  });
-
-  console.log('[boundaryRings]', testBoundaryRings);
-
-  testDrawBoundaryRings() 
-}
-
-function testDrawBoundaryRings() {
-  if (!map) return;
-
-  testBoundaryRings.forEach(ring => {
-    // lon,lat → naver LatLng
-    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon));
-
-    new naver.maps.Polyline({
-      map,
-      path,
-      strokeColor: '#0092BA',
-      strokeWeight: 3,
-      strokeOpacity: 0.9,
-    });
-  });
-
-  // 보기 좋게 화면도 경계로 맞춰주자
-  const bounds = new naver.maps.LatLngBounds();
-  testBoundaryRings.forEach(ring => {
-    ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon)));
-  });
-  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
-    map.fitBounds(bounds);
+          try {
+            const res = await axios.post(
+                axiosUrl,
+                payload,
+                {
+                  headers: {'Content-Type': 'application/json'},
+                  withCredentials: true,
+                  timeout: 5000,
+                }
+            )
+            console.log('OK', res.data)
+          } catch (e) {
+            console.error('send error', e)
+          }
+        },
+        (err) => {
+          console.error('위치 실패:', err.message)
+        },
+        {enableHighAccuracy: true}
+    )
   }
 }
-
 </script>
 
 <style scoped>
 /* --------------------------------- */
 /* 🐬 디자인 (CSS) */
 /* --------------------------------- */
-
 .group-main-page {
-  /* AppLayout의 Header와 Footer 사이의 공간 */
   min-height: calc(100vh - 55px - 60px);
 }
 .map-overlay-buttons button:first-child {
@@ -505,12 +490,6 @@ function testDrawBoundaryRings() {
   border-radius: 0.5rem;
   width: 100%;
   max-width: 400px;
-}
-.create-group-button {
-  font-size: 1rem;
-  padding: 10px 20px;
-  height: 50px;
-  border-radius: 25px;
 }
 
 /* 💡 [디자인 수정] 버튼들을 지도 아래로 내림 */

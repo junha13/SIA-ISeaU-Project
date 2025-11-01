@@ -3,7 +3,7 @@
     <div class="mt-2">
       <img :src="beach?.beachImage" class="img-fluid w-100 rounded-1" alt="beach image" style="max-height: 250px; object-fit: cover;"/>
 
-      <div class="d-flex justify-content-around border-bottom bg-white sticky-top mt-2 mb-2" style="top:55px; z-index:100;">
+      <div class="d-flex justify-content-around border-bottom bg-white sticky-top mt-2 mb-2" style="top:2px; z-index:100;">
         <button
             v-for="(tab, i) in tabs"
             :key="i"
@@ -129,7 +129,7 @@ watch(
 async function requestBeachDetail(beachNumber) {
     try {
 const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/beach/detail/${beachNumber}/info`,
+  `${import.meta.env.VITE_API_BASE_URL}/api/beach/detail/${beachNumber}/info`,
    { headers: { Accept: 'application/json' }, timeout: 5000 }
   )
       beach.value = response.data.data.result

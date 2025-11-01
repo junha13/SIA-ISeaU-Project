@@ -6,7 +6,7 @@ import axios from 'axios'; // 🚨 'axios' import
 
 // 🚨 API 엔드포인트 URL (groupApi에 정의되지 않았을 경우 대비)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const PENDING_URL = `${API_BASE_URL}/groups/invitations/pending`;
+const PENDING_URL = `${API_BASE_URL}/api/groups/invitations/pending`;
 
 export const useGroupStore = defineStore('group', () => {
     const { showConfirmModal } = useConfirmModal();
