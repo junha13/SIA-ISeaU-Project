@@ -6,7 +6,7 @@ import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
 
 // Spring Boot static 폴더 (frontend 기준 상대경로)
-const springBootStatic = path.resolve(__dirname, '../../backend/springboot/src/main/resources/static')
+const springBootStatic = path.resolve(__dirname, '../backend/springboot/src/main/resources/static')
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -61,6 +61,7 @@ export default defineConfig({
     optimizeDeps: {
         include: ['quill', 'vue3-naver-maps'],
     },
+
     server: {
         port: 5173,
         host: true, // 외부에서 접속 가능 (개발용)
@@ -71,12 +72,13 @@ export default defineConfig({
                 secure: false,
             },
         },
-        // build: {
-        //     outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
-        //     emptyOutDir: true,         // 기존 내용 삭제 후 빌드
-        // },
+
         define: {
             __API_BASE_URL__: JSON.stringify(process.env.VITE_API_BASE_URL)
         }
-    }
+    },
+    build: {
+        outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
+        emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+    },
 })

@@ -10,6 +10,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class SuccessResponse {
+class ResponseGroups {
     private boolean success = true; // 기본값 true
 }
