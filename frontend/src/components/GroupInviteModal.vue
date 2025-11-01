@@ -146,7 +146,7 @@ const searchUser = async () => {
     }
 
     try {
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/user/search`; 
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`; 
 
         const response = await axios.post(apiUrl, payload, { 
             headers: { 'Content-Type': 'application/json' },
@@ -209,7 +209,7 @@ const handleInvite = async () => {
     };
 
     try {
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/groups/invite`;
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/groups/invite`;
         const response = await axios.post(apiUrl, payload, {
             headers: { 'Content-Type': 'application/json' },
             withCredentials: true,

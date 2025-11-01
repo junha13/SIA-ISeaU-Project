@@ -260,7 +260,7 @@ async function loadData() {
       // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
     };
 
-    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/beach/beaches`, payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
     beaches.value = response.data.result
   } catch (error) {
     apiError.value = error;
@@ -272,7 +272,7 @@ async function loadData() {
 
 const fetchFavoriteIds = async () => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/my`);
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
     console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
@@ -352,7 +352,7 @@ async function toggleFavorite(beachNumber) {
   // 2. API 요청 보내기
   try {
     if (isCurrentlyFavorite) {
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/${beachNumber}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/${beachNumber}`);
       console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
       await axios.post(FAVORITES_API_URL, { beachNumber });

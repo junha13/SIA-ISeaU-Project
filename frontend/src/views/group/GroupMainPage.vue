@@ -150,7 +150,7 @@ const handleNotificationSettings = () => {
 // 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
 const fetchGroups = async () => {
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups?timestamp=${new Date().getTime()}`; 
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`; 
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
         
@@ -176,7 +176,7 @@ const fetchLocations = async () => {
     console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회 시작...`);
 
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/locations?groupId=${activeGroupId.value}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
         activeGroupLocations.value = response.data.data.result; // 결과를 'activeGroupLocations' 상자에 저장
         // 💡 [추가] 마커 업데이트 로직 호출 (updateMapMarkers)
@@ -210,7 +210,7 @@ const deleteGroup = async () => {
     console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출 시작...`);
     
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/groups/${activeGroupId.value}`; 
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`; 
         await axios.delete(url, { withCredentials: true }); // 서버에 "이 그룹 삭제해줘!" 요청
         
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
@@ -236,7 +236,7 @@ const loadGroupData = () => {
 onMounted(() => {
   fetchGroups(); // [일 1] 실행 (그룹 있는지 확인)
   getLocation(); // 내 핸드폰 위치 켜기
-  requestGeoLocation(null); // (500 오류 방지를 위해 'test' 대신 null 전달)
+  requestGeoLocation("test"); // (500 오류 방지를 위해 'test' 대신 null 전달)
 });
 
 // [자동] 'watch': 'activeGroupId' 상자를 *계속 지켜봅니다.*
@@ -398,10 +398,10 @@ function requestGeoLocation(value) {
       let axiosUrl;
       
       if ( value === "test") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/testBoundaryCheck`;
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`;
       }
       if ( value === "boundary") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/location/boundaryCheck`;
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`;
       }
 
       if (!axiosUrl) {

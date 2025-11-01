@@ -206,7 +206,7 @@ import QuillForm from '@/components/Editor.vue'
         boardName:boardData.value.postCategoryName
     }
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post/post`,
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/post/post`,
         params,
         {
           headers: { 'Content-Type': 'application/json' },
