@@ -44,8 +44,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:5173",   // 로컬 개발용 포트
-                        "http://localhost:8080",
+                        "http://localhost:8080",   // 로컬 개발용 포트
                         "https://hellokiyo.ngrok.io" // ngrok 도메인
                 )
                 .allowedMethods("*")

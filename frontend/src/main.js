@@ -50,4 +50,6 @@ app.component('quill-editor', quillEditor)
 app.component('v-chart', ECharts)
 app.component('InfiniteLoading', InfiniteLoading)
 
-app.mount('#app')
+router.isReady().then(() => {
+    app.mount('#app')
+});

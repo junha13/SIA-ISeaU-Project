@@ -16,6 +16,10 @@ export const useBeachStore = defineStore('beach', () => {
     const apiError = ref(null);
     const currentBeachDetail = ref(null);
     const isDetailLoading = ref(false);
+
+    const weatherData = ref([]);
+    const isWeatherLoading = ref(false);
+    const weatherApiError = ref(null);
     const { showConfirmModal } = useConfirmModal();
 
     // === 댓글 상태 ===
@@ -81,8 +85,8 @@ export const useBeachStore = defineStore('beach', () => {
     };
     /**
      * ✅ 선택/해제 토글 (낙관적 업데이트 → 서버 호출 → 실패 시 롤백)
-     *  - 선택: POST /user/select-beach { beachNumber }
-     *  - 해제: POST /user/unselect-beach
+     * - 선택: POST /user/select-beach { beachNumber }
+     * - 해제: POST /user/unselect-beach
      */
     const toggleSelectBeach = async (beachId, beachName) => {
         const prevId = selectedBeachId.value
@@ -186,6 +190,29 @@ export const useBeachStore = defineStore('beach', () => {
         }
     };
 
+    // 날씨 데이터 요청 액션
+    const fetchWeatherData = async (beachNumber) => {
+        isWeatherLoading.value = true;
+        weatherApiError.value = null;
+        try {
+            const call = beachApi.fetchWeatherData(beachNumber);
+            const response = await call();
+
+            // 사용자 함수에서 사용된 경로(response.data.data.result)를 기반으로 데이터 추출
+            const result = response.data?.data?.result ?? response.data?.result ?? response.result ?? [];
+
+            weatherData.value = Array.isArray(result) ? result : [];
+            return weatherData.value; // 컴포넌트의 콘솔/날짜 초기화 로직을 위해 데이터를 반환
+        } catch (error) {
+            console.error('[BeachStore] 날씨 정보 로딩 실패:', error);
+            weatherApiError.value = error;
+            weatherData.value = [];
+            return [];
+        } finally {
+            isWeatherLoading.value = false;
+        }
+    };
+
     // -------- 댓글 액션 --------
     const loadComments = async (beachNumber) => {
         isCommentsLoading.value = true;
@@ -220,12 +247,12 @@ export const useBeachStore = defineStore('beach', () => {
     };
 
 
-
     // --- Getters ---
     const getCurrentSelectedBeachId = computed(() => selectedBeachId.value);
     const getFavoriteBeachIds = computed(() => favoriteBeachIds.value);
     const getCurrentBeachDetail = computed(() => currentBeachDetail.value);
     const getComments = computed(() => comments.value);
+    const getWeatherData = computed(() => weatherData.value);
 
     return {
         // state
@@ -238,6 +265,9 @@ export const useBeachStore = defineStore('beach', () => {
         isDetailLoading,
         comments,
         isCommentsLoading,
+        weatherData,
+        isWeatherLoading,
+        weatherApiError,
 
         // actions
         fetchBeaches,
@@ -250,11 +280,13 @@ export const useBeachStore = defineStore('beach', () => {
         deleteComment,
         loadComments,
         isSelected,
+        fetchWeatherData,
 
         // getters
         getCurrentSelectedBeachId,
         getFavoriteBeachIds,
         getCurrentBeachDetail,
-        getComments
+        getComments,
+        getWeatherData
     };
 });

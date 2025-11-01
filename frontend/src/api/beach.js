@@ -18,6 +18,9 @@ const { execute: selectBeach } = useApi('post', '/user/select-beach');
 // 활동 해수욕장 선택 해제 API (POST)
 const { execute: unselectBeach } = useApi('post', '/user/unselect-beach');
 
+// 해수욕장 날씨 정보 조회 API (GET)
+const fetchWeatherData = (beachNumber) => useApi('get', `/beach/detail/${beachNumber}/weather`).execute;
+
 // === 댓글(Comment) APIs 동적구조이기 때문에 정적 구조와 다름 ===
 // 목록
 const fetchComments = (beachNumber) => useApi('get',  `/beach/detail/${beachNumber}/comments`).execute;
@@ -38,6 +41,7 @@ export const beachApi = {
     selectBeach,
     unselectBeach,
 
+    fetchWeatherData,
     fetchBeachDetail,
     fetchComments,
     addComment,

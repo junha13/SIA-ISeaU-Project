@@ -8,8 +8,10 @@ import { fileURLToPath, URL } from 'node:url'
 // Spring Boot static 폴더 (frontend 기준 상대경로)
 const springBootStatic = path.resolve(__dirname, '../backend/springboot/src/main/resources/static')
 
+const baseUrl =
 // https://vite.dev/config/
 export default defineConfig({
+    base: './',
     plugins: [
         vue(),
         vueDevTools(),
@@ -22,12 +24,12 @@ export default defineConfig({
             },
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
             manifest: {
-                name: 'ISeaU PWA App',
-                short_name: 'ISeaU PWA',
+                name: '캄보디아',
+                short_name: '노예들',
                 theme_color: '#ffffff',
                 icons: [
                     {
-                        src: 'pwa-192x192.png',
+                        src: 'iseau.png',
                         sizes: '192x192',
                         type: 'image/png',
                         // 📌 icons의 purpose 속성 설정: maskable 아이콘을 반드시 포함해야 합니다.
@@ -67,7 +69,7 @@ export default defineConfig({
         host: true, // 외부에서 접속 가능 (개발용)
         proxy: {
             '/api': {
-                target: 'http://172.168.10.15:8080', // 개발 시 로컬 Spring Boot
+                target: process.env.VITE_API_BASE_URL, // 개발 시 로컬 Spring Boot
                 changeOrigin: true,
                 secure: false,
             },

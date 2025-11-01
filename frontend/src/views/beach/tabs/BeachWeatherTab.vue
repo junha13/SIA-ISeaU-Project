@@ -78,33 +78,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'; 
+import { ref, onMounted, computed } from 'vue';
+import { useBeachStore } from '@/stores/beachStore';
+import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 // API_BASE_URL 변수가 사용되지 않아 제거됨
 
 const route = useRoute();
-const weatherData = ref(null); // 백엔드 raw 리스트
+//const weatherData = ref(null); // 백엔드 raw 리스트
 
+
+const beachStore = useBeachStore();
+const { weatherData, isWeatherLoading } = storeToRefs(beachStore);
 // --- API 호출 ---
 onMounted(() => {
-  const beachNumber = route.params.beachNumber;
-  if (beachNumber) {
-    requestWeatherData(beachNumber);
-  }
+  const beachNumber = route.params.beachNumber;
+    if (beachNumber) {
+      requestWeatherData(beachNumber);
+    }
 });
 
 async function requestWeatherData(beachNumber) {
-  try {
-    // API_ENDPOINT 대신 URL 하드코딩 유지
-    const response = await axios.get(
+   try {
+     // API_ENDPOINT 대신 URL 하드코딩 유지
+     const response = await axios.get(
       `http://172.168.10.15:8080/api/beach/detail/${beachNumber}/weather`
     );
 
     // 실제 컨트롤러 응답 구조에 맞게 경로 수정
     weatherData.value = response.data.data.result;
-    
+   
     // --- [START] 요청하신 콘솔 로그 추가 ---
     if (weatherData.value && weatherData.value.length > 0) {
       const current = weatherData.value[0]; // currentWeather에 해당
