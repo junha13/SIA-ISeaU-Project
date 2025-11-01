@@ -12,6 +12,9 @@ export default defineConfig({
     vueDevTools(),
     VitePWA({
           strategies: 'injectManifest',
+          injectManifest: {
+            maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB로 올림
+          },
 
           // 🚨 추가: Service Worker 소스 파일 지정
           srcDir: 'public',
@@ -38,15 +41,15 @@ export default defineConfig({
               ]
 
           },
-          workbox: {
-              // 개발 환경에서 로그를 줄이는 데 도움을 줍니다.
-              // 이 옵션만으로 알림창이 사라지지 않을 수 있습니다.
-              // skipWaiting: true,
-              // clientsClaim: true
-          },
 
           // 🚨 [핵심] SW 등록 방식 설정 (개발 시 알림을 최소화)
           registerType: 'autoUpdate',
+            workbox: {
+                // 개발 환경에서 로그를 줄이는 데 도움을 줍니다.
+                // 이 옵션만으로 알림창이 사라지지 않을 수 있습니다.
+                // skipWaiting: true,
+                // clientsClaim: true
+            },
           // 💡 개발 중에는 SW 업데이트 시 사용자에게 팝업을 띄우지 않도록 설정하는 것이 편리합니다.
       })
   ],
