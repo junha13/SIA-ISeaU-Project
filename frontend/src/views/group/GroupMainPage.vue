@@ -39,6 +39,10 @@
           </div>
         </div>
 
+        <h3 class="fw-bolder mb-3" :style="{ color: darkColor }">
+            {{ groupName }}
+        </h3>
+
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
         <div class="member-list">
           <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
@@ -94,6 +98,11 @@ import axios from 'axios';
 import GroupInviteModal from '@/components/GroupInviteModal.vue';
 import GroupCreateModal from '@/components/GroupCreateModal.vue'; 
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach } = storeToRefs(store)
+
 
 // =================================================================
 // ## 1. 기본 설정 (Setup)
@@ -136,6 +145,11 @@ const activeGroupId = computed(() => {
   return hasGroup.value ? myGroupList.value[0].id : null;
 });
 
+// 💡 [추가] 현재 활성화된 그룹의 이름
+const groupName = computed(() => {
+  return hasGroup.value ? myGroupList.value[0].name : '';
+});
+
 // 💡 중복 제거된 그룹 멤버 위치 목록 (Template에서 사용)
 const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
@@ -157,6 +171,7 @@ const groupLocations = computed(() => {
 const fetchGroups = async () => {
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`; 
+        // 💡 [원본 유지] withCredentials: true (세션 방식)
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; 
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
@@ -187,6 +202,7 @@ const deleteGroup = async () => {
     console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출...`);
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`; 
+        // 💡 [원본 유지] withCredentials: true (세션 방식)
         await axios.delete(url, { withCredentials: true });
         
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
@@ -218,6 +234,7 @@ const fetchLocations = async () => {
     console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회...`);
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
+        // 💡 [원본 유지] withCredentials: true (세션 방식)
         const response = await axios.get(url, { withCredentials: true });
         activeGroupLocations.value = response.data.data.result; 
     } catch (error) {
@@ -358,6 +375,7 @@ function requestGeoLocation(value) {
         const res = await axios.post( axiosUrl, payload,
           {
             headers: { 'Content-Type': 'application/json' },
+            // 💡 [원본 유지] withCredentials: true (세션 방식)
             withCredentials: true,
             timeout: 5000,
           }
@@ -461,6 +479,7 @@ onMounted(() => {
   fetchGroups(); // 1. 그룹 정보 가져오기 (-> 4번, 5번 섹션 로직 실행)
   getLocation(); // 2. 내 위치 1회 가져오기 (-> 6번 섹션 로직 실행)
   requestGeoLocation("test"); // 3. 내 위치 서버로 전송 (7번 섹션 로직 실행)
+  header.value = groupName
 });
 
 onUnmounted(() => {
