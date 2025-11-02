@@ -7,7 +7,7 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
-    "dev": "vite  --host",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -24,7 +24,6 @@
     "infinite-loading-vue3-ts": "^1.0.5",
     "install": "^0.13.0",
     "pinia": "^2.1.7",
-    "run": "^1.5.0",
     "vite-plugin-pwa": "^1.1.0",
     "vue": "^3.4.27",
     "vue-echarts": "^8.0.1",

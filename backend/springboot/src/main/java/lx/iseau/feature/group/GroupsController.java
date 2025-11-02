@@ -56,11 +56,11 @@ public class GroupsController {
     }
 
     /**
-     * 그룹 목록 조회 (GET /api/groups)
+     * 그룹 목록 조회 (GET /api/groups) 
      */
     @RequestMapping
-    public ResponseEntity<?> getGroupsList() {
-    	Map<String, Object> result = service.getGroupsList();
+    public ResponseEntity<?> getGroupsList() {    	
+    	Map<String, Object> result = service.getGroupsList(); 
         //   1. 서비스가 "로그인이 필요합니다"라는 메시지를 반환했는지 확인
         if (result.get("message") != null && result.get("message").toString().contains("로그인")) {
              // 500 서버 다운 대신, "401 권한 없음" 에러를 프론트에 반환
@@ -78,30 +78,30 @@ public class GroupsController {
      */
     @RequestMapping("/invite") //
     public ResponseEntity<?> inviteGroupMember(@RequestBody RequestGroupInviteDTO request) {
-        Map<String, Object> result = service.inviteGroupMember(request);
-
+        Map<String, Object> result = service.inviteGroupMember(request); 
+            
         // 1.서비스가 반환한 결과에서 로그인 에러인지 확인
-        if (Boolean.FALSE.equals(result.get("success")) &&
-            result.get("message") != null &&
-            result.get("message").toString().contains("로그인")) {
+        if (Boolean.FALSE.equals(result.get("success")) && 
+            result.get("message") != null && 
+            result.get("message").toString().contains("로그인")) {            
              // 2. 로그인 필요 시 401 반환 (서비스 결과를 body에 포함)
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result); 
         }
         return ResponseEntity
                 .ok()
                 .header("api", "Groups/invite")
-                .body(Map.of("data", result));
+                .body(Map.of("data", result)); 
     }
 
     /**
      * 위치 공유 수락 (POST /api/groups/location/accept)
      * (수락자 정보를 세션에서 가져오도록 수정)
      */
-    @RequestMapping("/location/accept") //
-    public ResponseEntity<?> acceptLocationShare(@RequestBody RequestLocationShare request) {
-
-        Map<String, Object> result = service.acceptLocationShare(request);
-
+    @RequestMapping("/location/accept") // 
+    public ResponseEntity<?> acceptLocationShare(@RequestBody RequestLocationShare request) { 
+    	
+        Map<String, Object> result = service.acceptLocationShare(request);        
+        
         return ResponseEntity
                 .ok()
                 .header("api", "Groups/location/accept")
@@ -112,10 +112,10 @@ public class GroupsController {
      * 위치 공유 거절 (POST /api/groups/location/reject)
      */
     @RequestMapping("/location/reject")
-    public ResponseEntity<?> rejectLocationShare(@RequestBody RequestLocationShare request) {
-
+    public ResponseEntity<?> rejectLocationShare(@RequestBody RequestLocationShare request) { 
+    	
     	Map<String, Object> result = service.rejectLocationShare(request);
-
+    	
         return ResponseEntity
                 .ok()
                 .header("api", "Groups/location/reject")
@@ -137,7 +137,7 @@ public class GroupsController {
     @RequestMapping("/invitations/pending")
     public ResponseEntity<?> getPendingInvitations() {
         Map<String, Object> result = service.getPendingInvitations();
-
+        
         return ResponseEntity
                 .ok()
                 .header("api", "Groups/invitations/pending")

@@ -20,12 +20,19 @@
                class="d-block w-100" alt="해변 풍경 2" style="height: 200px; object-fit: cover;">
         </div>
         <div class="carousel-item">
+          <!-- 더미 이미지 (main.png 참고) -->
           <img src="/images/mainBeach/3.png"
                class="d-block w-100" alt="해변 풍경 3" style="height: 200px; object-fit: cover;">
         </div>
+        <div class="carousel-item">
+          <!-- 더미 이미지 (main.png 참고) -->
+          <img src="/images/mainBeach/4.png"
+               class="d-block w-100" alt="해변 풍경 4" style="height: 200px; object-fit: cover;">
         </div>
+        <!-- ... 추가 슬라이드 항목 ... -->
       </div>
 
+      <!-- Indicator (페이지네이션: 4 dots) -->
       <div class="carousel-indicators-custom d-flex justify-content-center mt-3">
         <button type="button" class="dot" :class="{ active: currentSlide === 0 }" @click="setSlide(0)" aria-label="Slide 1"></button>
         <button type="button" class="dot" :class="{ active: currentSlide === 1 }" @click="setSlide(1)" aria-label="Slide 2"></button>
@@ -34,7 +41,7 @@
       </div>
     </div>
 
-    <div class="p-3 mt-5 border rounded">
+    <div class="p-1 mt-5 rounded">
 
     <!-- 3. 주요 기능 카드 4개 (Grid Layout) -->
     <div class="row g-3">
@@ -55,7 +62,7 @@
 
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
-      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupList')">
+      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
         <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
       </div>
     </div>
@@ -79,6 +86,8 @@
         </div>
       </div>
     </div>
+    </div>
+
   </div>
 </template>
 
@@ -161,13 +170,9 @@ const goToPage = (pageName) => {
 </script>
 
 <style scoped>
-/* Main Page Custom Styles */
-.main-page {
-  /* App.vue의 padding-bottom만큼 고려하여 높이 설정 */
-  height: calc(100vh - 55px - 60px); /* 화면 전체 - 헤더 - 푸터 (App.vue의 크기에 따라 조정 필요) */
-  overflow-y: auto;
+html, body {
+  overflow: hidden;   /* 바깥 스크롤 죽이기 */
 }
-
 /* 알림 섹션 */
 .alert-section {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);

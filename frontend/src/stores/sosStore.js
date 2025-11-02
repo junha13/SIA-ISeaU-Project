@@ -56,18 +56,12 @@ export const useSOSStore = defineStore('sos', () => {
         */
 
         // 전화/설명 (네이밍 혼재 대비)
-        if (reportData.value.phone){
-            fd.append('mobile', reportData.value.phone);
-        }
-        if (reportData.value.description) {
-            fd.append('details', reportData.value.description);
-        }
-
+        if (reportData.value.phone) fd.append('mobile', reportData.value.phone); 
+        if (reportData.value.description) fd.append('details', reportData.value.description); 
+        
         // 파일
-        if (reportData.value.imageFile) {
-            fd.append('imageFile', reportData.value.imageFile);
-        }
-
+        if (reportData.value.imageFile) fd.append('imageFile', reportData.value.imageFile); 
+        
         // 선택: 기본 승인 상태
         fd.append('adminApproval', 'N');
 

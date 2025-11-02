@@ -32,28 +32,28 @@
       </div>
     </div>
 
-    <div class="card shadow-sm p-3 mb-3">
-      <h6 class="fw-bold mb-2">상세 정보</h6>
-      <div class="row text-center">
-        <div class="col"><small>풍속</small><div>{{ currentWeather?.windSpeed ?? '--' }}m/s</div></div>
-        <div class="col"><small>습도</small><div>{{ currentWeather?.humidity ?? '--' }}%</div></div>
-        <div class="col"><small>자외선지수</small><div>{{ currentWeather?.uvIndex ?? '--' }}</div></div>
-        <div class="col"><small>강수확률</small><div>{{ currentWeather?.rainProbability ?? '--' }}%</div></div>
-      </div>
-    </div>
-
+    <!-- 3. 상세 정보 (위치 변경됨) -->
+    <div class="card shadow-sm p-3 mb-3"> 
+      <h6 class="fw-bold mb-2">상세 정보</h6>
+      <div class="row text-center">
+                <div class="col"><small>풍속</small><div>{{ currentWeather?.windSpeed ?? '--' }}m/s</div></div>
+        <div class="col"><small>습도</small><div>{{ currentWeather?.humidity ?? '--' }}%</div></div>
+        <div class="col"><small>자외선지수</small><div>{{ currentWeather?.uvIndex ?? '--' }}</div></div>
+        <div class="col"><small>강수확률</small><div>{{ currentWeather?.rainProbability ?? '--' }}%</div></div>
+      </div>
+    </div>
     <!-- 4. [NEW] 일별 예보 (토글 & 시간별 목록) -->
     <div class="card shadow-sm p-3">
       <h6 class="fw-bold mb-2">일별 예보</h6>
 
       <!-- 토글 버튼 영역 (트렌디 스타일 적용) -->
       <div class="d-flex justify-content-between mb-3 border-bottom">
-        <button
-            v-for="day in toggleDays"
-            :key="day.dateStr"
-            @click="selectDay(day.dateStr)"
-            class="btn btn-sm flex-fill rounded-0 bg-white border-0 shadow-none text-center py-2"
-            :class="{
+        <button 
+          v-for="day in toggleDays"
+          :key="day.dateStr"
+          @click="selectDay(day.dateStr)"
+          class="btn btn-sm flex-fill rounded-0 bg-white border-0 shadow-none text-center py-2"
+          :class="{
             'tab-active fw-bold': selectedDay === day.dateStr,
             'text-muted fw-normal': selectedDay !== day.dateStr
           }"
@@ -71,7 +71,7 @@
           <div class="fw-bold">{{ item.temperature ?? '--' }}°C</div>
         </div>
       </div>
-
+      
       <div v-else class="text-center text-muted small py-2">
         {{ toggleDays.length > 0 ? '해당 날짜의 예보 정보가 없습니다.' : '다음 날 예보 정보가 없습니다.' }}
       </div>
@@ -192,6 +192,7 @@ const dailySummaries = computed(() => {
 });
 
 // 4. [NEW] 선택된 날짜의 시간별 예보
+// 4. [NEW] 선택된 날짜의 시간별 예보
 const selectedDayHourlyForecast = computed(() => {
     if (!Array.isArray(weatherData.value) || weatherData.value.length === 0 || !selectedDay.value) {
         return [];
@@ -219,7 +220,7 @@ const selectedDayHourlyForecast = computed(() => {
         index === self.findIndex(t => t.forecastTime === item.forecastTime)
     );
     // ---------------------------------------------
-
+    
     return uniqueResult; // [수정] result -> uniqueResult
 });
 

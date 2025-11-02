@@ -16,7 +16,4 @@ public class ResponseBeachCommentDTO {
     private int rating;
     private int beachNumber;
     private int userNumber;
-    
-    private String userId;
-    private String sort;
 }

@@ -14,6 +14,7 @@ public class RegisterDTO {
 	private String userName;
 	private String email;
 	private String mobile;
+	// 프론트에서 3-4-4 형태로 나누어 보낼 경우를 위해 분리 필드 추가
 	private String mobile1;
 	private String mobile2;
 	private String mobile3;

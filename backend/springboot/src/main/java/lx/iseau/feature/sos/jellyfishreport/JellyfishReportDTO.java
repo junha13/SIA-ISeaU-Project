@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class JellyfishReportDTO {
 	private Integer reportNumber;
-
+	
 	private Double lat;
 	private Double lon;
 	

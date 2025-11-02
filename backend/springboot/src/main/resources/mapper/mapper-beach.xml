@@ -209,7 +209,7 @@
            c.rating               AS rating,
            c.beach_number         AS beachNumber,
            c.user_number          AS userNumber,
-           u.id            AS userId
+           u.user_name            AS userName
     FROM tb_beach_comment_list c
     JOIN tb_user u ON u.user_number = c.user_number
     WHERE c.beach_number = #{beachNumber}
@@ -243,31 +243,5 @@
       AND user_number = #{userNumber}
     ]]>
   </delete>
-  
-	 <select id="getMyBeachComments" resultType="ResponseBeachCommentDTO">
-	  <![CDATA[
-	  SELECT
-	    c.beach_comment_number AS beachCommentNumber,
-	    c.comment_content      AS commentContent,
-	    c.created_time         AS createdTime,
-	    c.rating               AS rating,
-	    c.beach_number         AS beachNumber,
-	    c.user_number          AS userNumber,
-	    u.id                   AS userId
-	  FROM tb_beach_comment_list c
-	  JOIN tb_user u ON u.user_number = c.user_number
-	  WHERE c.user_number = #{userNumber}
-	  ]]>
-	  <choose>
-	    <when test="sort == 'oldest'">
-	      ORDER BY c.created_time ASC, c.beach_comment_number ASC
-	    </when>
-	    <otherwise>
-	      <!-- default: latest -->
-	      ORDER BY c.created_time DESC, c.beach_comment_number DESC
-	    </otherwise>
-	  </choose>
-	</select>
-  
 
 </mapper>

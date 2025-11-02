@@ -26,7 +26,7 @@ public class JellyfishReportService {
             savedUrl = fileStorageService.store(imageFile);
         }
         dto.setImageUrl(savedUrl);                 // DB에는 URL만 저장
-
+        
         // ✅ 파일이 없으면 빈 문자열로 보정하여 DB NOT NULL/제약을 회피
         if (dto.getImageUrl() == null) dto.setImageUrl("");
 

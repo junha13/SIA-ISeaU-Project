@@ -12,7 +12,6 @@
       </div>
     </div>
 
-    <!-- 이안류 탭 -->
     <div v-if="active === 'rip'">
       <h6 class="fw-bold mb-3">
         이안류 안전등급:
@@ -36,8 +35,7 @@
       </div>
     </div>
 
-    <!-- 해파리 탭 해파리면 'jelly'여야하지않나 -->
-    <div v-else-if="active === 'jelly'">
+    <div v-else-if="active === 'temp'">
       <h6 class="fw-bold mb-3">
         현재 수온:
         <span :style="{ color: '#0092BA' }">
@@ -54,7 +52,6 @@
       </div>
     </div>
 
-    <!-- 파고 탭 -->
     <div v-else>
       <h6 class="fw-bold mb-3">
         파고 높이:
@@ -179,7 +176,7 @@ async function fetchWaveData(beachNumber) {
         }
       } catch (e) { /* ignore */ }
     });
-
+    
     // 현재 파고 설정
     if (closestData && typeof closestData.waveHeight === 'number') {
       currentWaveHeight.value = closestData.waveHeight;
@@ -187,7 +184,7 @@ async function fetchWaveData(beachNumber) {
     } else {
        console.warn(`[DangerTab] (Wave) 현재 파고 높이 찾기 실패.`);
     }
-
+    
     // 현재 수온 설정
     if (closestData && typeof closestData.seaSurfaceTemperature === 'number') {
       currentTemp.value = closestData.seaSurfaceTemperature;
@@ -197,13 +194,13 @@ async function fetchWaveData(beachNumber) {
     }
 
     // --- 차트 데이터 생성 (파고/수온 분리) ---
-
+    
     // 1. 파고 차트 데이터 (1시간 간격, 24개)
     const waveChartValues = history
         .slice(0, 24)
         .map(item => typeof item.waveHeight === 'number' ? item.waveHeight : undefined);
-
-    while (waveChartValues.length < 24) {
+    
+    while (waveChartValues.length < 24) { 
         waveChartValues.push(undefined);
     }
     console.log("[DangerTab] (Wave) 최종 차트 데이터 (Y축, 24개):", waveChartValues);
@@ -213,7 +210,7 @@ async function fetchWaveData(beachNumber) {
     const tempChartValues = history
         .slice(0, 24)
         .map(item => typeof item.seaSurfaceTemperature === 'number' ? item.seaSurfaceTemperature : undefined);
-
+    
     while (tempChartValues.length < 24) {
         tempChartValues.push(undefined);
     }
@@ -316,13 +313,13 @@ const ripChartOption = computed(() => {
   };
 });
 
-// 파고 차트 옵션 (Line Chart)
+// 파고 차트 옵션 (변경 없음)
 const waveChartOption = computed(() => {
   const data = waveChartData.value; // Y축 (24개)
   const hours = waveChartHours.value; // X축 (24개)
   const now = new Date();
   const currentHour = now.getHours();
-  const nowIndex = currentHour;
+  const nowIndex = currentHour; 
 
   return {
     tooltip: {
@@ -345,7 +342,7 @@ const waveChartOption = computed(() => {
     },
     xAxis: [{ // X축 (시간)
       type: 'category',
-      data: hours, // '0시', '2시', ...
+      data: hours, // 24개
       position: 'bottom',
       axisLine: { show: false },
       axisTick: { show: false },
@@ -371,9 +368,9 @@ const waveChartOption = computed(() => {
         return Math.max(value.max, 1.5);
       }
     },
-    series: [{ // 선 그래프
+    series: [{ 
       type: 'line',
-      data: data, // 파고 높이 배열
+      data: data, // 24개 데이터
       smooth: true,
       showSymbol: false,
       itemStyle: { color: '#FFB354' },
@@ -384,10 +381,9 @@ const waveChartOption = computed(() => {
           { offset: 1, color: 'rgba(255, 179, 84, 0.05)' }
         ])
       },
-      markPoint: {
+      markPoint: { 
         symbol: 'circle', symbolSize: 10,
         data: [{
-            // 현재 시간 인덱스를 사용하여 좌표 설정
             coord: nowIndex !== -1 && data[nowIndex] !== undefined ? [nowIndex, data[nowIndex]] : undefined,
             itemStyle: { color: '#FFB354', borderColor: '#fff', borderWidth: 2 }
         }],
@@ -462,8 +458,8 @@ const seaSurfaceTemperatureChartOption = computed(() => {
       lineStyle: { width: 3, color: chartColor },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(0, 146, 186, 0.4)' },
-          { offset: 1, color: 'rgba(0, 146, 186, 0.05)' }
+          { offset: 0, color: 'rgba(0, 146, 186, 0.4)' }, 
+          { offset: 1, color: 'rgba(0, 146, 186, 0.05)' } 
         ])
       },
       markPoint: {
@@ -495,4 +491,3 @@ onMounted(() => {
   height: 220px;
 }
 </style>
-

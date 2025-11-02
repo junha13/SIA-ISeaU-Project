@@ -42,7 +42,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-//import { getToken, onMessage } from 'firebase/messaging';
+import { getToken, onMessage } from 'firebase/messaging';
 import { Workbox } from 'workbox-window';
 // 🚨 다음 두 파일은 프로젝트에 맞게 경로를 수정해야 합니다.
 import { messaging } from '@/firebase.js'; // Firebase 인스턴스 (초기화)
@@ -142,10 +142,10 @@ const requestPermissionAndGetToken = async () => {
       // 🚨 환경 변수 설정 필요 (vite.config.js 또는 .env 파일)
       const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-      // currentToken.value = await getToken(messaging, {
-      //   vapidKey: VAPID_KEY,
-      //   serviceWorkerRegistration: registration
-      // });
+      currentToken.value = await getToken(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration
+      });
 
       if (currentToken.value) {
         await saveTokenToServer(currentToken.value);

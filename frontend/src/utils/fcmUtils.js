@@ -2,14 +2,14 @@
 
 import { getToken } from 'firebase/messaging';
 import { Workbox } from 'workbox-window';
-import { messaging } from '@/firebase.js';
+import { messaging } from '@/firebase.js'; 
 import axios from 'axios';
 
 // --- 헬퍼 함수: 서버에 토큰 저장 ---
 const saveTokenToServer = async (token, userId) => {
     // 🚨 실제 백엔드 URL과 엔드포인트에 맞게 수정
     const SERVER_URL = '/api/fcm/save-token'; // 토큰 저장 엔드포인트
-
+    
     try {
         console.log(`[FCM UTIL] 서버 저장 시도: ID=${userId}, Token=${token.substring(0, 10)}...`);
         await axios.post(SERVER_URL, {
@@ -20,7 +20,7 @@ const saveTokenToServer = async (token, userId) => {
     } catch (error) {
         // 토큰 저장이 실패해도 로그인 흐름은 막지 않습니다.
         console.error(`[FCM UTIL] 토큰 서버 저장 실패 (User: ${userId}). DB 또는 네트워크 문제 확인 필요.`, error);
-        throw new Error('FCM 토큰 서버 저장 실패'); // 호출하는 쪽에서 에러 처리할 수 있도록 throw
+        throw new Error('FCM 토큰 서버 저장 실패'); 
     }
 };
 

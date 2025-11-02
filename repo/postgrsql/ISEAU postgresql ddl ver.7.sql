@@ -105,8 +105,8 @@ CREATE TABLE tb_beach_daily_forcast
 
 CREATE TABLE tb_board 
     ( 
-     board_number serial PRIMARY KEY ,
-     board_name   varchar (50)  NOT NULL
+     board_number serial PRIMARY KEY , 
+     board_name   varchar (50)  NOT NULL 
     ) 
 ;
 
@@ -219,7 +219,7 @@ CREATE TABLE tb_user
      location    geography(Point, 4326) , 
      role_number integer  NOT NULL,
 	 beach_number integer
-    )
+    ) 
 ;
 Create table tb_post_recommend
 	(
@@ -236,6 +236,7 @@ Create table tb_post_comment_recommend
 	PRIMARY KEY (user_number, comment_number)
 	)
 ;
+
 
 CREATE TABLE tb_user_settings 
     ( 
@@ -362,24 +363,24 @@ ALTER TABLE tb_user
 
 ;
 ALTER TABLE tb_beach_tag_list
-    ADD CONSTRAINT tb_beach_FKv3 FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_beach_FKv3 FOREIGN KEY 
+    ( 
      beach_number
-    )
-    REFERENCES tb_beach
-    (
+    ) 
+    REFERENCES tb_beach 
+    ( 
      beach_number
-    )
+    ) 
 ;
 ALTER TABLE tb_beach_tag_list
-    ADD CONSTRAINT tb_beach_tag_FKv1 FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_beach_tag_FKv1 FOREIGN KEY 
+    ( 
      tag_number
-    )
+    ) 
     REFERENCES tb_beach_tag
-    (
+    ( 
      tag_number
-    )
+    ) 
 ;
 
 ALTER TABLE tb_post 
@@ -404,14 +405,14 @@ ALTER TABLE tb_post_comment
     ) 
 ;
 ALTER TABLE tb_post_recommend
-    ADD CONSTRAINT tb_post_FKv1 FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_post_FKv1 FOREIGN KEY 
+    ( 
      post_number
-    )
-    REFERENCES tb_post
-    (
+    ) 
+    REFERENCES tb_post 
+    ( 
      post_number
-    )
+    ) 
 ;
 
 ALTER TABLE tb_beach_cannot_forecast 
@@ -513,35 +514,35 @@ ALTER TABLE tb_post_comment
     ) 
 ;
 ALTER TABLE tb_post_recommend
-    ADD CONSTRAINT tb_user_FKv8 FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_user_FKv8 FOREIGN KEY 
+    ( 
      user_number
-    )
-    REFERENCES tb_user
-    (
+    ) 
+    REFERENCES tb_user 
+    ( 
      user_number
-    )
+    ) 
 ;
 
 ALTER TABLE tb_post_comment_recommend
-    ADD CONSTRAINT tb_user_FKv9 FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_user_FKv9 FOREIGN KEY 
+    ( 
      user_number
-    )
-    REFERENCES tb_user
-    (
+    ) 
+    REFERENCES tb_user 
+    ( 
      user_number
-    )
+    ) 
 ;
 ALTER TABLE tb_post_comment_recommend
-    ADD CONSTRAINT tb_post_comment_FK FOREIGN KEY
-    (
+    ADD CONSTRAINT tb_post_comment_FK FOREIGN KEY 
+    ( 
      comment_number
-    )
-    REFERENCES tb_post_comment
-    (
+    ) 
+    REFERENCES tb_post_comment 
+    ( 
      comment_number
-    )
+    ) 
 ;
 
 ALTER TABLE tb_beach_daily_forcast 
@@ -586,7 +587,7 @@ values ('산책'), ('수영'), ('레저'), ('서핑'), ('가족'), ('핫플'), (
 insert into tb_board (board_name)
 values ('공지'), ('정보'), ('친목')
 ;
--- 해수욕장 데이터 넣기 (주의 : lon - lat 순서임)
+-- 해수욕장 데이터 넣기 (주의 : lon - lat 순서임) 
 INSERT INTO tb_beach (
     beach_name, 
     beach_image, 
@@ -659,7 +660,7 @@ VALUES
         '064-739-4993', -- 콤마(,) 추가
         DATE '2025-07-01', 
         DATE '2025-08-31'),
-		(
+      (
     '이호테우해수욕장',
     'https://buly.kr/8emJacU',
     '상당히 재밌다',
@@ -671,7 +672,7 @@ VALUES
     DATE '2025-07-15',
     DATE '2025-08-15'
     ),
-	(
+   (
     '경포대해수욕장',
     'https://buly.kr/8ph4YvI',
     '무지 재밌다',
@@ -682,8 +683,8 @@ VALUES
     '0507-1320-4901',
     DATE '2025-06-28',
     DATE '2025-08-17'
-	),
-	(
+   ),
+   (
     '협재해수욕장',
     'https://buly.kr/Gvnvh5N',
     '정말 재밌다',
@@ -765,181 +766,181 @@ VALUES
     DATE '2025-07-12',
     DATE '2025-08-24'),
    ('대천해수욕장',
-   'https://buly.kr/1n4n8sW',
-   '서해 대표 해수욕장',
-   ST_GeomFromText('POINT(126.51131 36.31125)', 4326)::geography,
-   'Y',
-   4.5,
-   '충청남도 보령시 신흑동',
-   '041-930-3520',
+   'https://buly.kr/1n4n8sW', 
+   '서해 대표 해수욕장', 
+   ST_GeomFromText('POINT(126.51131 36.31125)', 4326)::geography, 
+   'Y', 
+   4.5, 
+   '충청남도 보령시 신흑동', 
+   '041-930-3520', 
    DATE '2025-07-05', DATE '2025-08-24'),
 
-('꽃지해수욕장',
-'https://buly.kr/DwF4pIV',
-'할미·할아비바위 노을',
-ST_GeomFromText('POINT(126.33421 36.48765)', 4326)::geography,
-'Y', 4.4,
-'충청남도 태안군 안면읍 승언리 산29-100번지',
-'041-670-2543',
+('꽃지해수욕장', 
+'https://buly.kr/DwF4pIV', 
+'할미·할아비바위 노을', 
+ST_GeomFromText('POINT(126.33421 36.48765)', 4326)::geography, 
+'Y', 4.4, 
+'충청남도 태안군 안면읍 승언리 산29-100번지', 
+'041-670-2543', 
 DATE '2025-07-05', DATE '2025-08-17'),
-('만리포해수욕장',
-'https://buly.kr/5UIhkAO',
-'태안의 대표 백사장',
+('만리포해수욕장', 
+'https://buly.kr/5UIhkAO', 
+'태안의 대표 백사장', 
 ST_GeomFromText('POINT(126.13957 36.7884)', 4326)::geography,
-'Y', 4.3,
-'충청남도 태안군 모항리 1325-52번지',
-'041-672-9662',
+'Y', 4.3, 
+'충청남도 태안군 모항리 1325-52번지', 
+'041-672-9662', 
 DATE '2025-07-05', DATE '2025-08-24'),
-('신지명사십리해수욕장',
-'https://buly.kr/CWv0yuO',
-'직선 4km 백사장',
-ST_GeomFromText('POINT(126.81214 34.3272)', 4326)::geography,
-'Y', 4.5,
-'전라남도 완도군 신지면',
-'061-550-5427',
+('신지명사십리해수욕장', 
+'https://buly.kr/CWv0yuO', 
+'직선 4km 백사장', 
+ST_GeomFromText('POINT(126.81214 34.3272)', 4326)::geography, 
+'Y', 4.5, 
+'전라남도 완도군 신지면', 
+'061-550-5427', 
 DATE '2025-07-12', DATE '2025-08-17'),
 
-('만성리검은모래해변', 'https://buly.kr/2fea3Gq', '검은모래와 해상레일바이크로 유명한 여수 대표 해변',
+('만성리검은모래해변', 'https://buly.kr/2fea3Gq', '검은모래와 해상레일바이크로 유명한 여수 대표 해변', 
  ST_GeomFromText('POINT(127.74508 34.77675)', 4326)::geography, 'Y', 4.3,
- '전라남도 여수시 만흥동 1-3',
+ '전라남도 여수시 만흥동 1-3', 
 '061-651-4525', DATE '2025-07-05', DATE '2025-08-17'),
 
-('율포솔밭해수욕장', 'https://buly.kr/7mCYUzR', '소나무 숲 캠핑장과 해수녹차탕으로 유명한 보성 명소',
+('율포솔밭해수욕장', 'https://buly.kr/7mCYUzR', '소나무 숲 캠핑장과 해수녹차탕으로 유명한 보성 명소', 
  ST_GeomFromText('POINT(127.09065 34.66981)', 4326)::geography, 'Y', 4.2,
  '전라남도 보성군 회천면 우암길 24', '061-850-5448', DATE '2025-07-05', DATE '2025-08-17'),
 
-('우전해수욕장', 'https://buly.kr/1RFHBef', '증도의 얕은 바다와 모래톱으로 가족 단위 인기',
+('우전해수욕장', 'https://buly.kr/1RFHBef', '증도의 얕은 바다와 모래톱으로 가족 단위 인기', 
  ST_GeomFromText('POINT(126.11585 34.99616)', 4326)::geography, 'Y', 4.3,
  '전라남도 신안군 증도면 우전리 200', '061-240-4003', DATE '2025-07-05', DATE '2025-08-17'),
 
-('송호해수욕장', 'https://buly.kr/2qZL2ES', '완만한 경사와 얕은 수심으로 어린이 동반에 적합',
+('송호해수욕장', 'https://buly.kr/2qZL2ES', '완만한 경사와 얕은 수심으로 어린이 동반에 적합', 
  ST_GeomFromText('POINT(126.51966 34.31322)', 4326)::geography, 'Y', 4.1,
  '전라남도 해남군 송지면 땅끝해안로 1827','061- 530- 5917', DATE '2025-07-18', DATE '2025-08-17'),
 
-('가마미해수욕장', 'https://buly.kr/7x7JU6h', '서해안 노을 명소, 넓은 백사장과 야영장',
+('가마미해수욕장', 'https://buly.kr/7x7JU6h', '서해안 노을 명소, 넓은 백사장과 야영장', 
  ST_GeomFromText('POINT(126.40867 35.39878)', 4326)::geography, 'Y', 4.3,
  '전라남도 영광군 염산면 가마미해수욕장길 23', '061-356-1020', DATE '2025-07-18', DATE '2025-08-24'),
 
-('변산해수욕장',    'https://buly.kr/1RFHCN5', '부안의 대표 관광지, 변산반도 국립공원 내 위치',
+('변산해수욕장',    'https://buly.kr/1RFHCN5', '부안의 대표 관광지, 변산반도 국립공원 내 위치', 
  ST_GeomFromText('POINT(126.53113 35.68032)', 4326)::geography, 'Y', 4.5,
  '전라북도 부안군 변산면 대항리 603', '063-582-7808', DATE '2025-07-04', DATE '2025-08-17'),
 
-('격포해수욕장', 'https://buly.kr/74XWaRX', '채석강과 함께 즐기는 해변',
+('격포해수욕장', 'https://buly.kr/74XWaRX', '채석강과 함께 즐기는 해변', 
  ST_GeomFromText('POINT(126.4696 35.62906)', 4326)::geography, 'Y', 4.4,
  '전라북도 부안군  격포리 산 47-1', '063-580-4493', DATE '2025-07-04', DATE '2025-08-17'),
 
-('고사포해수욕장', 'https://buly.kr/8824TK2', '가족 단위 캠핑 명소',
+('고사포해수욕장', 'https://buly.kr/8824TK2', '가족 단위 캠핑 명소', 
  ST_GeomFromText('POINT(126.50869 35.66277)', 4326)::geography, 'Y', 4.3,
  '전라북도 부안군  변산면 운산리 441-4', '063-580-4493', DATE '2025-07-04', DATE '2025-08-17'),
 
-('모항해수욕장', 'https://buly.kr/6Bxjg26', '조용하고 프라이빗한 소규모 해변',
+('모항해수욕장', 'https://buly.kr/6Bxjg26', '조용하고 프라이빗한 소규모 해변', 
  ST_GeomFromText('POINT(126.50756 35.5822)', 4326)::geography, 'Y', 4.2,
  '전라북도 부안군 변산면 도청리 165',   '063-583-6941', DATE '2025-07-04', DATE '2025-08-17'),
 
-('위도해수욕장', 'https://buly.kr/5fDSjWo', '도서여행 명소, 맑은 물과 고운 모래',
+('위도해수욕장', 'https://buly.kr/5fDSjWo', '도서여행 명소, 맑은 물과 고운 모래', 
  ST_GeomFromText('POINT(126.28325 35.60463)', 4326)::geography, 'Y', 4.4,
  '전라북도 부안군 위도면 진리 575', '063-580-3762', DATE '2025-07-04', DATE '2025-08-17'),
 
-('무창포해수욕장', 'https://buly.kr/CB5VF1U', '신비의 바닷길로 유명',
- ST_GeomFromText('POINT(126.53606 36.24478)', 4326)::geography,
+('무창포해수욕장', 'https://buly.kr/CB5VF1U', '신비의 바닷길로 유명', 
+ ST_GeomFromText('POINT(126.53606 36.24478)', 4326)::geography, 
  'Y', 4.4, '충청남도 보령시 웅천읍 열린바다1길 10', '041-930-0800', DATE '2025-07-12', DATE '2025-08-24'),
 
 
-('천리포해수욕장', 'https://buly.kr/5UIhy0U', '천리포수목원 인근 잔잔한 해변',
- ST_GeomFromText('POINT(126.15062 36.80234)', 4326)::geography,
+('천리포해수욕장', 'https://buly.kr/5UIhy0U', '천리포수목원 인근 잔잔한 해변', 
+ ST_GeomFromText('POINT(126.15062 36.80234)', 4326)::geography, 
  'Y', 4.3, '충남 태안군 소원면 의항리 978-2번지', '041-670-2695', DATE '2025-07-05', DATE '2025-08-17'),
 
-('학암포해수욕장', 'https://buly.kr/FhOerJU', '완만한 수심과 솔숲 야영지',
- ST_GeomFromText('POINT(126.20323 36.89768)', 4326)::geography,
+('학암포해수욕장', 'https://buly.kr/FhOerJU', '완만한 수심과 솔숲 야영지', 
+ ST_GeomFromText('POINT(126.20323 36.89768)', 4326)::geography, 
  'Y', 4.3, '충청남도 태안군 원북면 방갈리 515-121번지', '041-670-2695', DATE '2025-07-05', DATE '2025-08-17'),
 
 
-('삼봉해수욕장', 'https://buly.kr/ChpmBQz', '곰섬·삼봉·기지포 연계 드라이브 코스',
- ST_GeomFromText('POINT(126.31733 36.56799)', 4326)::geography,
+('삼봉해수욕장', 'https://buly.kr/ChpmBQz', '곰섬·삼봉·기지포 연계 드라이브 코스', 
+ ST_GeomFromText('POINT(126.31733 36.56799)', 4326)::geography, 
  'Y', 4.2, '충남 태안군 안면읍 창기리 1304-3번지', '041-670-2695', DATE '2025-07-05', DATE '2025-08-17'),
 
-('신두리해수욕장', 'https://buly.kr/6XnFqrP', '신두리 사구 인접 자연경관',
- ST_GeomFromText('POINT(126.19112 36.84078)', 4326)::geography,
+('신두리해수욕장', 'https://buly.kr/6XnFqrP', '신두리 사구 인접 자연경관', 
+ ST_GeomFromText('POINT(126.19112 36.84078)', 4326)::geography, 
  'Y', 4.2, '충청남도 태안군 원북면 신두해변길 199', '041-670-2695', DATE '2025-07-05', DATE '2025-08-17'),
 
-('영일대해수욕장', 'https://buly.kr/C0AkG8P', '포항 도심 접근성 최고, 영일대 누각',
- ST_GeomFromText('POINT(129.37919 36.05653)', 4326)::geography,
+('영일대해수욕장', 'https://buly.kr/C0AkG8P', '포항 도심 접근성 최고, 영일대 누각', 
+ ST_GeomFromText('POINT(129.37919 36.05653)', 4326)::geography, 
  'Y', 4.5, '경상북도 포항시 북구  항구동 17-228',    '054-246-0041', DATE '2025-07-12', DATE '2025-08-24'),
 
-('송도해변(포항)', 'https://buly.kr/7mCYiXU', '2025년 재개장(보도자료)',
- ST_GeomFromText('POINT(129.3799 36.03556)', 4326)::geography,
+('송도해변(포항)', 'https://buly.kr/7mCYiXU', '2025년 재개장(보도자료)', 
+ ST_GeomFromText('POINT(129.3799 36.03556)', 4326)::geography, 
  'Y', 4.2, '경상북도 포항시 남구 송도동 1171', '054-240-7314', DATE '2025-07-12', DATE '2025-08-24'),
 
-('칠포해수욕장', 'https://buly.kr/YfUV4v', '서퍼·캠핑 인기 스팟',
- ST_GeomFromText('POINT(129.4001 36.13196)', 4326)::geography,
+('칠포해수욕장', 'https://buly.kr/YfUV4v', '서퍼·캠핑 인기 스팟', 
+ ST_GeomFromText('POINT(129.4001 36.13196)', 4326)::geography, 
  'Y', 4.3, '경상북도 포항시 북구 흥해읍 칠포리 197-31', '054-261-3001', DATE '2025-07-12', DATE '2025-08-24'),
 
-('월포해수욕장', 'https://buly.kr/CpyXQr', '완만한 수심과 긴 백사장',
- ST_GeomFromText('POINT(129.37137 36.2015)', 4326)::geography,
+('월포해수욕장', 'https://buly.kr/CpyXQr', '완만한 수심과 긴 백사장', 
+ ST_GeomFromText('POINT(129.37137 36.2015)', 4326)::geography, 
  'Y', 4.2, '경상북도 포항시 북구 청하면 월포리 294-21', '054-232-9770', DATE '2025-07-12', DATE '2025-08-24'),
 
 
-('구조라해수욕장', 'https://buly.kr/8TradjK', '외도·해금강 접근 용이, 가족 인기',
- ST_GeomFromText('POINT(128.68958 34.8081)', 4326)::geography,
+('구조라해수욕장', 'https://buly.kr/8TradjK', '외도·해금강 접근 용이, 가족 인기', 
+ ST_GeomFromText('POINT(128.68958 34.8081)', 4326)::geography, 
  'Y', 4.5, '경상남도 거제시 일운면 거제대로 2056', '055-639-3000', DATE '2025-07-05', DATE '2025-08-24'),
 
-('학동몽돌해수욕장', 'https://buly.kr/3u3t8V8', '자갈 파도소리로 유명한 몽돌 해변',
- ST_GeomFromText('POINT(128.64153 34.77328)', 4326)::geography,
+('학동몽돌해수욕장', 'https://buly.kr/3u3t8V8', '자갈 파도소리로 유명한 몽돌 해변', 
+ ST_GeomFromText('POINT(128.64153 34.77328)', 4326)::geography, 
  'Y', 4.4, '경상남도 거제시 동부면 학동6길 ','055-635-5421', DATE '2025-07-05', DATE '2025-08-24'),
 
-('와현모래숲해변', 'https://buly.kr/G3EAoib', '거제 동부의 잔잔한 모래사장',
- ST_GeomFromText('POINT(128.70738 34.81279)', 4326)::geography,
+('와현모래숲해변', 'https://buly.kr/G3EAoib', '거제 동부의 잔잔한 모래사장', 
+ ST_GeomFromText('POINT(128.70738 34.81279)', 4326)::geography, 
  'Y', 4.3, '경남 거제시 일운면 와현리', '055-639-4243', DATE '2025-07-05', DATE '2025-08-24'),
 
-('상주 은모래비치', 'https://buly.kr/90bra4a', '남해 대표 백사장(에메랄드 수색)',
- ST_GeomFromText('POINT(127.98892 34.72021)', 4326)::geography,
+('상주 은모래비치', 'https://buly.kr/90bra4a', '남해 대표 백사장(에메랄드 수색)', 
+ ST_GeomFromText('POINT(127.98892 34.72021)', 4326)::geography, 
  'Y', 4.2, '경남 남해군 상주면 상주리', '055-860-3073', DATE '2025-07-11', DATE '2025-08-24'),
 
-('광암해수욕장(창원)', 'https://buly.kr/8IwpenU', '창원 유일의 도심형 해수욕장',
- ST_GeomFromText('POINT(128.5006 35.10274)', 4326)::geography,
+('광암해수욕장(창원)', 'https://buly.kr/8IwpenU', '창원 유일의 도심형 해수욕장', 
+ ST_GeomFromText('POINT(128.5006 35.10274)', 4326)::geography, 
  'Y', 4.0, '경상남도 창원시 마산합포구 진동면 광암해안길', '055-225-6861', DATE '2025-07-05', DATE '2025-08-24'),
 
 ('송정해수욕장', 'https://buly.kr/8emLcPx', '서핑 포인트', ST_GeomFromText('POINT(129.20024 35.17915)', 4326)::geography, 'Y', 4.6,
  '부산광역시 해운대구 송정동 712-8', '051-749-5800', DATE '2025-06-21', DATE '2025-08-31'), -- 좌표: 송정역 인근 위키(동해선) :contentReference[oaicite:5]{index=5}
 
 ('다대포해수욕장', 'https://buly.kr/GZyRl2h', '낙조 명소, 모래사장', ST_GeomFromText('POINT(128.96353 35.04661)', 4326)::geography, 'Y', 4.2,
- '부산광역시 사하구 다대동 482-3번지', '051-220-4912', DATE '2025-07-01', DATE '2025-08-31'),
+ '부산광역시 사하구 다대동 482-3번지', '051-220-4912', DATE '2025-07-01', DATE '2025-08-31'), 
 
 ('일광해수욕장', 'https://buly.kr/8TradRO', '가족 휴양에 적합', ST_GeomFromText('POINT(129.23498 35.26107)', 4326)::geography, 'Y', 4.5,
- '부산광역시 기장군 일광읍 삼성3길 17', '051-709-5446', DATE '2025-07-01', DATE '2025-08-31'),
+ '부산광역시 기장군 일광읍 삼성3길 17', '051-709-5446', DATE '2025-07-01', DATE '2025-08-31'), 
 
 ('송도해수욕장', 'https://buly.kr/DEa37Qr', '대한민국 최초 공설 해수욕장(1913)', ST_GeomFromText('POINT(129.01881 35.07564)', 4326)::geography, 'Y', 4.5,
- '부산광역시 서구 암남동 135-5', '051-240-4000', DATE '2025-07-01', DATE '2025-08-31'),
+ '부산광역시 서구 암남동 135-5', '051-240-4000', DATE '2025-07-01', DATE '2025-08-31'), 
 
 ('안목해변', 'https://buly.kr/FWTtrsg', '커피거리로 유명', ST_GeomFromText('POINT(128.94464 37.77433)', 4326)::geography, 'Y', 4.0,
  '강원특별자치도 강릉시 견소동 286', '033-660-3887', DATE '2025-07-04', DATE '2025-08-17'),
 
 ('주문진해수욕장', 'https://buly.kr/8emLc2N', '북강릉 대표, BTS 버스정류장 인근', ST_GeomFromText('POINT(128.82121 37.90942)', 4326)::geography, 'Y', 3.7,
- '강원특별자치도 강릉시 주문진읍 향호리 8-35', '033-640-4535', DATE '2025-07-04', DATE '2025-08-17'),
+ '강원특별자치도 강릉시 주문진읍 향호리 8-35', '033-640-4535', DATE '2025-07-04', DATE '2025-08-17'), 
 
 ('낙산해수욕장', 'https://buly.kr/612ytlv', '양양 대표 해변', ST_GeomFromText('POINT(128.63751 38.11548)', 4326)::geography, 'Y', 4.1,
  '강원특별자치도 양양군 강현면 해맞이길 55', '033-670-2518', DATE '2025-07-11', DATE '2025-08-24'),
-
+ 
 ('망상해수욕장', 'https://buly.kr/CM0GD6S', '동해시 대표 해변(오토캠핑장)', ST_GeomFromText('POINT(129.09002 37.59425)', 4326)::geography, 'Y', 4.5,
- '강원특별자치도 동해시 망상동 393-36',    '033-530-2800', DATE '2025-07-09', DATE '2025-08-17'),
+ '강원특별자치도 동해시 망상동 393-36',    '033-530-2800', DATE '2025-07-09', DATE '2025-08-17'), 
 
 ('추암해변', 'https://buly.kr/GZyRkfT', '촛대바위 일출 명소', ST_GeomFromText('POINT(129.1596 37.47815)', 4326)::geography, 'Y', 3.8,
  '강원특별자치도 동해시 추암동 1', '033-530-2801', DATE '2025-07-09', DATE '2025-08-17'),
 ('삼척해수욕장', 'https://buly.kr/EoorwSD', '삼척 시내 접근 용이', ST_GeomFromText('POINT(129.17950 37.44030)', 4326)::geography, 'Y', 4.5,
- '   강원특별자치도 삼척시 테마타운길 76 ',    '033-570-3074', DATE '2025-07-09', DATE '2025-08-17'),
+ '   강원특별자치도 삼척시 테마타운길 76 ',    '033-570-3074', DATE '2025-07-09', DATE '2025-08-17'), 
 
 ('맹방해수욕장', 'https://buly.kr/8IwpeEM', '완만한 경사, 가족형', ST_GeomFromText('POINT(129.23489 37.38894)', 4326)::geography, 'Y', 4.5,
- '강원특별자치도 삼척시 근덕면 하맹방리', '033-570-3074', DATE '2025-07-09', DATE '2025-08-17'),
+ '강원특별자치도 삼척시 근덕면 하맹방리', '033-570-3074', DATE '2025-07-09', DATE '2025-08-17'), 
 
 -- ===================== 인천 (지자체·관광공사 공지/기사 기준) =====================
 ('왕산해수욕장', 'https://buly.kr/ChpmAc2', '을왕리 북측 조용한 백사장', ST_GeomFromText('POINT(126.3683442 37.4564569)', 4326)::geography, 'Y', 4.4,
- '인천광역시 중구 을왕동 810-97', '032-760-8874', DATE '2025-06-21', DATE '2025-09-07'),
+ '인천광역시 중구 을왕동 810-97', '032-760-8874', DATE '2025-06-21', DATE '2025-09-07'), 
 
 ('마시안해변', 'https://buly.kr/1RFHONA', '용유도 카페거리·노을', ST_GeomFromText('POINT(126.41819 37.47630)', 4326)::geography, 'Y', 4.4,
  '인천광역시 중구 마시란로 118', '032-746-3093', DATE '2025-06-21', DATE '2025-09-07'),
 
 ('하나개해수욕장', 'https://buly.kr/90brZRX', '무의도 대표 해변(갯벌체험)', ST_GeomFromText('POINT(126.40889 37.38584)', 4326)::geography, 'Y', 4.5,
- '인천광역시 중구 무의동 산189', '032-751-8833', DATE '2025-06-21', DATE '2025-09-07'),
+ '인천광역시 중구 무의동 산189', '032-751-8833', DATE '2025-06-21', DATE '2025-09-07'), 
 
 ('서포리해수욕장','https://buly.kr/9MRNX13', '3km 백사장·소나무숲', ST_GeomFromText('POINT(126.11405 37.2201)', 4326)::geography, 'Y', 4.1,
  '인천광역시 옹진군 덕적면 덕적남로 582', '   032-831-6623', DATE '2025-07-21', DATE '2025-08-17'),
@@ -984,3 +985,13 @@ first_aid_description) values
 (2, '저체온증 응급 처치', 2, '젖은 옷 벗기', 'images/fa/jellyfish1.mp4', '젖은 옷은 체온을 빼앗으므로 모두 벗깁니다.'),
 (2, '저체온증 응급 처치', 3, '따뜻하게 하기', 'images/fa/jellyfish1.mp4', '따뜻한 음료를 마시게 하고 옷을 껴입게 합니다., 겨드랑이나 배 목 뒤 등 큰 혈관이 있는 곳에 따뜻한 물주머니를 둡니다. (화상 주의 !)'),
 (2, '저체온증 응급 처치', 4, '움직임 최소화', 'images/fa/jellyfish1.mp4', '과도한 움직임은 심근에 부담을 주므로 최소화합니다.'),
+
+(3, '열사병 응급 처치', 1, '119 즉시 신고하기', 'images/fa/jellyfish1.mp4', '열사병인 경우 매우 위험하니 즉시 119에 신고하세요.'),
+(3, '열사병 응급 처치', 2, '환자 이동', 'images/fa/jellyfish1.mp4', '환자를 시원한 그늘이나 에어컨이 있는 곳으로 옮기세요.'),
+(3, '열사병 응급 처치', 3, '몸 식히기', 'images/fa/jellyfish1.mp4', '구급차가 도착하기 전까지 얼음이나 젖은 수건 등을 이용해 체온을 낮춰주세요.'),
+(3, '열사병 응급 처치', 4, '아무것도 먹이지 말기', 'images/fa/jellyfish1.mp4', '의식이 저하된 환자에게 약 포함 아무것도 먹이면 안됩니다.'),
+
+(4, '햇빛 화상 응급 처치', 1, '차가운 물로 식히기', 'images/fa/jellyfish1.mp4', '냉수 샤워나 찬물에 적신 수건으로 열을 식혀주세요., 얼음 또는 아주 찬물은 금지 !'),
+(4, '햇빛 화상 응급 처치', 2, '피부 수분 공급하기', 'images/fa/jellyfish1.mp4', '알로에젤 수딩젤 무향 보습로션 등을 발라주세요.'),
+(4, '햇빛 화상 응급 처치', 3, '햇볕 피하기', 'images/fa/jellyfish1.mp4', '화상을 입은 부위가 다시 햇볕에 노출되지 않도록 해주세요.'),
+(4, '햇빛 화상 응급 처치', 4, '물집은 터뜨리지 말기', 'images/fa/jellyfish1.mp4', '물집을 억지로 터뜨리면 세균 감염이 있으니 터뜨리지 마세요 !');

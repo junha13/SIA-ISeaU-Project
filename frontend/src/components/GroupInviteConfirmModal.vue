@@ -50,6 +50,7 @@
 
 <script setup>
 import { computed } from 'vue';
+// 🚨 1. [추가] useGroupStore를 임포트합니다.
 import { useGroupStore } from '@/stores/groupStore';
 
 const mainColor = '#0092BA';
@@ -62,8 +63,11 @@ const props = defineProps({
   invitationData: { type: Object, default: () => ({ inviterName: '', inviterPhone: '' }) },
 });
 
+// 🚨 2. [삭제] emit('confirm')은 이제 사용하지 않습니다.
+// const emit = defineEmits(['update:isVisible', 'confirm', 'cancel']);
+const emit = defineEmits(['update:isVisible']); // 'confirm', 'cancel' 제거
 
-const emit = defineEmits(['update:isVisible']);
+// 🚨 3. [추가] groupStore 인스턴스를 만듭니다.
 const groupStore = useGroupStore();
 
 // 모달 메시지 출력용 Computed
@@ -72,17 +76,17 @@ const inviterPhone = computed(() => props.invitationData.inviterPhone || '010-XX
 
 
 const handleConfirm = (isAccepted) => {
-  console.log(`[모달] 1. handleConfirm 함수 실행됨. (isAccepted: ${isAccepted})`);
+  console.log(`[모달] 1. handleConfirm 함수 실행됨. (isAccepted: ${isAccepted})`); 
 
   if (isAccepted) {
     // 🚨 4. [수정] emit('confirm') 대신, store의 acceptInvitation을 '직접' 호출합니다.
-    console.log("[모달] 2. store.acceptInvitation()을 직접 호출!");
+    console.log("[모달] 2. store.acceptInvitation()을 직접 호출!"); 
     // props.invitationData가 바로 store의 'receivedInvitation' 객체입니다.
     groupStore.acceptInvitation(props.invitationData);
 
   } else {
     // 🚨 5. [수정] 거절도 store를 직접 호출합니다.
-    console.log("[모달] 2. store.rejectInvitation()을 직접 호출!");
+    console.log("[모달] 2. store.rejectInvitation()을 직접 호출!"); 
     groupStore.rejectInvitation(props.invitationData);
   }
 };
@@ -90,7 +94,7 @@ const handleConfirm = (isAccepted) => {
 const handleCancel = () => {
   console.log("[모달] handleCancel 함수 실행됨.");
   // 🚨 6. [수정] '거절'이 아닌 '닫기' 버튼은 store의 closeModal을 호출합니다.
-  groupStore.closeModal();
+  groupStore.closeModal(); 
 };
 </script>
 

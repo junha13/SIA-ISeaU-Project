@@ -22,5 +22,6 @@ public class ResponseBeachDTO {
     private String mobile;
     private LocalDate openDate;
     private LocalDate closeDate;
-    private int reviewCount;
+    // ✅ 추가
+    private int reviewCount; 
 }

@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequestMapping("/api/beach")
@@ -24,7 +23,7 @@ public class BeachController {
 	@Autowired
 	private BeachService service; 
 
-	@PostMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
+	@RequestMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
 	public ResponseEntity<?> getBeachList(@RequestBody BeachListRequest request) {
 	    String sort = (request.getSort() != null) ? request.getSort().toLowerCase() : "";
 
@@ -106,9 +105,9 @@ public class BeachController {
 	    		.ok()
 		        .body(Map.of("data", result));
 	}
-
+	
 	// 해수욕장 리뷰 삭제
-	@RequestMapping("/detail/comments/delete/{beachCommentNumber}")
+	@RequestMapping("/detail/{beachNumber}/comments/delete/{beachCommentNumber}")
 	public ResponseEntity<?> deleteBeachComment(@PathVariable int beachCommentNumber, @RequestBody ResponseBeachCommentDTO dto) {
 		dto.setBeachCommentNumber(beachCommentNumber);
 		Map<String, Object> result = service.deleteBeachComment(dto);
@@ -116,34 +115,22 @@ public class BeachController {
 				.ok()
 				.body(Map.of("data", result));
 	}
-	
-	// 해수욕장 내 리뷰 목록 조회
-	@GetMapping("/comments/my")
-	public ResponseEntity<?> getMyBeachComments(
-	        @RequestParam(name = "sort", defaultValue = "latest") String sort
-	) {
-	    Map<String, Object> result = service.getMyBeachComments(sort);
-	    return ResponseEntity.ok()
-	            .header("api", "Beach/comments/my")
-	            .body(Map.of("data", result)); // result 안에 userNumber도 담아서 리턴
-	}
 
-	/*// 해수욕장 리뷰 수정
+	/* 해수욕장 리뷰 수정 (세션말고 토큰할때)
 	@PutMapping("/detail/{beachNumber}/comments/{beachCommentNumber}")
-	public ResponseEntity<?> editBeachComment(@PathVariable int beachNumber,
+	public ResponseEntity<?> updateBeachComment(@PathVariable int beachNumber,
 	                                       @PathVariable("beachCommentNumber") int beachCommentNumber,
 	                                       //@AuthenticationPrincipal user, 로그인 후 추가
 	                                       @RequestBody ResponseBeachCommentDTO dto) {
 	    // 임시 사용자 (로그인 기능 후 @AuthenticationPrincipal 교체)
-	    dto.setUserNumber(1); // dto.setUserNumber(user.getUserNumber());
 	    dto.setBeachNumber(beachNumber);
 	    dto.setBeachCommentNumber(beachCommentNumber);
 
-	    int updated = service.editBeachComment(dto);
+	    int updated = service.updateBeachComment(dto);
 	    return ResponseEntity.ok(Map.of("success", updated > 0));
-	}*/
-
-
+	}
+	 */
+	
 	
 
 	@GetMapping("/favorites/my")
@@ -155,7 +142,7 @@ public class BeachController {
 	            .header("api", "Beach/beachs/favorites")
 	            .body(Map.of("data", favoritesMap));
 	}
-
+	
 	@RequestMapping("/favorites")
 	public ResponseEntity<?> insertFavorite(@RequestBody ResponseFavoritesDTO dto) {
 	    int userNumber = 1; // 테스트용

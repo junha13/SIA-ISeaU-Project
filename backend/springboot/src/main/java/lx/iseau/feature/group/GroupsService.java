@@ -35,17 +35,17 @@ public class GroupsService {
 	    Map<String, Object> map = new HashMap<>();
 	    dto.setGroupName(dto.getGroupName().trim());
 	    dto.setUserId((Integer) session.getAttribute("userNumber"));
-
+	    
 	    int num = dao.insertGroup(dto); // ⬅️ 이 DTO에 새 ID가 담깁니다.
-
+	    
 	    if (num == 1) {
 	        map.put("result", "true");
 	        // 💡 [추가] DTO에 저장된 새 그룹 ID를 응답에 포함
-	        map.put("newGroupId", dto.getUserId());
+	        map.put("newGroupId", dto.getUserId()); 
 	    } else {
 	        map.put("result", "false");
 	    }
-
+	    
 	    return map;
 	}
 	
@@ -255,7 +255,7 @@ public class GroupsService {
         if (groups.isEmpty()) {
             return createErrorResponse("소속된 그룹이 없습니다.");
         }
-
+        
         int groupId = groups.get(0).getId(); // 사용자의 group_number PK
 
         // 3. 이 그룹의 리더가 누구인지 확인
@@ -294,7 +294,7 @@ public class GroupsService {
 	    }
 	    try {
 	        // ⬅️ (Integer)로 안전하게 형변환
-	        return (Integer) userNumberObj;
+	        return (Integer) userNumberObj; 
 	    } catch (ClassCastException e) {
 	        session.invalidate(); // 세션 데이터 손상 시 초기화
 	        return null;

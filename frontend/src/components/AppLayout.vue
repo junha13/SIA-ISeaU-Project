@@ -34,7 +34,7 @@
     <header class="app-header shadow-sm sticky-top" :style="{ backgroundColor: 'white', color: darkColor }">
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
-
+          
           <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
             <img class="mt-n2" src="/iseau.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}
@@ -50,12 +50,12 @@
         <div class="d-flex align-items-center">
           <i class="fas fa-bell fs-1 me-5" :style="{ color: dangerColor }" @click="clickAlert"></i>
           <button
-              class="bg-transparent border-0 p-2 burger-btn"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#sideMenu"
-              aria-controls="sideMenu"
-              aria-label="menu"
+            class="bg-transparent border-0 p-2 burger-btn"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sideMenu"
+            aria-controls="sideMenu"
+            aria-label="menu"
           >
             <i class="fas fa-bars mt-3 fs-1 me-4 navbar-toggler-icon"></i>
           </button>
@@ -83,9 +83,7 @@
           leave-active-class="animate__animated animate__fadeOut fast-route"
           mode="out-in"
         >
-          <div class="route-shell" :key="route.fullPath">
-            <component :is="Component" />
-          </div>
+          <component :is="Component" :key="route.fullPath" />
         </transition>
       </router-view>
     </main>
@@ -133,8 +131,8 @@ import { useConfirmModal } from '@/utils/modalUtils'
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
-//const { header, beach } = storeToRefs(store)
-//const mainHeaderName = "I Sea U"
+const { header, beach } = storeToRefs(store)
+const mainHeaderName = "I Sea U"
 
 function goBack() {
   router.back();
@@ -304,7 +302,7 @@ onMounted(() => {
 /* (이전 스타일 유지) */
 .main-scroll {
   height: calc(100vh - 55px - 60px);
-  overflow-y: scroll;
+  overflow-y: scroll;               
   scrollbar-gutter: stable;           /* ✅ 크롬/엣지에서 덜 흔들리게 */
   -webkit-overflow-scrolling: touch;  /* 모바일 부드럽게 */
 }

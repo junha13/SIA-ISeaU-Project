@@ -33,26 +33,26 @@ public class UserController {
 				.header("api", "User/settings")
 				.body(Map.of("data", result));
 	}
-
+	
 	@PostMapping("/search")
-	public ResponseEntity<Map<String, Object>> searchUsers(@RequestBody RequestUserDTO request) {
-	    Map<String, Object> map = new HashMap<>();
-
+	public ResponseEntity<Map<String, Object>> searchUsers(@RequestBody RequestUserDTO request) {	   
+	    Map<String, Object> map = new HashMap<>(); 
+	    
 	    String id = request.getId();
 	    String name = request.getUserName();
-	    String mobile = request.getMobile();
-
+	    String mobile = request.getMobile();	
+	    
 	   map.put("id", id != null ? id : "");
 	   map.put("name", name != null ? name : "");
 	   map.put("mobile", mobile != null ? mobile : "");
-
+	   
 	    Map<String, Object> result = service.searchUser(map);
 	    return ResponseEntity
 	            .ok()
-	            .header("api", "User/search")
-	            .body(Map.of("data", result));
+	            .header("api", "User/search")	          
+	            .body(Map.of("data", result)); 
 	}
-
+	
     @PostMapping("/select-beach")
     public ResponseEntity<?> selectBeach(@RequestBody Map<String, Object> body) {
         Object val = body.get("beachNumber");

@@ -1,8 +1,3 @@
-# Frontend 빌드 결과물 제외 (Spring Boot static 폴더)
-src/main/resources/static/
-# Firebase token
-src/main/resources/firebase/service-account.json
-
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

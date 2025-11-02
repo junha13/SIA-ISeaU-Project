@@ -31,21 +31,21 @@
         where user_number = #{userNumber}
 </update>
 <select id="findUserById" resultType="RequestUserDTO" parameterType="String">
-    SELECT
-        user_number,
-        id,
-        user_name,
-        email,
-        mobile
+    SELECT 
+        user_number, 
+        id,              
+        user_name,  
+        email, 
+        mobile 
     FROM tb_user
     WHERE id = #{id}
 </select>
-
+    
 <select id="findUserByNameAndPhone" resultType="RequestUserDTO" parameterType="java.util.Map">
-    SELECT
-        user_number,
-        id,             user_name,
-        email,
+    SELECT 
+        user_number, 
+        id,             user_name, 
+        email, 
         mobile
         FROM tb_user
     WHERE user_name = #{name} AND mobile = #{mobile}
@@ -65,12 +65,12 @@
      WHERE user_number = #{userNumber}
   </update>
 
-  <!-- 현재 선택된 해수욕장 번호 (없으면 null)
+  <!-- 현재 선택된 해수욕장 번호 (없으면 null) 
   <select id="findActiveBeach" resultType="java.lang.Integer">
     SELECT beach_number
       FROM tb_user
      WHERE user_number = #{userNumber}
   </select>
   -->
-
+	
 </mapper>

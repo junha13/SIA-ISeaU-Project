@@ -69,6 +69,7 @@
   </div> <!-- /.sos-main-page -->
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useSOSStore } from '@/stores/sosStore'; // SOS Store 사용
@@ -131,7 +132,6 @@ const dial = async (displayTitle, number) => {
         await showConfirmModal({
           title: '전화 연결 안내',
           message: `신고는 모바일 전용입니다.`,
-          //message: `${displayTitle} 번호(${number})를 복사했어요.\n스마트폰에서 붙여넣어 전화를 걸어주세요.`,
           type: 'info',
         });
       } catch {
@@ -179,7 +179,7 @@ const handleEmergencyCall = async (target) => {
   min-height: calc(100vh - 55px - 60px); /* 상단 헤더/하단 탭바 높이에 맞게 필요시 조정 */
 }
 
-/* 주요 기능 카드 스타일 */
+/* 카드(상단 2개) */
 .feature-card {
   display: flex;
   flex-direction: column;
@@ -236,4 +236,5 @@ const handleEmergencyCall = async (target) => {
   display: grid;
   place-items: center;
 }
+
 </style>

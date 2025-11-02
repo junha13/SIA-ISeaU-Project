@@ -36,7 +36,7 @@ public class JellyfishReportController {
 			@RequestParam(value = "adminApproval", required = false) String adminApproval
 	) {
 		try {
-
+			
 			if (lat == null || lon == null) {
 				return ResponseEntity.badRequest()
 						.body(Map.of("error", "BadRequest", "message", "위치 좌표(lat/lon)는 필수입니다."));
@@ -51,7 +51,7 @@ public class JellyfishReportController {
 			dto.setAdminApproval((adminApproval == null || adminApproval.isBlank()) ? "N" : adminApproval);
 
 			Integer id = service.createReport(dto, imageFile);
-
+			
             // ✅ HashMap은 null value 허용
             Map<String, Object> body = new HashMap<>();
             body.put("reportNumber", id);

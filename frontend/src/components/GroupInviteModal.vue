@@ -87,17 +87,17 @@
 import { ref, watch } from 'vue';
 import { useConfirmModal } from '@/utils/modalUtils';
 import axios from 'axios';
-//import { useRoute } from 'vue-router'; // useRoute import
+// import { useRoute } from 'vue-router'; // 💡 [제거] 더 이상 URL에서 ID를 읽지 않음
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 const { showConfirmModal } = useConfirmModal();
-//const route = useRoute(); // 1. useRoute 인스턴스 생성
+// const route = useRoute(); // 💡 [제거]
 
 const props = defineProps({
     isVisible: { type: Boolean, default: false },
-    // 부모(GroupMainPage)로부터 현재 그룹 ID를 받습니다.
-    groupId: { type: Number, required: true }
+    // 💡 [추가] 부모(GroupMainPage)로부터 현재 그룹 ID를 받습니다.
+    groupId: { type: Number, required: true } 
 });
 
 const emit = defineEmits(['update:isVisible']);
@@ -128,16 +128,16 @@ const searchUser = async () => {
     let payload = {
         id: null,
         name: null,
-        mobile: null
+        mobile: null 
     };
-
+    
     if (searchMethod.value === 'id' && searchQuery.value) {
         isValid = true;
-        payload.id = searchQuery.value;
+        payload.id = searchQuery.value; 
     } else if (searchMethod.value === 'phone' && searchQueryName.value && searchQueryPhone.value) {
         isValid = true;
-        payload.name = searchQueryName.value;
-        payload.mobile = searchQueryPhone.value;
+        payload.name = searchQueryName.value; 
+        payload.mobile = searchQueryPhone.value; 
     }
 
     if (!isValid) {
@@ -146,22 +146,22 @@ const searchUser = async () => {
     }
 
     try {
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`;
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/user/search`; 
 
-        const response = await axios.post(apiUrl, payload, {
+        const response = await axios.post(apiUrl, payload, { 
             headers: { 'Content-Type': 'application/json' },
-            withCredentials: true
+            withCredentials: true 
         });
-
+        
         const responsePayload = response.data.data;
-
+        
         if (responsePayload && responsePayload.found && responsePayload.user) {
             const userData = responsePayload.user;
-
+            
             searchResult.value = {
                 found: true,
-                id: userData.id,
-                name: userData.userName || userData.name,
+                id: userData.id, 
+                name: userData.userName || userData.name, 
                 username: userData.id, // targetUserId로 사용할 로그인 ID
             };
         } else {
@@ -172,7 +172,7 @@ const searchUser = async () => {
     } catch (error) {
         console.error('[GroupInviteModal] 사용자 검색 오류:', error);
         searchError.value = error.response ? error.response.data : error;
-        searchResult.value = { found: false, id: null, name: null, username: null };
+        searchResult.value = { found: false, id: null, name: null, username: null }; 
     } finally {
         isSearching.value = false;
     }
@@ -182,8 +182,7 @@ const searchUser = async () => {
  * 그룹 초대 API 호출
  */
 const handleInvite = async () => {
-	// Target ID가 undefined인지 확인
-	console.log('Target ID:', searchResult.value?.username);
+    console.log('Target ID:', searchResult.value?.username); 
 
     if (!searchResult.value?.found || !searchResult.value?.username) {
         showConfirmModal({ title: '알림', message: '초대할 사용자를 먼저 조회하세요.', type: 'warning' });
@@ -194,7 +193,7 @@ const handleInvite = async () => {
     console.log('[GroupInviteModal] 그룹 초대 API 호출 시작...');
 
     // 💡 [수정] prop으로 받은 groupId 사용
-    const groupId = props.groupId;
+    const groupId = props.groupId; 
 
     if (!groupId) {
         console.error('[GroupInviteModal] 그룹 ID를 찾을 수 없습니다. (Prop에서 null 받음)');
@@ -203,12 +202,11 @@ const handleInvite = async () => {
         return;
     }
 
-	// 3. API 요청 본문(Payload) 생성
-	const payload = {
-		groupId: groupId,
-		targetUserId: searchResult.value.username, // 유효한 ID가 들어올 것으로 기대
-		markerColor: selectedMarkerColor.value
-	};
+    const payload = {
+        groupId: groupId,
+        targetUserId: searchResult.value.username, 
+        markerColor: selectedMarkerColor.value
+    };
 
     try {
         const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/groups/invite`;
@@ -218,42 +216,38 @@ const handleInvite = async () => {
             timeout: 5000,
         });
 
-		// 5. 🚨 응답 구조 (response.data.data) 확인
-		const responsePayload = response.data.data;
+        const responsePayload = response.data.data;
 
-		// 🚨  응답 페이로드의 success 필드를 확인
-		if (responsePayload && responsePayload.success) {
-			showConfirmModal({
-				title: '초대 성공',
-				message: `${searchResult.value.name}님에게 그룹 초대 요청을 보냈습니다.`,
-				type: 'success',
-				autoHide: true,
-				duration: 1500
-			});
-			emit('update:isVisible', false);
-			resetState();
-			console.log('[GroupInviteModal] 그룹 초대 성공');
-		} else {
-			// API는 성공(200 OK)했지만, 백엔드가 success: false 반환 시
-			console.warn('[GroupInviteModal] 초대 API 응답 실패:', responsePayload);
-			showConfirmModal({
-				title: '초대 실패',
-				message: responsePayload.message || '초대 요청에 실패했습니다.',
-				type: 'error'
-			});
-		}
+        if (responsePayload && responsePayload.success) { 
+            showConfirmModal({
+                title: '초대 성공',
+                message: `${searchResult.value.name}님에게 그룹 초대 요청을 보냈습니다.`,
+                type: 'success',
+                autoHide: true,
+                duration: 1500
+            });
+            emit('update:isVisible', false);
+            resetState();
+            console.log('[GroupInviteModal] 그룹 초대 성공');
+        } else {
+            console.warn('[GroupInviteModal] 초대 API 응답 실패:', responsePayload);
+            showConfirmModal({ 
+                title: '초대 실패', 
+                message: responsePayload.message || '초대 요청에 실패했습니다.', 
+                type: 'error' 
+            });
+        }
 
-	} catch (error) {
-		// 6. 에러 처리 (4xx, 5xx 에러)
-		console.error('[GroupInviteModal] 그룹 초대 오류:', error);
-		let errorMessage = '초대 요청 중 오류가 발생했습니다.';
-		if (error.response && error.response.data && error.response.data.message) {
-			errorMessage = error.response.data.message; // 백엔드가 보낸 에러 메시지 사용
-		}
-		showConfirmModal({ title: '초대 실패', message: errorMessage, type: 'error' });
-	} finally {
-		isInviting.value = false;
-	}
+    } catch (error) {
+        console.error('[GroupInviteModal] 그룹 초대 오류:', error);
+        let errorMessage = '초대 요청 중 오류가 발생했습니다.';
+        if (error.response && error.response.data && error.response.data.message) {
+            errorMessage = error.response.data.message; 
+        }
+        showConfirmModal({ title: '초대 실패', message: errorMessage, type: 'error' });
+    } finally {
+        isInviting.value = false;
+    }
 };
 
 const handleCancel = () => {

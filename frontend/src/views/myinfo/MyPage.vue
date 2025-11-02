@@ -16,15 +16,15 @@
           </div>
         </div>
       </div>
-
+    
   <div v-else>
     <!-- 1. 정보 섹션 -->
         <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
           <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
           <div class="d-flex justify-content-between py-2 border-bottom">
             <span class="text-muted">이름</span>
-            <span
-              class="fw-bold"
+            <span 
+              class="fw-bold" 
               :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
               :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
               @click="!authStore.userInfo.userName && goToLogin()">
@@ -33,7 +33,7 @@
           </div>
           <div class="d-flex justify-content-between py-2">
             <span class="text-muted">전화번호</span>
-            <span
+            <span 
               class="fw-bold"
               :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
               :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"

@@ -18,9 +18,6 @@ const { execute: selectBeach } = useApi('post', '/api/user/select-beach');
 // 활동 해수욕장 선택 해제 API (POST)
 const { execute: unselectBeach } = useApi('post', '/api/user/unselect-beach');
 
-// 해수욕장 날씨 정보 조회 API (GET)
-const fetchWeatherData = (beachNumber) => useApi('get', `/beach/detail/${beachNumber}/weather`).execute;
-
 // === 댓글(Comment) APIs 동적구조이기 때문에 정적 구조와 다름 ===
 // 목록
 const fetchComments = (beachNumber) => useApi('get',  `/api/beach/detail/${beachNumber}/comments`).execute;
@@ -29,13 +26,9 @@ const addComment    = (beachNumber) => useApi('post', `/api/beach/detail/${beach
 // 수정
 const editComment   = (beachNumber, beachCommentNumber) =>
   useApi('put', `/api/beach/detail/${beachNumber}/comments/update/${beachCommentNumber}`).execute;
-// 삭제 
+// 삭제 (백엔드 경로 주의: beachNumber 없이 commentNumber만)
 const deleteComment = (beachCommentNumber) =>
   useApi('delete', `/api/beach/detail/comments/delete/${beachCommentNumber}`).execute;
-// 내 댓글 목록
-const fetchMyComments = (sort = 'latest') =>
-  useApi('get', `/api/beach/comments/my?sort=${sort}`).execute;
-
 
 
 export const beachApi = {
@@ -45,11 +38,9 @@ export const beachApi = {
     selectBeach,
     unselectBeach,
 
-    fetchWeatherData,
     fetchBeachDetail,
     fetchComments,
     addComment,
     editComment,
-    deleteComment,
-    fetchMyComments,
+    deleteComment
 };

@@ -30,7 +30,7 @@
         <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="id">
         <button 
           class="btn fw-bold text-white" 
-          :style="{ backgroundColor: (isIdChecked && passwordsMatch) ? '#dedede' : (isIdChecked ? '#28a745' : mainColor), minWidth: '100px', opacity: (isIdChecked && passwordsMatch) ? 0.65 : 1 }"
+          :style="{ backgroundColor: (isIdChecked && passwordsMatch) ? '#dedede' : (isIdChecked ? '#28a745' : mainColor), minWidth: '100px', opacity: (isIdChecked && passwordsMatch) ? 0.65 : 1 }" 
           @click="checkId"
           :disabled="isIdChecked">
           {{ isIdChecked ? '완료됨' : '중복확인' }}
@@ -148,6 +148,7 @@ const checkId = async () => {
   }
 };
 
+// 확인 버튼을 제거하고 실시간으로 유효성/일치 여부를 계산합니다.
 
 
 const handleRegister = async () => {

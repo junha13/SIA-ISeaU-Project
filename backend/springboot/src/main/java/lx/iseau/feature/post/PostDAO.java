@@ -6,13 +6,13 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface PostDAO {
-
+	
 	public int insertPostDB(PostVO post);
 
 	public int selectBoardNumber(BoardVO board);
 
 	public List<ResponsePostDTO> selectPostList();
-
+	
 	public ResponsePostDTO selectPostDetailByPostId(int PostNumber);
 
 	public int updateIncrementViewCount(int PostNumber);
@@ -26,8 +26,8 @@ public interface PostDAO {
 	public int deletePostRecommend(RequestPostRecommendDTO recommendDto);
 
 	public int selectRecommendCount(RequestPostRecommendDTO recommendDto);
-
+	
 	public int insertPostCommentDB(RequestPostCommentDTO commentDto);
-
+	
 	public List<RequestPostCommentDTO> selectCommentList(int postNumber);
 }

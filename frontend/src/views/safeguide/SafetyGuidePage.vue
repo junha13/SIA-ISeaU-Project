@@ -25,19 +25,19 @@
         </div>
 
         <div class="d-flex justify-content-between gap-3">
-
-          <div v-for="(videoId, vIndex) in item.videos" :key="videoId"
-
+          
+          <div v-for="(videoId, vIndex) in item.videos" :key="videoId" 
+               
                class="video-placeholder flex-fill rounded d-flex justify-content-center align-items-center ratio ratio-16x9"
-
+               
                style="cursor: pointer; background-size: cover; background-position: center; position: relative;"
-
+               
                :style="{ backgroundImage: `url(https://img.youtube.com/vi/${videoId}/mqdefault.jpg)` }"
                @click="showVideoModal(item.title, videoId, vIndex + 1)">
-
+            
             <i class="fas fa-play fs-5 text-white" style="text-shadow: 0 0 6px rgba(0,0,0,0.6);"></i>
           </div>
-
+          
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import VideoModal from '@/components/VideoModal.vue';
+import VideoModal from '@/components/VideoModal.vue'; 
 
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
@@ -75,30 +75,30 @@ const videoModalUrl = ref('');
 
 // --- Safety Learning Items ---
 const safetyItems = [
-  {
-    title: '준비 자세의 필요성',
-    icon: 'fas fa-exchange-alt',
-    color: mainColor,
-    videos: ['9XOvMD2HQE4', '-01E_ccUJbo', 'xAjvHjIldjA']
+  { 
+    title: '준비 자세의 필요성', 
+    icon: 'fas fa-exchange-alt', 
+    color: mainColor, 
+    videos: ['9XOvMD2HQE4', '-01E_ccUJbo', 'xAjvHjIldjA'] 
   },
-  {
-    title: '안전 장비의 필요성',
-    icon: 'fas fa-toolbox',
-    color: safetyColor,
-    videos: ['tFnYqTQbOUE', 'kl_JPt_6beY', 'ZZGg8MtVB7E']
+  { 
+    title: '안전 장비의 필요성', 
+    icon: 'fas fa-toolbox', 
+    color: safetyColor, 
+    videos: ['tFnYqTQbOUE', 'kl_JPt_6beY', 'ZZGg8MtVB7E'] 
   },
-  {
-    title: '바다 속 위험 생물',
-    icon: 'fas fa-fish',
-    color: dangerColor,
-    videos: ['66Gxc9XlnSA', 'Y5ltvhGIwko', 'ZLh5t1sCLBI']
+  { 
+    title: '바다 속 위험 생물', 
+    icon: 'fas fa-fish', 
+    color: dangerColor, 
+    videos: ['66Gxc9XlnSA', 'Y5ltvhGIwko', 'ZLh5t1sCLBI'] 
   },
-  {
-    title: '사고 다발 지역',
-    icon: 'fas fa-exclamation-triangle',
-    color: cautionColor,
+  { 
+    title: '사고 다발 지역', 
+    icon: 'fas fa-exclamation-triangle', 
+    color: cautionColor, 
     // [수정] 3개의 영상 ID 추가
-    videos: ['dS16DpiyTKU', 'ZLSV1KcywKk', 'YkyHZfd4FuY']
+    videos: ['dS16DpiyTKU', 'ZLSV1KcywKk', 'YkyHZfd4FuY'] 
   },
 ];
 

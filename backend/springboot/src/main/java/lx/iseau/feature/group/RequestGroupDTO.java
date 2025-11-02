@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class RequestGroupDTO {
 
 	private int userId;
-	private String groupName;
+	private String GroupName;
 	private Integer groupLeader;
 	private Integer groupNumber;    
 	private Integer groupMember;

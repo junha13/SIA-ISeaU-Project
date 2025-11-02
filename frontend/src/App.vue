@@ -1,20 +1,22 @@
 <template>
-    <Transition name="fade">
-      <Splash v-if="showSplash"></Splash>
-    </Transition>
+  <Transition name="fade">
+    <Splash v-if="showSplash"></Splash>
+  </Transition>
 
-    <GroupInviteConfirmModal
-      :is-visible="groupStore.receivedInvitation != null"
-      :invitationData="groupStore.receivedInvitation"
-    />
+  <GroupInviteConfirmModal 
+    :is-visible="groupStore.receivedInvitation != null"
+    :invitationData="groupStore.receivedInvitation"
+  /> 
+
     <router-view />
+
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { useGroupStore } from '@/stores/groupStore';
-import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue';
+import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'; 
 import Splash from '@/components/Splash.vue'
 
 const groupStore = useGroupStore();

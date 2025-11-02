@@ -89,7 +89,7 @@ const routes = [
             { path: 'my-info', name: 'MyInfo', component: MyPage },
             { path: 'my-info/comments', name: 'MyComment', component: MyCommentPage },
 
-            // post
+            // post 
             { path: 'post/:postNumber', name: 'PostDetail', component: PostDetail },
             { path: 'post/list', name: 'PostList', component: PostList },
             { path: 'post/write', name: 'PostWrite', component: PostWrite },
