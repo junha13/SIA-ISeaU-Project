@@ -58,15 +58,16 @@
   </div>
 </template>
 
+
 <script setup>
-import { ref, watch } from 'vue' 
+import { ref, watch, computed } from 'vue' // 💡 computed 추가
 import axios from 'axios'
 
-const message = ref('그룹 이름을 입력해주세요')
-const canCreate = ref(false)
+const message = ref('') // 💡 메시지 초기값 제거
+// const canCreate = ref(false) // 💡 [제거] computed로 대체
 
 const props = defineProps({
-  isVisible: { type: Boolean, default: false },
+  isVisible: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:isVisible', 'group-created'])
@@ -74,138 +75,101 @@ const emit = defineEmits(['update:isVisible', 'group-created'])
 const groupName = ref('')
 const isLoading = ref(false)
 
+// 💡 [추가] "생성" 버튼 활성화 조건
+// groupName이 비어있지 않고, 로딩 중이 아닐 때
+const canCreate = computed(() => {
+  return groupName.value.trim().length > 0 && !isLoading.value
+})
+
 /**
- * 모달의 모든 상태를 초기화합니다.
- */
+ * 모달의 모든 상태를 초기화합니다.
+ */
 const resetState = () => {
-  groupName.value = ''
-  isLoading.value = false
-  message.value = '그룹 이름을 입력해주세요' 
-  canCreate.value = false 
+  groupName.value = ''
+  isLoading.value = false
+  message.value = '' // 💡 초기화
 }
 
 /**
- * 모달 닫기
- */
+ * 모달 닫기
+ */
 const close = () => {
-  if (isLoading.value) return
-  emit('update:isVisible', false)
-  // watch가 리셋을 처리하므로 여기서는 호출 안 함
+  if (isLoading.value) return
+  emit('update:isVisible', false)
 }
 
 /**
- * 입력 필드 핸들러
+ * 💡 [수정] 입력 필드 핸들러
  */
 function handleInput(e) {
-  const currentValue = e.target.value
-  groupName.value = currentValue
-  
-  if (!currentValue.trim()) {
+  groupName.value = e.target.value
+  // 💡 중복 체크 API 호출 제거
+  if (!groupName.value.trim()) {
     message.value = '그룹 이름을 입력해주세요'
-    canCreate.value = false
   } else {
-    groupDoubleCheck(currentValue)
+    message.value = '' // 💡 메시지 클리어
   }
 }
 
-/**
- * [최종본] 그룹명 중복 체크 (사용자의 {"result": "true"} 방식 적용)
- */
-async function groupDoubleCheck(name) {
 
-  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/doubleCheck`;
-  
-  canCreate.value = false // 우선 비활성화
-  
-  try {
-    const response = await axios.post(
-      url,
-      { groupName: name }, // 'pathVariable' 오타가 없는 올바른 코드
-      {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true,
-        timeout: 5000,
-      }
-    )
 
-    // 2. 사용자의 현 자바 코드 응답 방식 ({"data": {"result": "true"}})에 맞춤
-    const result = response.data.data.result;
-
-    if (result === 'true') {
-      message.value = "그룹 생성이 가능합니다"
-      canCreate.value = true // ⬅️ 활성화
-    } else if (result === 'false') {
-      message.value = "이미 중복된 그룹 이름이 존재합니다."
-      canCreate.value = false;
-    } else if (result === 'empty') {
-      message.value = "그룹 이름을 입력해주세요."
-      canCreate.value = false;
-    }
-
-  } catch (err) {
-    // 500 에러 또는 네트워크 오류
-    console.error('[CreateGroupModal] doubleCheck error:', err); 
-    canCreate.value = false 
-    
-    if (err.response) {
-      message.value = err.response.data.message || "이름을 확인할 수 없습니다.";
-    } else {
-      message.value = "요청 중 오류가 발생했습니다.";
-    }
-  }
-}
 
 /**
- * [최종본] 그룹 생성
- */
+ * 그룹 생성
+ */
 const createGroup = async () => {
 
-  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/create`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/create`;
 
-  if (!canCreate.value || isLoading.value) return
-  
-  isLoading.value = true
-  message.value = '' 
+  // 💡 [수정] computed된 canCreate를 사용
+  if (!canCreate.value || isLoading.value) return
+  
+  isLoading.value = true
+  message.value = '' 
 
-  try {
-    const response = await axios.post(
-      url, 
-      { groupName: groupName.value },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true,
-        timeout: 5000,
-      }
-    )
-    
-    // 2. 사용자의 현 자바 코드 응답 방식 ({"data": {"result": "true"}})에 맞춤
-    if (response.data.data.result === 'true') {
-      emit('group-created') 
-      emit('update:isVisible', false) 
-    } else {
-      message.value = "그룹 생성에 실패했습니다. (서버 응답 오류)";
-    }
+  try {
+    const response = await axios.post(
+      url, 
+      { groupName: groupName.value },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        // 💡 [수정] withCredentials 제거 (토큰 사용)
+        timeout: 5000,
+      }
+    )
+    
+    // 💡 [수정] 백엔드가 "1인 1그룹" 정책을 적용했으므로,
+    //          실패 시(result: false) 메시지를 표시해야 함
+    if (response.data.data.result === 'true') {
+      const newGroupId = response.data.data.newGroupId;
+      emit('group-created', newGroupId) 
+      emit('update:isVisible', false) 
+    } else {
+      // 💡 백엔드가 보낸 '실패' 메시지 (예: "이미 그룹이 있습니다.")
+      message.value = response.data.message || "그룹 생성에 실패했습니다.";
+    }
 
-  } catch (err) {
-    console.error('[CreateGroupModal] createGroup error:', err);
-    if (err.response && err.response.data && err.response.data.message) {
-      message.value = err.response.data.message 
-    } else {
-      message.value = "그룹 생성 중 오류가 발생했습니다."
-    }
-  } finally {
-    isLoading.value = false
-  }
+  } catch (err) {
+    console.error('[CreateGroupModal] createGroup error:', err);
+    if (err.response && err.response.data && err.response.data.message) {
+      // 💡 백엔드가 500 에러와 함께 보낸 메시지
+      message.value = err.response.data.message 
+    } else {
+      message.value = "그룹 생성 중 오류가 발생했습니다."
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 모달 닫힐 때 리셋
 watch(
-  () => props.isVisible,
-  (now) => {
-    if (!now) {
-      resetState()
-    }
-  }
+  () => props.isVisible,
+  (now) => {
+    if (!now) {
+      resetState()
+    }
+  }
 )
 </script>
 <style scoped>

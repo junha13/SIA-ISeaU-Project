@@ -49,22 +49,6 @@ public class GroupsService {
 	    return map;
 	}
 	
-	// 그룹명 더블체크
-	@Transactional
-	public Map<String, Object> doubleCheckGroupName(RequestGroupDTO dto) { // 파라미터는 유지하되 내부에서 임시 ID 사용
-		Map<String, Object> map = new HashMap<>();
-		
-		if(dto.getGroupName().trim().isEmpty()) return Map.of("result", "empty");
-		
-		dto.setGroupName(dto.getGroupName().trim());
-		dto.setUserId((Integer) session.getAttribute("userNumber"));
-		int num = dao.SelectdoubleCheckByGroupName(dto);
-		
-		
-		map.put("result", num == 0 ? "true" : "false"); // 중복 없어야 true
-		return map;
-	}
-	
 	/**
 	 * [수정됨]
 	 * (userId 파라미터 제거)
