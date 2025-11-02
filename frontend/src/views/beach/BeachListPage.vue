@@ -122,7 +122,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center">
-                  <p class="fs-7 mb-0 text-muted">{{ beach.distance }} 거리</p>
+                  <p class="fs-7 mb-0 text-muted">{{ fmtDist(getDistanceFromMe(beach)) }}</p>
 
                   <button v-if="isSelected(beach.beachNumber)" class="btn btn-sm fw-bold" :style="{ backgroundColor: mainColor, color: 'white' }" @click.stop="toggleSelect(beach.beachNumber, beach.beachName)">선택됨</button>
                   <button v-else class="btn btn-sm btn-outline-secondary fw-bold" @click.stop="toggleSelect(beach.beachNumber, beach.beachName)">선택하기</button>
@@ -168,49 +168,46 @@
                 :style="viewMode === 'map' ? primaryBtnStyle : {}"
               >지도</button>
             </div>
+            <button
+              class="btn btn-sm btn-light shadow position-absolute"
+              style="top:12px; left:12px; z-index:9999;"
+              @click="focusMyLocation($event)"
+            >
+              내 위치
+            </button>
           </div>
         </div>
         <bottom-sheet>
           <div class="p-2 bg-white">
-            <h6 class="fw-bold mb-2" style="color:#0B1956;">
-              해수욕장 ({{ filteredBeachList.length }}곳)
-            </h6>
+            <h6 class="fw-bold mb-2" style="color:#0B1956;">해수욕장 ({{ filteredBeachList.length }}곳)</h6>
 
-            <div
-              v-for="b in filteredBeachList.slice(0,25)"
-              :key="b.beachNumber"
-              class="d-flex align-items-center mb-2 p-2 rounded-3 shadow-sm"
-              style="background:#fff;"
-            >
-              <div class="me-2 rounded-3 d-flex align-items-center justify-content-center"
-                  style="width:46px;height:46px;background:#f3f6f9;overflow:hidden;cursor:pointer;"
-                  @click="goToDetail(b.beachNumber)">
+            <div  v-for="b in (selectedMapBeach ? [selectedMapBeach] : filteredBeachList.slice(0,25))" :key="b.beachNumber"
+                class="d-flex align-items-center mb-2 p-2 rounded-3 shadow-sm" style="background:#fff; cursor:pointer;"
+                 @click="goToDetail(b.beachNumber)">
+
+              <div class="me-2 d-flex align-items-center justify-content-center rounded-3"
+                  style="width:46px;height:46px;background:#f3f6f9;overflow:hidden;cursor:pointer;">
                 <img v-if="b.beachImage" :src="b.beachImage" :alt="b.beachName" style="width:100%;height:100%;object-fit:cover;">
                 <span v-else class="text-muted small">IMG</span>
               </div>
 
               <div class="flex-grow-1 me-2">
                 <div class="d-flex justify-content-between align-items-start">
-                  <p class="mb-0 fw-semibold" style="font-size:.85rem;cursor:pointer;" @click="goToDetail(b.beachNumber)">
+                  <p class="mb-0 fw-semibold" style="font-size:.85rem;cursor:pointer;">
                     {{ b.beachName }}
                   </p>
-                  <i :class="['fas','fa-heart', isFavorite(b.beachNumber) ? 'text-danger':'text-muted']"
-                    style="font-size:.8rem;cursor:pointer;"
-                    @click.stop="toggleFavorite(b.beachNumber)"></i>
                 </div>
-                <p class="mb-1 text-muted" style="font-size:.7rem;">{{ b.address }}</p>
-                <div class="d-flex gap-2">
-                  <button
-                    class="btn btn-sm btn-light py-0"
-                    @click.stop="focusBeachOnMap(b)"
-                  >
-                    위치보기
-                  </button>
-                  <button class="btn btn-sm py-0 text-white"
-                          :style="{ backgroundColor: mainColor }"
-                          @click.stop="toggleSelect(b.beachNumber, b.beachName)">
-                    선택하기
-                  </button>
+                <div class="d-flex justify-content-between">
+                  <p class="mb-1 text-muted" style="font-size:.7rem;">{{ b.address }}</p>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-light py-0" @click.stop="focusBeachOnMap(b)">위치보기🏖️</button>
+                    <button v-if="isSelected(b.beachNumber)"
+                            class="btn btn-sm py-0 text-white" :style="{ backgroundColor: mainColor }"
+                            @click.stop="toggleSelect(b.beachNumber, b.beachName)">선택됨</button>
+                    <button v-else
+                            class="btn btn-sm py-0 btn-outline-secondary"
+                            @click.stop="toggleSelect(b.beachNumber, b.beachName)">선택하기</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -253,8 +250,6 @@ const size = ref(10);                  // 페이지 크기(백엔드와 동일)
 const hasMore = ref(true);             // 더 가져올 수 있는지
 const infiniteId = ref(0);             // 변경되면 InfiniteLoading이 초기화됨
 
-// const FAVORITES_API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/favorites`;
-// const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/beach/beaches`;
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -266,6 +261,7 @@ const currentSort = ref('name');
 const tabCondition = tabOptions
 const sortCondition = sortOptions
 const regionCondition = regionOptions
+const selectedMapBeach = ref(null) // 마커 선택 시 바텀시트 고정
 
 const primaryBtnStyle = { backgroundColor: mainColor, borderColor: mainColor, color: 'white' };
 const dropdownBtnStyle = { backgroundColor: '#f8f9fa', borderColor: '#ced4da', color: darkColor };
@@ -361,7 +357,7 @@ async function infiniteHandler($state) {
       // keyword: searchParams.value.keyword, // 백에서 받으면 주석 해제
     };
 
-    const res = await axios.post(BEACH_LIST_API_URL, payload);
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
     const list = res.data?.result ?? [];
 
     // 중복 방지 후 추가
@@ -407,7 +403,7 @@ async function toggleFavorite(beachNumber) {
       await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/${beachNumber}`);
       console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
-      await axios.post(FAVORITES_API_URL, { beachNumber });
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites`, { beachNumber });
       console.log(`⭐ ${beachNumber} 즐겨찾기 추가 성공`);
     }
   } catch (error) {
@@ -490,10 +486,45 @@ watchEffect(() => {
   list.forEach(b => {
     if (!b.latitude || !b.longitude) return
     const pos = new window.naver.maps.LatLng(b.latitude, b.longitude)
-    const m = new window.naver.maps.Marker({ position: pos, map, title: b.beachName })
+    const m = new window.naver.maps.Marker({
+    position: pos,
+    map,
+    title: b.beachName,
+    icon: {  // 해수욕장 마커 커스텀
+      content: `
+        <div style="
+          width:32px;
+          height:32px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:18px;
+          background:white;
+          border:2px solid #0092BA;
+          border-radius:999px;
+          box-shadow:0 2px 6px rgba(0,0,0,.25);
+        ">
+          🏖️
+        </div>
+      `,
+      anchor: new window.naver.maps.Point(14, 14),
+    }
+  });
+    window.naver.maps.Event.addListener(m, 'click', () => { // 마커 클릭하면 줌땡기기
+    map.setZoom(15);      // 필요하면 19/20으로
+    map.setCenter(pos);
+    selectedMapBeach.value = b
+  });
+
     markers.push(m)
   })
 })
+const focusMyLocation = (e) => {
+  e?.target?.blur();
+  if (!map || !latitude.value || !longitude.value) return;
+  map.setCenter(new window.naver.maps.LatLng(latitude.value, longitude.value));
+  map.setZoom(17);
+};
 
 function getLocation() {
   if (!navigator.geolocation) return;
@@ -511,6 +542,31 @@ const focusBeachOnMap = (beach) => {
 
   map.setCenter(new window.naver.maps.LatLng(beach.latitude, beach.longitude));
 };
+
+
+
+
+// 거리계산 => 나중에 서버에서 내려주는걸로 바꿔야함
+function getDistanceFromMe(b) {
+  if (!latitude.value || !longitude.value) return null
+  if (!b.latitude || !b.longitude) return null
+  const R = 6371000
+  const dLat = (b.latitude - latitude.value) * Math.PI/180
+  const dLng = (b.longitude - longitude.value) * Math.PI/180
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(latitude.value * Math.PI/180) *
+    Math.cos(b.latitude * Math.PI/180) *
+    Math.sin(dLng/2)**2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+}
+
+function fmtDist(m) {
+  if (!m) return ''
+  return m < 1000 ? `${m.toFixed(0)}m` : `${(m/1000).toFixed(1)} km`
+}
+
+
 </script>
 
 <style scoped>
@@ -526,9 +582,9 @@ const focusBeachOnMap = (beach) => {
 .beach-list-page { padding-top: 10px; }
 .beach-card { transition: transform 0.2s; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; }
 .beach-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; }
-.beach-image-placeholder { width: 100px; height: 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; }
+.beach-image-placeholder { width: 100px; height: 100px; flex: 0 0 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; overflow: hidden;}
 .beach-image-placeholder > p { line-height: 1.2; padding: .2rem; font-size: .65rem !important; }
-.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; border-radius: .25rem; }
+.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: static; top: 0; left: 0; border-radius: .25rem; }
 .rating-badge { position: absolute; bottom: 5px; right: 5px; font-size: .75rem; z-index: 10; }
 .badge { font-size: .65rem; padding: .3em .6em; }
 .tab-btn-primary { background-color: v-bind(mainColor) !important; border-color: v-bind(mainColor) !important; color: white !important; }

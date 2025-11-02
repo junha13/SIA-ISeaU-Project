@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <div class="p-3 mt-5 border rounded">
+    <div class="p-1 mt-5 ">
 
     <!-- 3. 주요 기능 카드 4개 (Grid Layout) -->
     <div class="row g-3">
@@ -76,7 +76,7 @@
       <!-- 카드 5: 게시글 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
-          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">게시글 리스트</p>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">커뮤니티</p>
         </div>
       </div>
       <!-- 카드 6: 응급대처법 -->
@@ -174,7 +174,6 @@ const goToPage = (pageName) => {
 .main-page {
   /* App.vue의 padding-bottom만큼 고려하여 높이 설정 */
   height: calc(100vh - 55px - 60px); /* 화면 전체 - 헤더 - 푸터 (App.vue의 크기에 따라 조정 필요) */
-  overflow-y: auto;
 }
 
 /* 알림 섹션 */
