@@ -113,7 +113,7 @@ function handleInput(e) {
  */
 async function groupDoubleCheck(name) {
 
-  const url = `${import.meta.env.VITE_API_BASE_URL}/groups/doubleCheck`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/doubleCheck`;
   
   canCreate.value = false // 우선 비활성화
   
@@ -160,7 +160,7 @@ async function groupDoubleCheck(name) {
  */
 const createGroup = async () => {
 
-  const url = `${import.meta.env.VITE_API_BASE_URL}/groups/create`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/create`;
 
   if (!canCreate.value || isLoading.value) return
   

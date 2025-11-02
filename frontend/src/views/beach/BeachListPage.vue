@@ -171,7 +171,50 @@
           </div>
         </div>
         <bottom-sheet>
-          <div>바텀시트 추가</div>
+          <div class="p-2 bg-white">
+            <h6 class="fw-bold mb-2" style="color:#0B1956;">
+              해수욕장 ({{ filteredBeachList.length }}곳)
+            </h6>
+
+            <div
+              v-for="b in filteredBeachList.slice(0,25)"
+              :key="b.beachNumber"
+              class="d-flex align-items-center mb-2 p-2 rounded-3 shadow-sm"
+              style="background:#fff;"
+            >
+              <div class="me-2 rounded-3 d-flex align-items-center justify-content-center"
+                  style="width:46px;height:46px;background:#f3f6f9;overflow:hidden;cursor:pointer;"
+                  @click="goToDetail(b.beachNumber)">
+                <img v-if="b.beachImage" :src="b.beachImage" :alt="b.beachName" style="width:100%;height:100%;object-fit:cover;">
+                <span v-else class="text-muted small">IMG</span>
+              </div>
+
+              <div class="flex-grow-1 me-2">
+                <div class="d-flex justify-content-between align-items-start">
+                  <p class="mb-0 fw-semibold" style="font-size:.85rem;cursor:pointer;" @click="goToDetail(b.beachNumber)">
+                    {{ b.beachName }}
+                  </p>
+                  <i :class="['fas','fa-heart', isFavorite(b.beachNumber) ? 'text-danger':'text-muted']"
+                    style="font-size:.8rem;cursor:pointer;"
+                    @click.stop="toggleFavorite(b.beachNumber)"></i>
+                </div>
+                <p class="mb-1 text-muted" style="font-size:.7rem;">{{ b.address }}</p>
+                <div class="d-flex gap-2">
+                  <button
+                    class="btn btn-sm btn-light py-0"
+                    @click.stop="focusBeachOnMap(b)"
+                  >
+                    위치보기
+                  </button>
+                  <button class="btn btn-sm py-0 text-white"
+                          :style="{ backgroundColor: mainColor }"
+                          @click.stop="toggleSelect(b.beachNumber, b.beachName)">
+                    선택하기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </bottom-sheet>
       </div>
     </div>
@@ -269,7 +312,7 @@ async function loadData() {
       // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
     };
 
-    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/beach/beaches`, payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
     beaches.value = response.data.result
   } catch (error) {
     apiError.value = error;
@@ -281,7 +324,7 @@ async function loadData() {
 
 const fetchFavoriteIds = async () => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/my`);
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
     const resData = res.data?.data?.result;
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
     console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
@@ -361,7 +404,7 @@ async function toggleFavorite(beachNumber) {
   // 2. API 요청 보내기
   try {
     if (isCurrentlyFavorite) {
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/beach/favorites/${beachNumber}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/${beachNumber}`);
       console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
       await axios.post(FAVORITES_API_URL, { beachNumber });
@@ -460,6 +503,14 @@ function getLocation() {
     { enableHighAccuracy: true }
   )
 }
+
+const focusBeachOnMap = (beach) => {
+  if (!map) return;
+  if (!window.naver?.maps) return;
+  if (!beach.latitude || !beach.longitude) return;
+
+  map.setCenter(new window.naver.maps.LatLng(beach.latitude, beach.longitude));
+};
 </script>
 
 <style scoped>

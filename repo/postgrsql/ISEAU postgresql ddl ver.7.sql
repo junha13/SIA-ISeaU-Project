@@ -976,10 +976,10 @@ VALUES ('사람일', 'person1@lxmail.com', '010-1111-1111', 'imperson1', 'person
 insert into tb_first_aid (first_aid_case_num, first_aid_case_name,
 first_aid_step, first_aid_content, first_aid_image,
 first_aid_description) values
-(1, '해파리 쏘임 응급 처치', 1, '바다에서 나오기', 'images/fa/jellyfish1.mp4', '침착하게 바다에서 나와 안전한 곳으로 이동하세요.'),
-(1, '해파리 쏘임 응급 처치', 2, '촉수 제거하기', 'images/fa/jellyfish1.mp4', '핀셋이나 카드로 조심스럽게 제거, 맨손으로 만지지 마세요!'),
-(1, '해파리 쏘임 응급 처치', 3, '바닷물로 씻기', 'images/fa/jellyfish1.mp4', '바닷물로 부드럽게 씻어내기, 민물이나 알코올 사용 금지!'),
-(1, '해파리 쏘임 응급 처치', 4, '냉찜질하기', 'images/fa/jellyfish1.mp4', '깨끗한 물수건이나 얼음팩을 수건에 감싸 이용해 피부 온도를 낮춰주세요., 얼음을 직접 피부에 대지 마세요!'),
+(1, '해파리 쏘임 응급 처치', 1, '바다에서 나오기', 'images/fa/jellyfish1.png', '침착하게 바다에서 나와 안전한 곳으로 이동하세요.'),
+(1, '해파리 쏘임 응급 처치', 2, '촉수 제거하기', 'images/fa/jellyfish2.png', '젓가락이나 카드로 촉수가 박힌 반대 방향으로 제거해주세요., 맨손으로 만지지 마세요!'),
+(1, '해파리 쏘임 응급 처치', 3, '바닷물로 씻기', 'images/fa/jellyfish3.png', '바닷물로 부드럽게 씻어내기, 수돗물이나 알코올 사용 금지!'),
+(1, '해파리 쏘임 응급 처치', 4, '냉찜질하기', 'images/fa/jellyfish4.png', '깨끗한 물수건이나 얼음팩을 수건에 감싸 이용해 피부 온도를 낮춰주세요., 얼음을 직접 피부에 대지 마세요!'),
 
 (2, '저체온증 응급 처치', 1, '바다에서 나오기', 'images/fa/jellyfish1.mp4', '침착하게 바다에서 나와 안전한 곳으로 이동하세요.'),
 (2, '저체온증 응급 처치', 2, '젖은 옷 벗기', 'images/fa/jellyfish1.mp4', '젖은 옷은 체온을 빼앗으므로 모두 벗깁니다.'),

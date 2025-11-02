@@ -129,7 +129,7 @@ watch(
 async function requestBeachDetail(beachNumber) {
     try {
 const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/beach/detail/${beachNumber}/info`,
+  `${import.meta.env.VITE_API_BASE_URL}/api/beach/detail/${beachNumber}/info`,
    { headers: { Accept: 'application/json' }, timeout: 5000 }
   )
       beach.value = response.data.data.result
