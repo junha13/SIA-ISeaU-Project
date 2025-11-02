@@ -11,11 +11,6 @@
         <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
       </button>
     </div>
-
-    <div v-for="member in groupLocations" :key="member.id"
-         :style="markerStyle(member.color)"
-         class="position-absolute rounded-circle shadow-sm">
-    </div>
     
     <div class="group-actions p-3">
 
@@ -110,9 +105,6 @@ const { } = storeToRefs(store);
 const mapEl = ref(null);
 let map;
 
-const router = useRouter(); 
-const { showConfirmModal } = useConfirmModal(); 
-
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
@@ -174,7 +166,6 @@ const fetchLocations = async () => {
     }
     
     console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회 시작...`);
-
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
@@ -223,7 +214,6 @@ const deleteGroup = async () => {
     }
 };
 
-// --- Lifecycle & Watchers (자동으로 실행되는 코드) ---
 
 // 'loadGroupData'라는 작은 일 (fetchLocations 실행)
 const loadGroupData = () => {
@@ -247,18 +237,6 @@ watch(activeGroupId, (newId, oldId) => {
         loadGroupData(); // 'loadGroupData' 일을 실행
     }
 }, { immediate: true }); // immediate: true (페이지 로드 시에도 일단 한 번 실행)
-
-// 'markerStyle': 더미 마커의 위치와 스타일을 정하는 함수
-const markerStyle = (color) => ({
-  backgroundColor: color || 'blue', 
-  width: '12px',
-  height: '12px',
-  top: `${Math.random() * 80 + 10}%`, 
-  left: `${Math.random() * 80 + 10}%`,
-  zIndex: 10,
-  border: '2px solid white',
-});
-
 
 /* 지도 부분 */
 const latitude = ref('') // 내 위치(위도) 기억 상자
