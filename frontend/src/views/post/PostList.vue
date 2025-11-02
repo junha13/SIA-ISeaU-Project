@@ -113,7 +113,7 @@ const store = useStore();
 const { header } = storeToRefs(store)
 
 onMounted(() => {
-  header.value = '게시판'
+  header.value = '커뮤니티'
 })
 
 

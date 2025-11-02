@@ -2,6 +2,8 @@
   <BottomSheet
     v-model="isOpen"
 
+    class="bottom-sheet-class"
+
     :snap-points="[80, '75%']"
     :initial-snap-point="0"
     
@@ -54,4 +56,5 @@ body{
 ::-webkit-scrollbar {
   display: none;
 }
+
 </style>
