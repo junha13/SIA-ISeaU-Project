@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -24,6 +25,17 @@ public class WebMVCConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/login", "/resources/**"); // 로그인 페이지와 리소스 파일은 제외
 	}
 	*/
+    // ------------------------------------
+    // 1. SPA 포워딩: Vue Router 경로 처리
+    // ------------------------------------
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        // 모든 요청을 index.html로 포워딩 (단, .js, .css 등 제외)
+        registry.addViewController("/{path:[^\\.]*}")
+                .setViewName("forward:/index.html");
+//        registry.addViewController("/**/{path:[^\\.]*}")
+//                .setViewName("forward:/index.html");
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

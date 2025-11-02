@@ -11,10 +11,10 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.health.services.client.HealthServices
+import androidx.health.services.client.MeasureClient
 import androidx.health.services.client.MeasureCallback
 import androidx.health.services.client.data.Availability
 import androidx.health.services.client.data.DataPointContainer
@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 class SafetyMonitoringService : Service() {
 
     private lateinit var dataClient: DataClient
-    private lateinit var measureClient: androidx.health.services.client.MeasureClient
+    private lateinit var measureClient: MeasureClient
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val TAG = "ISeaU_SafetyService"
@@ -54,10 +54,21 @@ class SafetyMonitoringService : Service() {
 
             heartRateList.forEach { dataPoint ->
                 val heartRate = dataPoint.value
+                val bpm = heartRate.roundToInt()
                 lastHeartRate = heartRate
 
-                Log.d(TAG, "❤️ Heart Rate: ${heartRate.roundToInt()} BPM")
-                checkSafetyLogic()
+                // 💡 [수정] Application에서 ViewModel 인스턴스를 가져와서 BPM을 직접 업데이트합니다.
+                val app = application as ISeaUApp // ISeaUApp 클래스가 Application을 상속받았다고 가정
+                app.healthViewModel.updateHeartRate(bpm)
+
+                Log.d(TAG, "❤️ Heart Rate: $bpm BPM (Logged in Service, Sent to ViewModel)")
+
+                // 3. 안전 로직 실행 (BPM이 0이 아닐 때만)
+                if (bpm > 0) {
+                    checkSafetyLogic()
+                } else {
+                    Log.w(TAG, "⚠️ HR Monitoring Failed: Heart Rate is null or 0.0. Check wearing or sensor.")
+                }
             }
         }
     }
@@ -68,15 +79,14 @@ class SafetyMonitoringService : Service() {
         measureClient = HealthServices.getClient(this).measureClient
 
         Log.d(TAG, "SafetyMonitoringService created.")
+        createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "SafetyMonitoringService started.")
 
-        // ✅ API 레벨에 따라 분기 처리
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                // API 34+: FOREGROUND_SERVICE_TYPE_HEALTH 사용
                 startForeground(
                     NOTIFICATION_ID,
                     createNotification(),
@@ -84,11 +94,9 @@ class SafetyMonitoringService : Service() {
                 )
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                // API 29-33: foregroundServiceType 없이 시작
                 startForeground(NOTIFICATION_ID, createNotification())
             }
             else -> {
-                // API 28 이하
                 startForeground(NOTIFICATION_ID, createNotification())
             }
         }
@@ -122,24 +130,19 @@ class SafetyMonitoringService : Service() {
 
         serviceScope.launch {
             try {
-                // ✅ guava의 await() 사용
                 val capabilities = measureClient.getCapabilitiesAsync().await()
 
-                // ✅ 올바른 속성 이름 사용
                 if (DataType.HEART_RATE_BPM in capabilities.supportedDataTypesMeasure) {
                     measureClient.registerMeasureCallback(
                         DataType.HEART_RATE_BPM,
                         heartRateCallback
                     )
-
                     isMonitoring = true
                     Log.d(TAG, "✅ Heart Rate monitoring started!")
-
                 } else {
                     Log.e(TAG, "❌ Heart Rate sensor not supported!")
                     stopSelf()
                 }
-
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Failed to start: ${e.message}", e)
                 stopSelf()
@@ -148,7 +151,9 @@ class SafetyMonitoringService : Service() {
     }
 
     private fun checkSafetyLogic() {
-        val hr = lastHeartRate ?: return
+        val hr = lastHeartRate
+
+        if (hr == null || hr == 0.0) return
 
         val isLowHR = hr < DANGER_HR_LOW
         val isHighHR = hr > DANGER_HR_HIGH
@@ -217,7 +222,6 @@ class SafetyMonitoringService : Service() {
         if (isMonitoring) {
             serviceScope.launch {
                 try {
-                    // ✅ unregisterMeasureCallbackAsync 사용
                     measureClient.unregisterMeasureCallbackAsync(
                         DataType.HEART_RATE_BPM,
                         heartRateCallback

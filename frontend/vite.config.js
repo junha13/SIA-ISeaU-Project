@@ -1,12 +1,17 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import path from 'path';
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Spring Boot static 폴더 (frontend 기준 상대경로)
+const springBootStatic = path.resolve(__dirname, '../backend/springboot/src/main/resources/static')
+
 // https://vite.dev/config/
 export default defineConfig({
+
   plugins: [
     vue(),
     vueDevTools(),
@@ -61,7 +66,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['quill', 'vue3-naver-maps'],
   },
-    server: {
+  server: {
         port: 5173,
         host: true,        // 외부에서도 접근 가능하게
         allowedHosts: [
@@ -74,6 +79,9 @@ export default defineConfig({
                 changeOrigin: true
             }
         }
-    }
-  
+    },
+  build: {
+        outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
+        emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+    },
 })
