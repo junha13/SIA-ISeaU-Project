@@ -285,6 +285,9 @@ onMounted(() => {
   header.value = "해수욕장 리스트"
   getLocation();
   //resetInfinite();
+
+  page.value = 2;
+  hasMore.value = true;
 });
 
 // 📌 목록/검색 조건 초기화 후 다시 불러오기 (무한스크롤 리셋)

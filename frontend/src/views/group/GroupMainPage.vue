@@ -174,6 +174,7 @@ const fetchGroups = async () => {
         // 💡 [원본 유지] withCredentials: true (세션 방식)
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; 
+        header.value = groupName.value || "그룹 화면"
         console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
     } catch (error) {
         console.error('그룹 목록 조회 실패:', error, error.response);
@@ -479,7 +480,7 @@ onMounted(() => {
   fetchGroups(); // 1. 그룹 정보 가져오기 (-> 4번, 5번 섹션 로직 실행)
   getLocation(); // 2. 내 위치 1회 가져오기 (-> 6번 섹션 로직 실행)
   requestGeoLocation("test"); // 3. 내 위치 서버로 전송 (7번 섹션 로직 실행)
-  header.value = groupName
+  header.value = groupName.value || "그룹 화면"
 });
 
 onUnmounted(() => {
