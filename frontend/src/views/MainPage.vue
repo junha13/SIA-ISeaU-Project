@@ -12,12 +12,12 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/1.png"
-               class="d-block w-100" alt="해변 풍경 1" style="height: 200px; object-fit: cover;">
+          <img src="/images/mainBeach/123.jpg"
+               class="d-block w-100" alt="해변 풍경 1" style="height: 300px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <img src="/images/mainBeach/2.png"
-               class="d-block w-100" alt="해변 풍경 2" style="height: 200px; object-fit: cover;">
+               class="d-block w-100" alt="해변 풍경 2" style="height: 300px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
