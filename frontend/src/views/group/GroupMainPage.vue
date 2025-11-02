@@ -12,11 +12,6 @@
       </button>
     </div>
 
-    <div v-for="member in groupLocations" :key="member.id"
-         :style="markerStyle(member.color)"
-         class="position-absolute rounded-circle shadow-sm">
-    </div>
-
     <div class="group-actions p-3">
 
       <template v-if="hasGroup">
@@ -46,7 +41,6 @@
         </div>
 
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 ({{ groupLocations.length }}명)</h6>
-        
         <div class="member-list">
           <div v-for="member in groupLocations" :key="member.id" class="d-flex align-items-center py-2 border-bottom">
             <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
@@ -65,15 +59,15 @@
       </template>
 
       <template v-else>
-
+        
         <div class="d-flex justify-content-end align-items-center mb-4 gap-2">
-            <button class="btn fw-bold text-white action-button create-button-full"
-                    :style="{ backgroundColor: mainColor, minWidth: '150px' }"
+            <button class="btn fw-bold text-white action-button create-button-full" 
+                    :style="{ backgroundColor: mainColor, minWidth: '150px' }" 
                     @click="showCreateGroupModal = true">
                 <i class="fas fa-plus me-2"></i> 그룹 생성하기
             </button>
         </div>
-
+        
         <h6 class="fw-bold mb-3" :style="{ color: darkColor }">그룹 멤버 (0명)</h6>
         <div class="alert alert-info text-center" role="alert" style="color: #666; background-color: #f0f8ff; border-color: #cce5ff;">
             그룹 생성 후 멤버가 표시됩니다.
@@ -91,7 +85,6 @@
     />
   </div>
 </template>
-
 <script setup>
 // ---------------------------------
 // 🐬 작동 로직 (JavaScript)
@@ -112,9 +105,6 @@ const { } = storeToRefs(store);
 const mapEl = ref(null);
 let map;
 
-const router = useRouter(); 
-const { showConfirmModal } = useConfirmModal(); 
-
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
 
@@ -127,12 +117,10 @@ const showCreateGroupModal = ref(false);
 // --- Computed (자동 계산기) ---
 const hasGroup = computed(() => myGroupList.value.length > 0);
 
-// 그룹이 있으면 첫 번째 그룹의 ID를 활성 ID로 사용
 const activeGroupId = computed(() => {
   return hasGroup.value ? myGroupList.value[0].id : null;
 });
 
-// 멤버 목록에서 중복 제거
 const groupLocations = computed(() => {
     const locations = activeGroupLocations.value;
     const uniqueMembers = {};
@@ -154,7 +142,7 @@ const handleNotificationSettings = () => {
 // 🐬 이 함수는 서버에게 "나(로그인한 사용자)의 유일한 그룹이 있는지 찾아 줘!"라고 요청합니다.
 const fetchGroups = async () => {
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`; 
         const response = await axios.get(url, { withCredentials: true });
         myGroupList.value = response.data.data.result; // 결과를 'myGroupList' 상자에 저장
         
@@ -172,14 +160,12 @@ const fetchGroups = async () => {
 
 // [API] 현재 활성 그룹의 멤버 위치를 서버에서 가져오는 일
 const fetchLocations = async () => {
-    // 'activeGroupId'가 없으면(null) 일을 시작하지 않음
     if (!activeGroupId.value) {
         console.warn("[FetchLocations] Aborted: activeGroupId is null.");
         return;
     }
     
     console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회 시작...`);
-
     try {
         const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
         const response = await axios.get(url, { withCredentials: true });
@@ -203,7 +189,7 @@ const handleGroupCreated = (newGroupId) => {
 const confirmDeleteGroup = () => {
   if (!activeGroupId.value) return;
   
-  // 🚨 deleteGroup을 호출합니다.
+  // 🚨 [수정된 로직] 확인 모달을 건너뛰고 바로 deleteGroup 호출
   console.log(`[ConfirmDelete] 그룹 ID ${activeGroupId.value} 삭제 확인 건너뛰고 즉시 실행.`);
   deleteGroup();
 };
@@ -215,7 +201,7 @@ const deleteGroup = async () => {
     console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출 시작...`);
     
     try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`; 
         await axios.delete(url, { withCredentials: true }); // 서버에 "이 그룹 삭제해줘!" 요청
         
         console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
@@ -228,7 +214,6 @@ const deleteGroup = async () => {
     }
 };
 
-// --- Lifecycle & Watchers (자동으로 실행되는 코드) ---
 
 // 'loadGroupData'라는 작은 일 (fetchLocations 실행)
 const loadGroupData = () => {
@@ -253,25 +238,12 @@ watch(activeGroupId, (newId, oldId) => {
     }
 }, { immediate: true }); // immediate: true (페이지 로드 시에도 일단 한 번 실행)
 
-// 'markerStyle': 더미 마커의 위치와 스타일을 정하는 함수
-const markerStyle = (color) => ({
-  backgroundColor: color || 'blue', 
-  width: '12px',
-  height: '12px',
-  top: `${Math.random() * 80 + 10}%`, 
-  left: `${Math.random() * 80 + 10}%`,
-  zIndex: 10,
-  border: '2px solid white',
-});
-
-
 /* 지도 부분 */
 const latitude = ref('') // 내 위치(위도) 기억 상자
 const longitude = ref('') // 내 위치(경도) 기억 상자
 
 // [자동] 'watchEffect': 지도 객체 초기화 및 중심 설정
 watchEffect(() => {
-  // Pinia에서 가져온 beach 정보에서 위경도 꺼냄
   const lat = latitude.value
   const lng = longitude.value
 
@@ -281,14 +253,13 @@ watchEffect(() => {
   // 재료가 다 준비되면 Naver 지도 API를 사용해 지도를 그림
   const pos = new window.naver.maps.LatLng(lat, lng)
 
-  // map이 한 번도 만들어진 적 없으면 (초기 렌더 시점)
   if (!map) {
     // (지도 그린 적 없으면) 새로 그림
     map = new window.naver.maps.Map(mapEl.value, {
       center: pos,
       zoom: 15
     })
-
+    
     // GeoServer 요청 (사용자 요청으로 유지)
     window.naver.maps.Event.once(map, 'init', testLoadBoundary)
     loadBoundary()
@@ -298,172 +269,146 @@ watchEffect(() => {
   }
 })
 
-/**
- * ============================================
- *          지오로케이션 내 위치 보기
- * ============================================
- */
+// --- GeoServer / Location (사용자 요청에 따라 유지됨) ---
+
+const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_boundary` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+let boundaryRings = [];
+
+async function loadBoundary() {
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    boundaryRings = []; 
+    (data.features || []).forEach(f => {
+      const geom = f.geometry;
+      if (!geom) return;
+      geom.coordinates.forEach(poly => {
+        const outerRing = poly[0]; 
+        boundaryRings.push(outerRing);
+      });
+    });
+    console.log('[boundaryRings]', boundaryRings);
+  } catch(e) {
+    console.error("GeoServer 'tb_boundary' load failed:", e)
+  }
+}
+
+const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
+  `?service=WFS` +
+  `&version=1.0.0` +
+  `&request=GetFeature` +
+  `&typeName=iseau:tb_test_layer` +
+  `&outputFormat=application/json` +
+  `&srsName=EPSG:4326`
+let testBoundaryRings = []
+
+async function testLoadBoundary() {
+  try {
+    const testRes = await fetch(test_url);
+    const testData = await testRes.json();
+    testBoundaryRings = []; 
+    (testData.features || []).forEach(f => {
+      const geom = f.geometry;
+      if (!geom) return;
+      geom.coordinates.forEach(poly => {
+        const outerRing = poly[0]; 
+        testBoundaryRings.push(outerRing);
+      });
+    });
+    console.log('[testBoundaryRings]', testBoundaryRings);
+    testDrawBoundaryRings() 
+  } catch(e) {
+    console.error("GeoServer 'tb_test_layer' load failed:", e)
+  }
+}
+
+function testDrawBoundaryRings() {
+  if (!map) return;
+  testBoundaryRings.forEach(ring => {
+    const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon));
+    new window.naver.maps.Polyline({
+      map,
+      path,
+      strokeColor: '#0092BA',
+      strokeWeight: 3,
+      strokeOpacity: 0.9,
+    });
+  });
+  const bounds = new window.naver.maps.LatLngBounds();
+  testBoundaryRings.forEach(ring => {
+    ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon)));
+  });
+  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
+    map.fitBounds(bounds);
+  }
+}
+
+
 function getLocation() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     (pos) => { latitude.value = pos.coords.latitude; longitude.value = pos.coords.longitude; },
-    (err) => { console.error('위치 실패: ' + err.message); },
+    (err) => { console.error('위치 실패:', err.message); },
     { enableHighAccuracy: true }
   )
 }
 
-
-/**
- * ============================================
- *  내 위치 해안선 or 테스트 폴리곤 비교하고 거리 받기
- * ============================================
- */
 function requestGeoLocation(value) {
   if (!navigator.geolocation) return;
 
-  const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-      `?service=WFS` +
-      `&version=1.0.0` +
-      `&request=GetFeature` +
-      `&typeName=iseau:tb_boundary` +
-      `&outputFormat=application/json` +
-      `&srsName=EPSG:4326`
-  let boundaryRings = [];
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
 
-  async function loadBoundary() {
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      boundaryRings = [];
-      (data.features || []).forEach(f => {
-        const geom = f.geometry;
-        if (!geom) return;
-        geom.coordinates.forEach(poly => {
-          const outerRing = poly[0];
-          boundaryRings.push(outerRing);
-        });
-      });
-      console.log('[boundaryRings]', boundaryRings);
-    } catch (e) {
-      console.error("GeoServer 'tb_boundary' load failed:", e)
-    }
-  }
+      const payload = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      console.log('sending to server:', payload)
 
-  const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-      `?service=WFS` +
-      `&version=1.0.0` +
-      `&request=GetFeature` +
-      `&typeName=iseau:tb_test_layer` +
-      `&outputFormat=application/json` +
-      `&srsName=EPSG:4326`
-  let testBoundaryRings = []
+      let axiosUrl;
+      
+      if ( value === "test") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`;
+      }
+      if ( value === "boundary") {
+        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`;
+      }
 
-  async function testLoadBoundary() {
-    try {
-      const testRes = await fetch(test_url);
-      const testData = await testRes.json();
-      testBoundaryRings = [];
-      (testData.features || []).forEach(f => {
-        const geom = f.geometry;
-        if (!geom) return;
-        geom.coordinates.forEach(poly => {
-          const outerRing = poly[0];
-          testBoundaryRings.push(outerRing);
-        });
-      });
-      console.log('[testBoundaryRings]', testBoundaryRings);
-      testDrawBoundaryRings()
-    } catch (e) {
-      console.error("GeoServer 'tb_test_layer' load failed:", e)
-    }
-  }
+      if (!axiosUrl) {
+        console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
+        return;
+      }
 
-  function testDrawBoundaryRings() {
-    if (!map) return;
-    testBoundaryRings.forEach(ring => {
-      const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon));
-      new window.naver.maps.Polyline({
-        map,
-        path,
-        strokeColor: '#0092BA',
-        strokeWeight: 3,
-        strokeOpacity: 0.9,
-      });
-    });
-    const bounds = new window.naver.maps.LatLngBounds();
-    testBoundaryRings.forEach(ring => {
-      ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon)));
-    });
-    if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
-      map.fitBounds(bounds);
-    }
-  }
-
-
-  function getLocation() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          latitude.value = pos.coords.latitude;
-          longitude.value = pos.coords.longitude;
-        },
-        (err) => {
-          console.error('위치 실패:', err.message);
-        },
-        {enableHighAccuracy: true}
-    )
-  }
-
-  function requestGeoLocation(value) {
-    if (!navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          latitude.value = pos.coords.latitude
-          longitude.value = pos.coords.longitude
-
-          const payload = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
+      try {
+        const res = await axios.post(
+          axiosUrl,
+          payload,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 5000,
           }
-          console.log('sending to server:', payload)
-
-          let axiosUrl;
-
-          if (value === "test") {
-            axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`;
-          }
-          if (value === "boundary") {
-            axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`;
-          }
-
-          if (!axiosUrl) {
-            console.warn("requestGeoLocation: 'value'가 'test' 또는 'boundary'가 아니라서 API를 호출하지 않습니다.");
-            return;
-          }
-
-          try {
-            const res = await axios.post(
-                axiosUrl,
-                payload,
-                {
-                  headers: {'Content-Type': 'application/json'},
-                  withCredentials: true,
-                  timeout: 5000,
-                }
-            )
-            console.log('OK', res.data)
-          } catch (e) {
-            console.error('send error', e)
-          }
-        },
-        (err) => {
-          console.error('위치 실패:', err.message)
-        },
-        {enableHighAccuracy: true}
-    )
-  }
+        )
+        console.log('OK', res.data)
+      } catch (e) {
+        console.error('send error', e)
+      }
+    },
+    (err) => {
+      console.error('위치 실패:', err.message)
+    },
+    { enableHighAccuracy: true }
+  )
 }
+
 </script>
 
 <style scoped>
@@ -494,14 +439,14 @@ function requestGeoLocation(value) {
 
 /* 💡 [디자인 수정] 버튼들을 지도 아래로 내림 */
 .group-actions {
-  position: relative;
-  padding-top: 1rem;
+  position: relative; 
+  padding-top: 1rem; 
 }
 
 /* 💡 [추가] 3개 버튼 공통 스타일 (크기 고정) */
 .action-button {
   font-size: 0.9rem;
-  padding: 8px 12px;
+  padding: 8px 12px; 
   height: 42px;       /* 높이 통일 */
   text-align: center;
   border-width: 1px;
@@ -509,15 +454,15 @@ function requestGeoLocation(value) {
 }
 
 .notification-button {
-  color: v-bind(darkColor);
-  border: 1px solid #dee2e6;
-  background-color: #e9ecef;
+  color: v-bind(darkColor); 
+  border: 1px solid #dee2e6; 
+  background-color: #e9ecef; 
 }
 
 .btn-outline-danger {
   border-color: #dc3545;
   color: #dc3545;
-  background-color: white;
+  background-color: white; 
 }
 
 .btn-outline-danger:hover {

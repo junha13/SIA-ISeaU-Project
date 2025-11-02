@@ -26,7 +26,8 @@ public class MainActivity extends AppCompatActivity {
         WebSettings webSettings = webview.getSettings();
 
         webSettings.setJavaScriptEnabled(true);
-
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setDatabaseEnabled(true);
         // 💡 추가된 설정: HTTPS 페이지에서 HTTP 콘텐츠 로딩을 허용합니다. (Ngrok 테스트 환경에 필요)
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
@@ -42,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 페이지 띄우기
-        webview.loadUrl("https://hellokiyo.ngrok.io/");
+        webview.loadUrl("https://iseau.kr");
+        //webview.loadUrl("https://hellokiyo.ngrok.io/");
         //webview.loadUrl("http://m.naver.com");
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

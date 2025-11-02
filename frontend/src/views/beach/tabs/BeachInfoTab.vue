@@ -76,7 +76,7 @@
             class="border rounded p-3 mb-2"
           >
             <div class="d-flex justify-content-between fw-bold">
-              {{ c.userName ?? ('사용자 ' + c.userNumber) }}
+              {{ c.userId ?? ('사용자 ' + c.userNumber) }}
               <small class="text-muted ms-2">{{ (c.createdTime).toString().replace('T', ' ').slice(2,19) }}</small>
             </div>
 

@@ -29,9 +29,13 @@ const addComment    = (beachNumber) => useApi('post', `/api/beach/detail/${beach
 // 수정
 const editComment   = (beachNumber, beachCommentNumber) =>
   useApi('put', `/api/beach/detail/${beachNumber}/comments/update/${beachCommentNumber}`).execute;
-// 삭제 (백엔드 경로 주의: beachNumber 없이 commentNumber만)
+// 삭제 
 const deleteComment = (beachCommentNumber) =>
   useApi('delete', `/api/beach/detail/comments/delete/${beachCommentNumber}`).execute;
+// 내 댓글 목록
+const fetchMyComments = (sort = 'latest') =>
+  useApi('get', `/api/beach/comments/my?sort=${sort}`).execute;
+
 
 
 export const beachApi = {
@@ -46,5 +50,6 @@ export const beachApi = {
     fetchComments,
     addComment,
     editComment,
-    deleteComment
+    deleteComment,
+    fetchMyComments,
 };
