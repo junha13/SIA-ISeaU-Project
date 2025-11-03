@@ -12,7 +12,7 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/123.jpg"
+          <img src="/images/mainBeach/1.jpg"
                class="d-block w-100" alt="해변 풍경 1" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
