@@ -29,6 +29,7 @@ public class GroupsService {
 	
 	private final HttpSession session;
 
+	
 	// Group
 	@Transactional
 	public Map<String, Object> createGroup(RequestGroupDTO dto) {

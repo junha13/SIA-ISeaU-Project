@@ -76,7 +76,7 @@ const videoModalUrl = ref('');
 // --- Safety Learning Items ---
 const safetyItems = [
   { 
-    title: '준비 자세의 필요성', 
+    title: '준비 운동의 필요성', 
     icon: 'fas fa-exchange-alt', 
     color: mainColor, 
     videos: ['9XOvMD2HQE4', '-01E_ccUJbo', 'xAjvHjIldjA'] 
