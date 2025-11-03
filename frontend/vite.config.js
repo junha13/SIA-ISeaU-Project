@@ -27,19 +27,19 @@ export default defineConfig({
 
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
           manifest: {
-              name: 'ISeaU PWA App',
-              short_name: 'ISeaU PWA',
+              name: 'ISeaU PWA',
+              short_name: 'ISeaU PWA page',
               theme_color: '#ffffff',
               icons: [
                   {
-                      src: 'pwa-192x192.png',
+                      src: 'iseau-192.png',
                       sizes: '192x192',
                       type: 'image/png',
                       // 📌 icons의 purpose 속성 설정: maskable 아이콘을 반드시 포함해야 합니다.
                       purpose: 'maskable'
                   },
                   {
-                      src: 'pwa-512x512.png',
+                      src: 'iseau-512.png',
                       sizes: '512x512',
                       type: 'image/png'
                   }
@@ -69,9 +69,6 @@ export default defineConfig({
   server: {
         port: 5173,
         host: true,        // 외부에서도 접근 가능하게
-        allowedHosts: [
-            'hellokiyo.ngrok.io'   // ngrok 도메인 허용
-        ],
         proxy: {
             // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
