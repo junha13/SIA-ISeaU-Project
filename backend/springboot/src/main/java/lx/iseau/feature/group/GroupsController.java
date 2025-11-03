@@ -42,19 +42,7 @@ public class GroupsController {
                 .body(Map.of("data", result));
     }
 
-    /**
-     * 그룹 더블체크
-     */
-    @RequestMapping("/doubleCheck")
-    public ResponseEntity<?> doubleCheckGroupName(@RequestBody RequestGroupDTO dto) { // @RequestAttribute 임시 제거
-        // 임시 사용자 ID 사용
-        Map<String, Object> result = service.doubleCheckGroupName(dto);
-        return ResponseEntity
-                .ok()
-                .header("api", "Groups/doubleCheck")
-                .body(Map.of("data", result));
-    }
-
+ 
     /**
      * 그룹 목록 조회 (GET /api/groups) 
      */
