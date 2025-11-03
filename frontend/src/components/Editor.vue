@@ -82,8 +82,8 @@ export default {
   overflow-x: hidden;
 }
 .ql-editor img {
-  max-width: 300px !important;
-  max-height: 300px !important;
+  max-width: 200% !important;
+  max-height: 200px !important;
   object-fit: cover; /* 비율 깨짐 방지용으로 추천 */
 }
 </style>
