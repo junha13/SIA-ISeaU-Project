@@ -84,6 +84,7 @@ const handleConfirm = (isAccepted) => {
     // props.invitationData가 바로 store의 'receivedInvitation' 객체입니다.
     groupStore.acceptInvitation(props.invitationData);
 
+    window.location.reload();
   } else {
     // 🚨 5. [수정] 거절도 store를 직접 호출합니다.
     console.log("[모달] 2. store.rejectInvitation()을 직접 호출!"); 

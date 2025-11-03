@@ -210,11 +210,11 @@ public class GroupsService {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	public Map<String, Object> getGroupMemberLocations(int groupId) {
+	@Transactional
+	public Map<String, Object> getGroupMemberLocations(ResponseGroupMemberLocationDTO dto) {
 		Map<String, Object> map = new HashMap<>();
 		// REVIEW: 그룹 존재 여부, 조회 권한 확인 로직 추가 가능
-		List<ResponseGroupMemberLocationDTO> locationList = dao.findGroupMemberLocations(groupId);
+		List<ResponseGroupMemberLocationDTO> locationList = dao.findGroupMemberLocations(dto);
 		map.put("result", locationList);
 		return map;
 	}

@@ -14,6 +14,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor 
 public class ResponseGroupMemberLocationDTO {
 	
+	private Integer leaderNumber;
+	private Integer groupNumber;
+    private Double myLatitude;
+    private Double myLongitude;
+    private String userStatus;
+    
+    //--
     private Integer id;
     private Double lat;
     private Double lng;
@@ -21,4 +28,5 @@ public class ResponseGroupMemberLocationDTO {
     private String color;
     private String status;
     private LocalDateTime lastUpdate;
+    private Double distance; // 자신과 이 행(유저)과의 거리
 }

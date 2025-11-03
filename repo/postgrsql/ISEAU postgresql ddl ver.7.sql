@@ -218,7 +218,8 @@ CREATE TABLE tb_user
      birth_date  DATE  NOT NULL , 
      location    geography(Point, 4326) , 
      role_number integer  NOT NULL,
-	 beach_number integer
+	 beach_number integer,
+	 status varchar (20)
     ) 
 ;
 Create table tb_post_recommend
