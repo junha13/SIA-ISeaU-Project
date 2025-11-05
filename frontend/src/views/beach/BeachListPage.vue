@@ -38,11 +38,23 @@
         </div>
       </div>
 
-      <div class="d-flex overflow-auto gap-2 mb-3 pb-2" style="white-space: nowrap;">
-        <button v-for="tab in tabCondition" :key="tab.value" :class="['btn','btn-sm', 'rounded-pill', activeTab === tab.value ? 'tab-btn-primary' : 'tab-btn-light-secondary']"
-          @click="activeTab = tab.value">
-          {{ tab.label }}
-        </button>
+      <div
+      class="d-flex overflow-auto gap-2 mb-3 pb-2"
+      style="white-space: nowrap;"
+      >
+      <button
+      v-for="tab in tagFilterOptions"
+      :key="tab.value"
+      :class="[
+      'btn',
+      'btn-sm',
+      'rounded-pill',
+      activeTab === tab.value ? 'tab-btn-primary' : 'tab-btn-light-secondary'
+      ]"
+      @click="activeTab = tab.value"
+      >
+      {{ tab.label }}
+      </button>
       </div>
 
       <div class="d-flex align-items-center justify-content-between">
@@ -114,7 +126,7 @@
                 <p class="text-muted fs-7 mb-2">{{ beach.address }}</p>
 
                 <div class="d-flex gap-2 mb-3">
-                  <span v-for="(tag, index) in beach.tags" :key="index" :class="['badge', 'px-2', 'py-1', 'fw-bold', tagClass(tag)]">
+                  <span v-for="(tag, index) in beach.tags" :key="index" :class="['badge', 'px-3', 'py-2', 'fw-bold']" :style="tagClass(tag)" style="font-size:11px;">
                     {{ tag }}
                   </span>
                 </div>
@@ -235,6 +247,31 @@ const activeTab = ref('all');
 const viewMode = ref('list');
 const currentSort = ref('name');
 
+// ✅ 태그 필터링을 위한 고정 옵션
+const tagFilterOptions = ref([
+{ value: 'all', label: '전체' },
+{ value: 'favorite', label: '즐겨찾기' },
+{ value: '핫플', label: '핫플' },
+{ value: '레저', label: '레저' },
+{ value: '수영', label: '수영' },
+{ value: '가족', label: '가족' },
+{ value: '산책', label: '산책' },
+{ value: '서핑', label: '서핑' },
+{ value: '한적', label: '한적' },
+{ value: '반려동물 동반', label: '반려동물 동반' },
+]);
+
+// ********** 데이터 로딩 및 필터링 로직 **********
+// activeTab watch 로직: activeTab이 변경되면 loadData를 다시 호출하여 필터링합니다.
+watch(activeTab, (newValue, oldValue) => {
+if (newValue !== oldValue) {
+// '즐겨찾기' 탭은 프론트엔드 필터링을 사용하므로 API 호출을 건너뜁니다.
+if (newValue !== 'favorite') {
+loadData();
+}
+}
+});
+
 const tabCondition = tabOptions
 const sortCondition = sortOptions
 const regionCondition = regionOptions
@@ -270,14 +307,33 @@ async function loadData() {
   try {
     const backendSort = sortMap[currentSort.value] ?? 'name_asc';
 
-    const payload = {
+      const payload = {
       region: searchParams.value.region || '',
       sort: backendSort,
-    };
+      // 'all'이나 'favorite'이 아닐 때만 태그 필터를 백엔드에 전달
+      tagFilter: (activeTab.value !== 'all' && activeTab.value !== 'favorite')
+      ? activeTab.value
+      : null,
+      userLatitude: latitude.value,
+      userLongitude: longitude.value,
+
+      };
 
     const response = await axios.post(BEACH_LIST_API_URL, payload);
     
-    beaches.value = response.data.result || []; 
+      beaches.value = (response.data.result || []).map(b => {
+    // tagsString 필드가 DTO에 없거나 비어있는 경우를 대비하여 안전하게 배열로 변환
+    const tagsList = b.tagsString
+    ? b.tagsString.split(',').map(tag => tag.trim()).filter(tag => tag)
+    : [];
+
+    return {
+    ...b,
+    tags: tagsList,
+    // distance 필드가 없으면 빈 문자열 할당 (템플릿 오류 방지)
+    distance: b.distance || '',
+    };
+    }); 
 
   } catch (error) {
     apiError.value = error;
@@ -293,7 +349,7 @@ const fetchFavoriteIds = async () => {
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
     
     // ⭐ [수정 반영] 서버 응답 구조에 유연하게 대처합니다. (res.data.result 또는 res.data.data.result)
-    let resData = res.data?.result;
+    let resData = res.data?.result || res.data?.data?.result;
 
     if (!resData) {
       resData = res.data?.data?.result;
@@ -367,7 +423,9 @@ async function toggleFavorite(beachNumber) {
     alert("즐겨찾기 변경 중 오류가 발생했습니다. 다시 시도해 주세요.");
   }
 }
+// ********** Computed 속성 및 기타 **********
 
+const dbOnlyList = computed(() => beaches.value);
 /**
  * 클라이언트 측 필터링: 서버에서 받은 전체 목록(beaches)에 대해 검색어와 탭 필터를 적용합니다.
  */
@@ -392,19 +450,31 @@ const filteredBeachList = computed(() => {
   return list;
 });
 
-const dbOnlyList = computed(() => beaches.value);
-const isSelected = (id) => beachStore.isSelected(id)
-const toggleSelect = (id, name) => beachStore.toggleSelectBeach(id, name)
+const
+isSelected = id => beachStore.isSelected(id);
+const
+toggleSelect = (id, name) => beachStore.toggleSelectBeach(id, name);
+const
+isFavorite = id => favoriteBeachIds.value.includes(id);
+const
+goToDetail = id => router.push(`/beach/${id}`);
 
-const isFavorite = id => {
-  return favoriteBeachIds.value.includes(id);
+
+// 태그에 따라 색상 클래스 지정
+const tagClass = (tag) => {
+  const palette = {
+    '핫플':           ['#FDE2E4', '#7A1D2F'], // 연한 레드
+    '레저':           ['#D7F3F7', '#0B5E65'], // 연한 시안/민트
+    '수영':           ['#D6E9FF', '#0B4F8A'], // 연한 블루
+    '가족':           ['#DFF5E1', '#1B5E20'], // 연한 그린
+    '산책':           ['#FFF6D1', '#7A5E00'], // 연한 옐로
+    '서핑':           ['#F1F3F5', '#343A40'], // 라이트 그레이
+    '한적':           ['#F8FAFC', '#111827'], // 아주 연한 슬레이트
+    '반려동물 동반':   ['#EAEAEA', '#1F2937'], // 밝은 그레이
+  };
+  const [bg, fg] = palette[tag] || ['#F3F4F6', '#111827']; // 기본값
+  return { backgroundColor: bg, color: fg };
 };
-
-const goToDetail = id => router.push(`/beach/${id}`);
-const tagClass = tag => ({
-  '안전': 'bg-secondary', '수영': 'bg-info', '서핑': 'bg-info',
-  '산책': 'bg-warning', '가족': 'bg-success',
-}[tag] || 'bg-light text-dark');
 // 지도 부분 (변경 없음)
 const beachMap = ref(null)
 let map
@@ -545,5 +615,13 @@ function fmtDist(m) {
 .loading {
   text-align: center;
   padding: 12px;
+}
+
+.beach-image-placeholder {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  min-height: 100px;
+  flex: 0 0 100px; /* flex-basis 고정 + shrink 방지 */
 }
 </style>

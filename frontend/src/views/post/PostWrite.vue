@@ -12,7 +12,7 @@
             <div class="d-flex flex-wrap gap-2">
               <button v-for="cat in postCategories" :key="cat"
                       class="btn btn-sm fw-semibold rounded-pill"
-                      :class="boardData.postCategoryName === cat ? 'btn-dark text-white' : 'btn-outline-secondary text-gray-700'"
+                      :class="categoryBtnStyle(cat)"
                       @click="boardData.postCategoryName = cat">
                 {{ cat }}
               </button>
@@ -61,8 +61,8 @@
 
           <!-- 버튼: 텍스트 동적 변경 및 등록/수정 로직 호출 -->
           <div class="d-flex justify-content-end gap-3">
-            <button class="btn btn-light-secondary fw-bold" @click="saveDraft">임시저장</button>
-            <button class="btn btn-dark fw-bold" @click="requestAddPost()">
+            <button class="btn fw-bold" :style="btnSecondaryStyle" @click="saveDraft">임시저장</button>
+            <button class="btn fw-bold" :style="btnPrimaryStyle" @click="requestAddPost()">
               {{ isEditMode ? '수정 완료' : '등록' }}
             </button>
           </div>
@@ -223,7 +223,23 @@ import QuillForm from '@/components/Editor.vue'
       console.error('[Detail] load error:', e)
     }
   }
+const HEX = {
+  primary: '#0B1956',   // 진한 남색(메인 액션)
+  accent:  '#0092BA',   // 서브 액션 필요시
+  text:    '#495057',   // 회색 텍스트
+  border:  '#D1D1D1',   // 옅은 회색 보더
+  white:   '#FFFFFF'
+};
 
+// 하단 버튼 스타일
+const btnPrimaryStyle  = { backgroundColor: HEX.primary, color: HEX.white,  border: `1px solid ${HEX.primary}` }; // 등록/수정
+const btnSecondaryStyle= { backgroundColor: HEX.white,   color: HEX.text,   border: `1px solid ${HEX.border}` };  // 임시저장
+
+// 카테고리 토글 버튼 스타일
+const categoryBtnStyle = (cat) =>
+  boardData.value.postCategoryName === cat
+    ? { backgroundColor: HEX.primary, color: HEX.white, border: `1px solid ${HEX.primary}` }   // 선택됨
+    : { backgroundColor: HEX.white,   color: HEX.text,  border: `1px solid ${HEX.border}` };   // 비선택
 
 </script>
 

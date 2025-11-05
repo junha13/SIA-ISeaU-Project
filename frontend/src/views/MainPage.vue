@@ -21,7 +21,7 @@
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/3.png"
+          <img src="/images/mainBeach/image.png"
                class="d-block w-100" alt="해변 풍경 3" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
@@ -63,7 +63,7 @@
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
       <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
-        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
+        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">위치공유</p>
       </div>
     </div>
 
