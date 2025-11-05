@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class RequestUserLocationDTO {
 
 	private int userNumber;
+	private String userStatus;
 	private int groupNumber;
 	private double latitude;
 	private double longitude;

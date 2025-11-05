@@ -5,7 +5,7 @@ import { useApi } from '@/utils/useApi.js';
 // 환경변수 VITE_API_BASE_URL은 useApi 내부 axios 인스턴스의 baseURL로 적용됩니다.
 
 // 로그인 API (POST)
-const { execute: login } = useApi('post', '/api/auth/login');
+const { execute: login } = useApi('post', '/api/auth/login'); 
 
 // 회원가입 API (POST)
 const { execute: register } = useApi('post', '/api/auth/register');

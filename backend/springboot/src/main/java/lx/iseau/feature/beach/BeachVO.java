@@ -24,5 +24,6 @@ public class BeachVO {
     private LocalDate closeDate;
     // ✅ 추가
     private int reviewCount;
+    private String tagsString;
     
 }

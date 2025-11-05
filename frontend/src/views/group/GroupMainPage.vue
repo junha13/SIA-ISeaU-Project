@@ -4,12 +4,8 @@
     <div ref="mapEl" style="width:100%;height:300px;"></div>
 
     <div class="map-overlay-buttons position-absolute top-0 end-0 p-3">
-      <button class="btn btn-sm btn-white rounded-pill shadow-sm mb-2" style="background-color: white;" @click="getLocation">
-        내 위치 새로고침 <i class="fas fa-sync-alt ms-1"></i>
-      </button>
-      <button class="btn btn-sm btn-primary rounded-circle shadow-sm" style="width: 40px; height: 40px; background-color: white; border: 1px solid #ccc;">
-        <i class="fas fa-location-arrow" :style="{ color: darkColor }"></i>
-      </button>
+
+
     </div>
     
     <div class="group-actions p-3">
@@ -49,11 +45,41 @@
             <div class="me-3 rounded-pill" :style="{ backgroundColor: member.color, width: '4px', height: '50px' }"></div>
             <div class="flex-grow-1">
               <h6 class="fw-bolder mb-0 fs-6">{{ member.name }} <span class="small text-muted fw-normal ms-1">{{ member.username }}</span></h6>
-              <p class="text-secondary small mb-0">{{ member.phone }}</p>
+              <!-- 기존 거리 표시 줄 교체 -->
+            <p v-if="member.status === 'online'" class="text-secondary small mb-0">
+              {{ bootLoading
+                ? '로딩중...'
+                : (Number(member.distance) <= 0.2
+                    ? '본인'
+                    : (Number.isFinite(Number(member.distance))
+                        ? `나와의 거리 : ${Number(member.distance).toFixed(1)} m`
+                        : '나와의 거리 : -')) }}
+            </p>
+
+            <!-- 수영/육지 상태 표시 (⚠ 준비되기 전엔 절대 '육지' 안뜸) -->
+<p v-if="member.status === 'online'" class="text-secondary small mb-0">
+  {{
+    !isStatusReady
+      ? '상태 확인 중...'
+      : (
+          // 수영/육지 판단 우선
+          (member.userStatus === false || member.userStatus === 'false')
+            ? '수영 중'
+            : (
+                // 본인일 때만 해안선 거리 노출 (boundary_distance가 있을 때만)
+                Number(member.distance) <= 0.2
+                  ? (boundary_distance != null
+                      ? `육지 (해안선까지의 거리 ${Number(boundary_distance).toFixed(1)} m)`
+                      : '육지')
+                  : '육지'
+              )
+        )
+  }}
+</p>
             </div>
             <div class="d-flex align-items-center">
-              <span v-if="member.status === 'online'" class="text-success small fw-bold"> online </span>
-              <span v-else-if="member.status === 'pending'" class="text-muted small fw-bold"> (초대 중) </span>
+              <span v-if="member.status === 'online'" class="text-success small fw-bold" style="font-size: 8px;"> (등록완료) </span>
+              <span v-else-if="member.status === 'pending'" class="text-muted small fw-bold" style="font-size: 8px;"> (초대 중) </span>
               <i class="fas fa-comment-dots text-secondary ms-3 me-3" style="cursor: pointer;"></i>
               <i class="fas fa-ellipsis-v text-secondary" style="cursor: pointer;"></i>
             </div>
@@ -78,418 +104,425 @@
       </template>
     </div>
 
-    <GroupInviteModal 
-      v-model:isVisible="showInviteModal" 
-      :group-id="activeGroupId" 
+    <GroupInviteModal
+      v-if="hasGroup && activeGroupId != null"
+      v-model:isVisible="showInviteModal"
+      :group-id="Number(activeGroupId)"
     />
     <GroupCreateModal 
       v-model:isVisible="showCreateGroupModal" 
       @group-created="handleGroupCreated" 
     />
+    <GroupAlertSettingsModal
+      v-model:isVisible="showAlertModal"
+      :levels="alertSettings"
+    />
+    <GroupInviteConfirmModal
+      v-if="receivedInvitation"
+      :isVisible="true"
+      :invitationData="receivedInvitation"
+      @confirm="acceptInvitation"
+      @cancel="rejectInvitation"
+    />
   </div>
+  <div v-if="alertDialog.visible" class="ga-backdrop">
+  <div class="ga-modal">
+    <div class="ga-header">
+      <h5>알림</h5>
+      <button class="ga-close" @click="closeAlert">×</button>
+    </div>
+    <div class="ga-body">
+      {{ alertDialog.message }}
+    </div>
+    <div class="ga-footer">
+      <button class="ga-btn" @click="closeAlert">확인</button>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup>
-// ---------------------------------
-// 🐬 작동 로직 (리팩토링)
-// ---------------------------------
-import { ref, onMounted, onUnmounted, computed, watch, watchEffect } from 'vue'; 
-import axios from 'axios'; 
-import GroupInviteModal from '@/components/GroupInviteModal.vue';
-import GroupCreateModal from '@/components/GroupCreateModal.vue'; 
-
-import { useStore } from '@/stores/store.js';
+import { ref, onMounted, onUnmounted, computed, watch, watchEffect } from 'vue'
+import axios from 'axios'
+import GroupInviteModal from '@/components/GroupInviteModal.vue'
+import GroupCreateModal from '@/components/GroupCreateModal.vue'
+import GroupAlertSettingsModal from '@/components/GroupAlertSettingsModal.vue'
+import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
+import { useStore } from '@/stores/store.js'
+import { useGroupStore } from '@/stores/groupStore'
 import { storeToRefs } from 'pinia'
-const store = useStore();
-const { header, beach } = storeToRefs(store)
+const store = useStore()
+const { header } = storeToRefs(store)
+
+const groupStore = useGroupStore()
+const { receivedInvitation } = storeToRefs(groupStore)
+const { acceptInvitation, rejectInvitation, checkPendingInvitations } = groupStore
+
+/* ===== 색상 ===== */
+const mainColor = '#0092BA'
+const darkColor = '#0B1956'
+
+/* ===== 지도/마커 ===== */
+const mapEl = ref(null)
+let map
+let memberMarkers = []
+const firstPingDone = ref(false)
+
+/* ===== 상태 ===== */
+const myGroupList = ref([])
+const activeGroupLocations = ref([])
+const showAlertModal = ref(false)
+const showInviteModal = ref(false)
+const showCreateGroupModal = ref(false)
+const latitude = ref(null)
+const longitude = ref(null)
+const bootLoading = ref(true)
+
+const lastStatus = ref({})
+const stableStatus = ref({})
+
+const normStatus = (v) =>
+  (v === false || v === 'false') ? 'swim'
+  : (v === true  || v === 'true')  ? 'land'
+  : null
 
 
-// =================================================================
-// ## 1. 기본 설정 (Setup)
-// 전역 변수, 스토어, 상수, 지도 객체 등을 정의합니다.
-// =================================================================
+const isStatusReady = computed(() =>
+  firstPingDone.value &&
+  user_status.value !== null &&          // ✅ 수영/육지 확정이 먼저
+  latitude.value !== null &&
+  longitude.value !== null
+)
 
+/* ===== 계산 ===== */
+const hasGroup = computed(() => myGroupList.value.length > 0)
+const activeGroupId = computed(() => hasGroup.value ? myGroupList.value[0].id : null)
+const groupName = computed(() => hasGroup.value ? myGroupList.value[0].name : '')
 
-const mainColor = '#0092BA';
-const darkColor = '#0B1956';
-
-// 🗺️ 지도 관련 변수
-const mapEl = ref(null);
-let map; // Naver Map 객체 (반응형 X)
-let memberMarkers = []; // 지도 위에 표시된 마커 목록
-
-// ⏱️ 위치 추적 타이머
-let locationPollTimer = null; 
-
-// =================================================================
-// ## 2. 핵심 상태 (State)
-// 이 컴포넌트의 주요 반응형 상태(기억 상자)입니다.
-// =================================================================
-const myGroupList = ref([]); 
-const activeGroupLocations = ref([]);
-const showInviteModal = ref(false); 
-const showCreateGroupModal = ref(false); 
-const latitude = ref(''); // 내 위치(위도)
-const longitude = ref(''); // 내 위치(경도)
-
-// =================================================================
-// ## 3. 계산된 상태 (Computed)
-// 상태(State)를 기반으로 자동 계산되는 값들입니다.
-// =================================================================
-
-// 💡 그룹이 있는지?
-const hasGroup = computed(() => myGroupList.value.length > 0);
-
-// 💡 현재 활성화된 그룹 ID
-const activeGroupId = computed(() => {
-  return hasGroup.value ? myGroupList.value[0].id : null;
-});
-
-// 💡 [추가] 현재 활성화된 그룹의 이름
-const groupName = computed(() => {
-  return hasGroup.value ? myGroupList.value[0].name : '';
-});
-
-// 💡 중복 제거된 그룹 멤버 위치 목록 (Template에서 사용)
+/* 멤버 위치 중복 제거 + 정렬 */
 const groupLocations = computed(() => {
-    const locations = activeGroupLocations.value;
-    const uniqueMembers = {};
-    
-    locations.forEach(member => {
-        uniqueMembers[member.id] = member;
-    });
+  const mapObj = {}
+  activeGroupLocations.value.forEach(m => {
+    if (!m.id) return
+    const d = m.distance != null ? Number(m.distance) : null
+    const lat = m.lat ?? m.latitude ?? null
+    const lng = m.lng ?? m.longitude ?? null
+    mapObj[m.id] = { ...(mapObj[m.id] || {}), ...m, distance: d, lat, lng }
+  })
+  return Object.values(mapObj).sort((a, b) => {
+    const aMe = a.distance != null && a.distance <= 0.3
+    const bMe = b.distance != null && b.distance <= 0.3
+    if (aMe && !bMe) return -1
+    if (!aMe && bMe) return 1
+    return (a.distance ?? 999999) - (b.distance ?? 999999)
+  })
+})
 
-    return Object.values(uniqueMembers);
-});
-
-// =================================================================
-// ## 4. 🤝 그룹 관리 로직 (Group Management)
-// 그룹 생성, 조회, 삭제, 초대 등 그룹 자체에 대한 기능입니다.
-// =================================================================
-
-// [API] 내 그룹 목록 조회
+/* ===== API: 그룹 ===== */
 const fetchGroups = async () => {
-    try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${new Date().getTime()}`; 
-        // 💡 [원본 유지] withCredentials: true (세션 방식)
-        const response = await axios.get(url, { withCredentials: true });
-        myGroupList.value = response.data.data.result; 
-        header.value = groupName.value || "그룹 화면"
-        console.log("[FetchGroups] 그룹 목록:", myGroupList.value);
-    } catch (error) {
-        console.error('그룹 목록 조회 실패:', error, error.response);
-        myGroupList.value = [];
-    }
-};
-
-// [Event] 그룹 생성 성공 시
-const handleGroupCreated = (newGroupId) => {
-    showCreateGroupModal.value = false;
-    console.log(`[GroupCreate] 새 그룹 생성됨: ${newGroupId}. 그룹 목록 갱신...`);
-    fetchGroups(); 
-};
-
-// [Event] 그룹 삭제 버튼 클릭 시 (즉시 삭제)
-const confirmDeleteGroup = () => {
-  if (!activeGroupId.value) return;
-  console.log(`[ConfirmDelete] 그룹 ID ${activeGroupId.value} 즉시 삭제 실행.`);
-  deleteGroup();
-};
-
-// [API] 그룹 삭제
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups?timestamp=${Date.now()}`
+    const res = await axios.get(url, { withCredentials: true })
+    myGroupList.value = res.data?.data?.result ?? []
+    header.value = groupName.value || '그룹 화면'
+  } catch (e) {
+    console.error('그룹 목록 조회 실패:', e)
+    myGroupList.value = []
+  }
+}
+const handleGroupCreated = () => { showCreateGroupModal.value = false; fetchGroups() }
+const confirmDeleteGroup = () => { if (activeGroupId.value) deleteGroup() }
 const deleteGroup = async () => {
-    if (!activeGroupId.value) return;
-    
-    console.log(`[DeleteGroup] 그룹 ID ${activeGroupId.value} 삭제 API 호출...`);
-    try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`; 
-        // 💡 [원본 유지] withCredentials: true (세션 방식)
-        await axios.delete(url, { withCredentials: true });
-        
-        console.log("[DeleteGroup] 삭제 성공. 그룹 목록 갱신...");
-        activeGroupLocations.value = []; 
-        fetchGroups(); 
-    } catch (error) {
-        console.error('그룹 삭제 실패:', error);
-        alert('그룹 삭제에 실패했습니다.');
-    }
-};
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/${activeGroupId.value}`
+    await axios.delete(url, { withCredentials: true })
+    activeGroupLocations.value = []
+    fetchGroups()
+  } catch (e) {
+    console.error('그룹 삭제 실패:', e); alert('그룹 삭제에 실패했습니다.')
+  }
+}
+const handleNotificationSettings = () => { showAlertModal.value = true }
 
-// [Event] 알림 설정 (아직 미구현)
-const handleNotificationSettings = () => {
-    console.log("알림 설정 버튼 클릭됨");
-};
-
-// =================================================================
-// ## 5. 📍 위치 추적 로직 (Location Tracking)
-// 그룹 멤버의 위치를 '주기적'으로 가져오는 기능입니다.
-// =================================================================
-
-// [API] 그룹 멤버 위치 조회
+/* ===== API: 위치 ===== */
 const fetchLocations = async () => {
-    if (!activeGroupId.value) {
-        console.warn("[FetchLocations] Aborted: activeGroupId is null.");
-        return;
-    }
-    
-    console.log(`[FetchLocations] 그룹 ID ${activeGroupId.value}의 위치 조회...`);
-    try {
-        const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations?groupId=${activeGroupId.value}`;
-        // 💡 [원본 유지] withCredentials: true (세션 방식)
-        const response = await axios.get(url, { withCredentials: true });
-        activeGroupLocations.value = response.data.data.result; 
-    } catch (error) {
-        console.error('그룹 위치 정보 조회 실패:', error);
-        activeGroupLocations.value = [];
-    }
-};
-
-// HELPER: fetchLocations를 호출하는 작은 일
-const loadGroupData = () => {
-  if (activeGroupId.value) {
-    fetchLocations(); 
+  if (!activeGroupId.value) return
+  const payload = {
+    myLatitude: latitude.value,
+    myLongitude: longitude.value,
+    groupNumber: activeGroupId.value
+  }
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/locations`
+    const res = await axios.post(url, payload, { withCredentials: true })
+    activeGroupLocations.value = res.data?.data?.result ?? []
+  } catch (e) {
+    console.error('그룹 위치 정보 조회 실패:', e)
+    activeGroupLocations.value = []
+  } finally {
+    bootLoading.value = false
   }
 }
 
-// [WATCH] activeGroupId가 변경되면 '주기적' 위치 조회를 시작/중지합니다.
-// (1. fetchGroups 성공 -> 2. activeGroupId 변경 -> 3. 이 watch 실행 -> 4. loadGroupData 호출)
-watch(activeGroupId, (newId, oldId) => {
-    // 1. 기존 타이머가 있다면 제거
-    if (locationPollTimer) {
-        clearInterval(locationPollTimer);
-        locationPollTimer = null;
+/* ===== 위치 스트림: watchPosition (초기 응답을 빠르게) ===== */
+let geoWatchId = null
+const startGeoWatch = () => {
+  if (!navigator.geolocation) return
+  if (geoWatchId != null) return
+  geoWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      latitude.value = pos.coords.latitude
+      longitude.value = pos.coords.longitude
+      // 좌표가 처음 들어온 순간에 지도/마커가 바로 반응
+    },
+    err => {
+      console.error('지오로케이션 실패:', err.message)
+    },
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
+  )
+}
+const stopGeoWatch = () => {
+  if (geoWatchId != null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(geoWatchId)
+    geoWatchId = null
+  }
+}
+
+/* ===== 서버 boundary 체크 루프 (interval) ===== */
+let boundary_distance = ref(null)
+let user_status = ref(null)
+let geoTimer = null
+let serverIntervalMs = 2000
+
+const pingBoundaryAndLocations = async () => {
+  if (!activeGroupId.value || latitude.value == null || longitude.value == null) {
+  return
+}
+  try {
+    // test 모드로 서버 인터벌/상태 가져오기
+    const axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`
+    const payload = {
+      latitude: latitude.value,
+      longitude: longitude.value,
+      groupNumber: activeGroupId.value,
+      userStatus: user_status.value
     }
+    const res = await axios.post(axiosUrl, payload, {
+      headers: { 'Content-Type': 'application/json' },
+      withCredentials: true,
+      timeout: 5000
+    })
+    const r = res.data?.data?.result
+if (r) {
+  serverIntervalMs = r.interval ?? serverIntervalMs
+  boundary_distance.value = (r.distance ?? null)
+  user_status.value = (r.inside ?? null)
 
-    // 2. 새 그룹 ID가 생기면
-    if (newId) {
-        console.log(`[Watcher] activeGroupId 변경: ${oldId} -> ${newId}. 위치 폴링 시작...`);
-        loadGroupData(); // 즉시 1회 실행
-        locationPollTimer = setInterval(loadGroupData, 10000); // 10초마다 반복
-    } else {
-        // 3. 그룹이 없어지면
-        activeGroupLocations.value = []; 
-    }
-}, { immediate: true }); 
+  // ✅ user_status가 들어와야만 Ready로 간주 (boundary만 먼저 와도 렌더 안 함)
+  firstPingDone.value = (user_status.value !== null)
+}
+  } catch (e) {
+    console.error('boundary check error', e)
+  }
+  // 그룹 위치도 같이 당겨오기
+  await fetchLocations()
+}
+const startGeoLoop = (ms) => {
+  if (geoTimer) clearInterval(geoTimer)
+  geoTimer = setInterval(pingBoundaryAndLocations, ms)
+}
+const restartGeoLoop = () => startGeoLoop(serverIntervalMs)
 
-// =================================================================
-// ## 6. 🗺️ 지도 & 마커 로직 (Map & Markers)
-// Naver Map을 초기화하고, 그룹 멤버 마커를 그리는 기능입니다.
-// =================================================================
-
-// [WATCH-EFFECT] '내 위치'(latitude)가 준비되면 Naver Map 객체를 '초기화'합니다.
-// (1. getLocation 성공 -> 2. latitude 변경 -> 3. 이 watchEffect 실행 -> 4. map 객체 생성)
+/* ===== 지도 1회 초기화 (중복 watchEffect 제거) ===== */
 watchEffect(() => {
   const lat = latitude.value
   const lng = longitude.value
-
-  // 1. 재료 확인 (위치, 지도 DOM, Naver API)
   if (!lat || !lng || !mapEl.value || !window.naver?.maps) return
-
   const pos = new window.naver.maps.LatLng(lat, lng)
 
-  // 2. 지도 '최초' 생성
   if (!map) {
-    map = new window.naver.maps.Map(mapEl.value, {
-      center: pos,
-      zoom: 15
-    })
-    // GeoServer 레이어 로드 (최초 1회)
-    window.naver.maps.Event.once(map, 'init', testLoadBoundary)
-    loadBoundary()
+    map = new window.naver.maps.Map(mapEl.value, { center: pos, zoom: 18 })
+    // 지도만 먼저 띄우고, boundary는 지연 로드
+    setTimeout(() => {
+      // 필요시 BBOX로 WFS 제한해서 불러오세요 (아래 함수에서 설명)
+      loadBoundariesDeferred()
+    }, 0)
   } else {
-  // 3. 이미 생성된 경우, 중심 좌표만 이동
     map.setCenter(pos)
   }
 })
-
-// [WATCH] '그룹 위치'(groupLocations)가 변경되면 '마커'를 새로 그립니다.
-// (1. fetchLocations 성공 -> 2. activeGroupLocations 변경 -> 3. groupLocations 변경 -> 4. 이 watch 실행)
-watch(groupLocations, (newLocations) => {
-    // 1. 재료 확인 (지도 API)
-    if (!map || !window.naver?.maps) return; 
-
-    console.log("[MapMarker] 그룹 위치 변경 감지. 마커 업데이트...", newLocations);
-
-    // 2. 기존 마커 모두 삭제
-    memberMarkers.forEach(marker => marker.setMap(null));
-    memberMarkers = [];
-
-    // 3. 새 위치 데이터로 마커 생성
-    newLocations.forEach(member => {
-        if (member.latitude && member.longitude) {
-            const marker = new window.naver.maps.Marker({
-                position: new window.naver.maps.LatLng(member.latitude, member.longitude),
-                map: map,
-                title: member.name, 
-            });
-            memberMarkers.push(marker);
-        }
-    });
-}, { deep: true }); 
-
-// =================================================================
-// ## 7.Geo-Services (내 위치 & GeoServer)
-// =================================================================
-
-// [Browser API] 내 GPS 위치 1회 가져오기 (지도 초기화용)
-function getLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => { 
-        latitude.value = pos.coords.latitude; 
-        longitude.value = pos.coords.longitude; 
-    },
-    (err) => { console.error('위치 실패:', err.message); },
-    { enableHighAccuracy: true }
-  )
+// ✅ 지오루프/워치 정리
+const clearLoops = () => {
+  if (geoTimer) { clearInterval(geoTimer); geoTimer = null }
+  stopGeoWatch()
 }
 
-// [Browser API + Server] 내 위치를 서버로 전송 (경계 확인용)
-function requestGeoLocation(value) {
-  if (!navigator.geolocation) return;
+// ✅ 화면/상태 찌꺼기 초기화
+const resetTransient = () => {
+  // 서버 상태
+  boundary_distance.value = null
+  user_status.value = null
+  firstPingDone.value = false
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      // 1. '내 위치' 상태 업데이트
-      latitude.value = pos.coords.latitude
-      longitude.value = pos.coords.longitude
+  // UI 상태
+  alertDialog.value = { visible: false, message: '' }
+  bootLoading.value = true
 
-      // 2. 서버로 전송할 데이터
-      const payload = {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      }
-      console.log('sending to server:', payload)
+  // 목록/거리 기록
+  activeGroupLocations.value = []
+  prevMemberDistances.value = {}
+  prevMemberSwim.value = {}
 
-      let axiosUrl;
-      if ( value === "test") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/testBoundaryCheck`;
-      }
-      if ( value === "boundary") {
-        axiosUrl = `${import.meta.env.VITE_API_BASE_URL}/api/location/boundaryCheck`;
-      }
-
-      if (!axiosUrl) return;
-
-      // 3. 서버 API 호출
-      try {
-        const res = await axios.post( axiosUrl, payload,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            // 💡 [원본 유지] withCredentials: true (세션 방식)
-            withCredentials: true,
-            timeout: 5000,
-          }
-        )
-        console.log('OK', res.data)
-      } catch (e) {
-        console.error('send error', e)
-      }
-    },
-    (err) => { console.error('위치 실패:', err.message) },
-    { enableHighAccuracy: true }
-  )
+  // 지도 마커 제거
+  memberMarkers.forEach(m => m.setMap?.(null))
+  memberMarkers = []
 }
+/* ===== 그룹이 생기면 즉시 1회 로딩 + 이후 주기 ===== */
+watch(activeGroupId, async (newId) => {
+  if (!newId) {
+    activeGroupLocations.value = []
+    if (geoTimer) { clearInterval(geoTimer); geoTimer = null }
+    return
+  }
+  // 즉시 1회: 초기 화면 빨리 채움
+  await fetchLocations()
+  // 서버 interval 기반 루프 시작
+  await pingBoundaryAndLocations()
+  restartGeoLoop()
+}, { immediate: true })
 
-// --- GeoServer 관련 로직 (수정 없이 원본 유지) ---
-const url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_boundary` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
-let boundaryRings = [];
-
-async function loadBoundary() {
+/* ===== Boundary (지연 로드 + 선택적 BBOX 최적화) ===== */
+const loadBoundariesDeferred = async () => {
   try {
-    const res = await fetch(url);
-    const data = await res.json();
-    boundaryRings = []; 
-    (data.features || []).forEach(f => {
-      const geom = f.geometry;
-      if (!geom) return;
-      geom.coordinates.forEach(poly => {
-        const outerRing = poly[0]; 
-        boundaryRings.push(outerRing);
-      });
-    });
-    console.log('[boundaryRings]', boundaryRings);
-  } catch(e) {
-    console.error("GeoServer 'tb_boundary' load failed:", e)
+    // 기본 URL
+    const base = `${import.meta.env.VITE_GEO_BASE_URL}/geoserver/iseau/ows`
+    // BBOX 최적화 (지도의 현재 bounds로 제한) — 전체 레이어가 크면 필수!
+    const bounds = map.getBounds()
+    const sw = bounds.getSW(); const ne = bounds.getNE()
+    const bbox = `${sw.lng()},${sw.lat()},${ne.lng()},${ne.lat()},EPSG:4326`
+
+    const url = `${base}?service=WFS&version=1.0.0&request=GetFeature&typeName=iseau:tb_test_layer&outputFormat=application/json&srsName=EPSG:4326&BBOX=${encodeURIComponent(bbox)}`
+    const res = await fetch(url)
+    const data = await res.json()
+    const rings = []
+    ;(data.features || []).forEach(f => {
+      const g = f.geometry
+      if (!g) return
+      g.coordinates.forEach(poly => rings.push(poly[0])) // 외곽링만
+    })
+    drawRings(rings, '#0092BA')
+    fitRings(rings)
+  } catch (e) {
+    console.error('Boundary 로드 실패:', e)
   }
 }
-
-const test_url = `http://127.0.0.1:8090/geoserver/iseau/ows` +
-  `?service=WFS` +
-  `&version=1.0.0` +
-  `&request=GetFeature` +
-  `&typeName=iseau:tb_test_layer` +
-  `&outputFormat=application/json` +
-  `&srsName=EPSG:4326`
-let testBoundaryRings = []
-
-async function testLoadBoundary() {
-  try {
-    const testRes = await fetch(test_url);
-    const testData = await testRes.json();
-    testBoundaryRings = []; 
-    (data.features || []).forEach(f => {
-      const geom = f.geometry;
-      if (!geom) return;
-      geom.coordinates.forEach(poly => {
-        const outerRing = poly[0]; 
-        testBoundaryRings.push(outerRing);
-      });
-    });
-    console.log('[testBoundaryRings]', testBoundaryRings);
-    testDrawBoundaryRings() 
-  } catch(e) {
-    console.error("GeoServer 'tb_test_layer' load failed:", e)
-  }
+const drawRings = (rings, color) => {
+  rings.forEach(ring => {
+    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon))
+    new naver.maps.Polyline({ map, path, strokeColor: color, strokeWeight: 3, strokeOpacity: 0.9 })
+  })
+}
+const fitRings = (rings) => {
+  const bounds = new naver.maps.LatLngBounds()
+  rings.forEach(ring => ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon))))
+  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) map.fitBounds(bounds)
 }
 
-function testDrawBoundaryRings() {
-  if (!map) return;
-  testBoundaryRings.forEach(ring => {
-    const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon));
-    new window.naver.maps.Polyline({
+/* ===== 마커: 멤버 목록이 바뀌면 갱신 ===== */
+watch(groupLocations, (list) => {
+  if (!list.length || !map || !window.naver?.maps) return
+  memberMarkers.forEach(m => m.setMap(null))
+  memberMarkers = []
+  list.forEach(member => {
+    if (member.status !== 'online') return   // 온라인만 마커
+    if (!member.lat || !member.lng) return
+    const marker = new naver.maps.Marker({
+      position: new naver.maps.LatLng(member.lat, member.lng),
       map,
-      path,
-      strokeColor: '#0092BA',
-      strokeWeight: 3,
-      strokeOpacity: 0.9,
-    });
-  });
-  const bounds = new window.naver.maps.LatLngBounds();
-  testBoundaryRings.forEach(ring => {
-    ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon)));
-  });
-  if (!bounds.isEmpty?.() && bounds.hasOwnProperty('extend')) {
-    map.fitBounds(bounds);
-  }
-}
+      title: member.name,
+      icon: {
+        content: `
+          <div style="
+            width:15px;height:15px;border-radius:100%;
+            background:${member.color || '#0092BA'};
+            border:1px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);
+          "></div>`,
+        anchor: new naver.maps.Point(10, 10)
+      }
+    })
+    memberMarkers.push(marker)
+  })
+}, { deep: true })
+
+/* ===== 알림 ===== */
+const alertSettings = ref([
+  { id: 1, label: '3m 이탈 알림', radius: 3, enabled: true },
+  { id: 2, label: '200m 이탈 알림', radius: 200, enabled: false },
+  { id: 3, label: '해안선 알림', radius: 0, enabled: true }
+])
+const prevMemberDistances = ref({})
+const prevMemberSwim = ref({})
+const alertDialog = ref({ visible: false, message: '' })
+const pushAlert = (_type, msg) => { alertDialog.value.visible = true; alertDialog.value.message = msg }
+const closeAlert = () => { alertDialog.value.visible = false }
+
+watch(groupLocations, (members) => {
+  members.forEach(m => {
+    if (!m.id) return
+
+        // ✅ 초대중이면 알림 전부 무시
+  if (m.status !== 'online') return
+
+  const isMe = Number(m.distance) <= 0.3   // 필요하면 임계값 조정
+    if (isMe) return
 
 
-// =================================================================
-// ## 8. 🔄 생명주기 훅 (Lifecycle Hooks)
-// 컴포넌트가 생성/소멸될 때 실행되는 진입점입니다.
-// =================================================================
+    const now = Number(m.distance)
+    if (!Number.isFinite(now)) return
+    const prev = prevMemberDistances.value[m.id]
+    if ((prev == null && now >= 3) || (prev != null && prev < 3 && now >= 3)) {
+      if (alertSettings.value.find(l => l.id === 1)?.enabled) {
+        pushAlert('radius', `⚠ ${m.name}님이 3m 이상 떨어졌어요. (${now.toFixed(1)}m)`)
+      }
+    }
+    prevMemberDistances.value[m.id] = now
 
-onMounted(() => {
-  fetchGroups(); // 1. 그룹 정보 가져오기 (-> 4번, 5번 섹션 로직 실행)
-  getLocation(); // 2. 내 위치 1회 가져오기 (-> 6번 섹션 로직 실행)
-  requestGeoLocation("test"); // 3. 내 위치 서버로 전송 (7번 섹션 로직 실행)
-  header.value = groupName.value || "그룹 화면"
-});
+    const nowSwim = m.userStatus === 'false'
+    const prevSwim = prevMemberSwim.value[m.id]
+    if (prevSwim !== undefined && prevSwim === false && nowSwim === true) {
+      pushAlert('swim', `🌊 ${m.name}님이 수영 중으로 바뀌었어요.`)
+    }
+    prevMemberSwim.value[m.id] = nowSwim
+  })
+}, { deep: true })
 
+/* ===== 라이프사이클 ===== */
+onMounted(async () => {
+  // 위치 스트림 & 그룹 병렬 시작 → 먼저 오는 걸로 바로 화면 채움
+  await Promise.allSettled([ (async () => startGeoWatch())(), fetchGroups() ])
+  // 그룹명 헤더
+  header.value = groupName.value || '그룹 화면'
+
+  checkPendingInvitations()
+})
 onUnmounted(() => {
-  // 4. 페이지 이탈 시, 타이머를 반드시 정리 (메모리 누수 방지)
-  if (locationPollTimer) {
-      clearInterval(locationPollTimer);
-      console.log("[Watcher] 페이지 이탈. 위치 폴링 타이머 제거.");
-  }
-});
+  stopGeoWatch()
+  if (geoTimer) clearInterval(geoTimer)
+})
+
+  watch(groupLocations, (members) => {
+  members.forEach(m => {
+    if (!m?.id) return
+    const s = normStatus(m.userStatus) // null | 'swim' | 'land'
+    if (s == null) return
+
+    // 이전값과 같으면 확정(stable)로 승격
+    if (lastStatus.value[m.id] === s) {
+      stableStatus.value[m.id] = s
+    }
+    lastStatus.value[m.id] = s
+  })
+})
 </script>
 
 <style scoped>
@@ -549,5 +582,53 @@ onUnmounted(() => {
 .btn-outline-danger:hover {
   background-color: #dc3545;
   color: white;
+}
+
+/* 모달관련 지우기 */
+.ga-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+.ga-modal {
+  width: 280px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(0,0,0,.15);
+}
+.ga-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 6px;
+}
+.ga-body {
+  padding: 12px 14px 4px;
+  font-size: 14px;
+}
+.ga-footer {
+  padding: 10px 14px 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+.ga-btn {
+  background: #0092ba;
+  border: none;
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ga-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>

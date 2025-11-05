@@ -61,7 +61,8 @@ public class BeachService  {
                 vo.getMobile(),
                 vo.getOpenDate(),
                 vo.getCloseDate(),
-                vo.getReviewCount()
+                vo.getReviewCount(),
+                vo.getTagsString()
             ));
         }
 

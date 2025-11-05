@@ -3,8 +3,8 @@
     <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
       <div class="modal-content shadow-xl rounded-xl border-0 bg-white">
         <div class="modal-header p-3 pb-0 border-0 d-flex justify-content-between align-items-center">
-          <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">{{ caseTitle }} </h5>
-          <button type="button" class="btn-close" @click="handleClose"></button>
+          <h5 class="fw-bolder p-1" :style="{ color: darkColor }">{{ caseTitle }} </h5>
+          <button type="button" class="btn-close" style="width:1.6rem;height:1.6rem;background-size:1.6rem" @click="handleClose"></button>
         </div>
 
         <div class="modal-body p-4 pt-1" style="max-height: 80vh; overflow-y: auto;">

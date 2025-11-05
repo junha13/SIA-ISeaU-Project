@@ -42,7 +42,6 @@ public class GroupsController {
                 .body(Map.of("data", result));
     }
 
- 
     /**
      * 그룹 목록 조회 (GET /api/groups) 
      */
@@ -114,9 +113,8 @@ public class GroupsController {
      * 이 API는 원래 userId가 필요 없었으므로 변경 없음
      */
     @RequestMapping("/locations")
-    public ResponseEntity<?> getGroupMemberLocations(
-            @RequestParam("groupId") int groupId) {
-        Map<String, Object> result = service.getGroupMemberLocations(groupId);
+    public ResponseEntity<?> getGroupMemberLocations(@RequestBody ResponseGroupMemberLocationDTO dto) {
+        Map<String, Object> result = service.getGroupMemberLocations(dto);
         return ResponseEntity
                 .ok()
                 .header("api", "Groups/locations")

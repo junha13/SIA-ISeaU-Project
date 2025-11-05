@@ -12,22 +12,22 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/1.png"
-               class="d-block w-100" alt="해변 풍경 1" style="height: 200px; object-fit: cover;">
+          <img src="/images/mainBeach/123.jpg"
+               class="d-block w-100" alt="해변 풍경 1" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <img src="/images/mainBeach/2.png"
-               class="d-block w-100" alt="해변 풍경 2" style="height: 200px; object-fit: cover;">
+               class="d-block w-100" alt="해변 풍경 2" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/3.png"
-               class="d-block w-100" alt="해변 풍경 3" style="height: 200px; object-fit: cover;">
+          <img src="/images/mainBeach/image.png"
+               class="d-block w-100" alt="해변 풍경 3" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
           <img src="/images/mainBeach/4.png"
-               class="d-block w-100" alt="해변 풍경 4" style="height: 200px; object-fit: cover;">
+               class="d-block w-100" alt="해변 풍경 4" style="height: 270px; object-fit: cover;">
         </div>
         <!-- ... 추가 슬라이드 항목 ... -->
       </div>
@@ -63,7 +63,7 @@
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
       <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
-        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
+        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">위치공유</p>
       </div>
     </div>
 
