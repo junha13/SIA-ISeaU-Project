@@ -6,12 +6,6 @@
 <mapper namespace="lx.iseau.feature.beach.BeachDAO">
 
   <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
-    <!-- page/size로 offset 계산 -->
-    <bind name="safePage" value="(page == null || page &lt;= 0) ? 1 : page"/>
-    <bind name="safeSize" value="(size == null || size &lt;= 0) ? 10 : size"/>
-    <bind name="offset"   value="(safePage - 1) * safeSize"/>
-
-    <![CDATA[
     SELECT
         b.beach_number,
         b.beach_name,
@@ -25,66 +19,72 @@
         b.mobile,
         b.open_date,
         b.close_date,
-        COALESCE(c.review_count, 0)
+        COALESCE(c.review_count, 0) AS review_count,
+        
+        -- ✅ [핵심 수정] 태그를 쉼표로 연결하여 하나의 문자열로 조회
+        STRING_AGG(t_name.tag_name, ',') AS tags_string
+        
+        <if test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
+        , ST_Distance(
+            b.location,
+            ST_SetSRID(ST_MakePoint(#{userLongitude}, #{userLatitude}), 4326)::geography
+        ) AS distance_meters
+        </if>
     FROM tb_beach b
+    
+    -- 태그 목록 조회를 위한 LEFT JOIN
+    LEFT JOIN tb_beach_tag_list t_list ON t_list.beach_number = b.beach_number
+    LEFT JOIN tb_beach_tag t_name ON t_name.tag_number = t_list.tag_number
+    
     LEFT JOIN (
         SELECT beach_number, COUNT(*) AS review_count
         FROM tb_beach_comment_list
         GROUP BY beach_number
     ) c ON c.beach_number = b.beach_number
+    
     WHERE 1=1
-    ]]>
 
-    <!-- 지역 필터 -->
     <if test="region != null and region != ''">
-      <![CDATA[
-      AND address LIKE CONCAT(#{region}, '%')
-      ]]>
+      AND b.address LIKE CONCAT(#{region}, '%')
     </if>
 
-    <!-- 카테고리 필터 -->
     <if test="category != null and category != ''">
-      <![CDATA[
       AND b.category = #{category}
-      ]]>
     </if>
-
+    
+    <if test="tagFilter != null and tagFilter != ''">
+      AND t_name.tag_name = #{tagFilter}
+    </if>
+    
+    GROUP BY
+        b.beach_number, b.beach_name, b.beach_image, b.beach_information, b.rating,
+        b.approved_by_ministry, b.address, b.location, b.mobile, b.open_date, b.close_date,
+        c.review_count
+        <if test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
+        , distance_meters
+        </if>
+        
     <choose>
-      <!-- 리뷰 개수순 (내림차순), 동일 시 평점/이름으로 안정화 -->
+      <when test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
+        ORDER BY distance_meters ASC, b.beach_name ASC
+      </when>
       <when test="sort == 'review_desc'">
-        <![CDATA[
         ORDER BY COALESCE(c.review_count, 0) DESC,
                  b.rating DESC,
                  b.beach_name ASC
-        ]]>
       </when>
       <when test="sort == 'rating_desc'">
-        <![CDATA[
         ORDER BY b.rating DESC NULLS LAST, b.beach_name ASC
-        ]]>
       </when>
       <when test="sort == 'name_asc'">
-        <![CDATA[
         ORDER BY b.beach_name ASC
-        ]]>
       </when>
       <otherwise>
-        <![CDATA[
         ORDER BY b.beach_number ASC
-        ]]>
       </otherwise>
     </choose>
+    </select>
 
-    <!-- 페이지네이션 -->
-    <![CDATA[
-    LIMIT #{safeSize}
-    OFFSET #{offset}
-    ]]>
-
-  </select>
-
-
-  <!-- 해수욕장 상세 정보 -->
   <select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
     <![CDATA[
     SELECT beach_number,
@@ -105,7 +105,6 @@
   </select>
 
 
-  <!-- 해수욕장 위험정보 -->
   <select id="getBeachDetailDanger" parameterType="int" resultType="ResponseBeachDangerDTO">
     <![CDATA[
     WITH beach_location AS (
@@ -121,7 +120,7 @@
         ST_X(w.observed_location::geometry) AS longitude
     FROM tb_beach_weather_info w,
          beach_location b
-    WHERE ST_DWithin(w.observed_location, b.location, 10000)
+    WHERE ST_DWithin(w.observed_location, b.location, 20000)
       AND w.forecast_time >= DATE_TRUNC('day', NOW())
       AND w.forecast_time < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
     ORDER BY w.forecast_time ASC
@@ -129,7 +128,6 @@
   </select>
 
 
-  <!-- 해수욕장 날씨 -->
   <select id="getBeachDetailWeather" parameterType="int" resultType="ResponseBeachWeatherDTO">
     <![CDATA[
     WITH beach_location AS (
@@ -160,7 +158,6 @@
   </select>
 
 
-  <!-- 즐겨찾기 -->
   <select id="getBeachFavorites" parameterType="int" resultType="ResponseFavoritesDTO">
     <![CDATA[
     SELECT
@@ -200,7 +197,6 @@
   </delete>
 
 
-  <!-- 댓글 -->
   <select id="getBeachComments" parameterType="int" resultType="ResponseBeachCommentDTO">
     <![CDATA[
     SELECT c.beach_comment_number AS beachCommentNumber,
@@ -263,7 +259,6 @@
 	      ORDER BY c.created_time ASC, c.beach_comment_number ASC
 	    </when>
 	    <otherwise>
-	      <!-- default: latest -->
 	      ORDER BY c.created_time DESC, c.beach_comment_number DESC
 	    </otherwise>
 	  </choose>

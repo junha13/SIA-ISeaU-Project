@@ -12,7 +12,7 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/1.jpg"
+          <img src="/images/mainBeach/123.jpg"
                class="d-block w-100" alt="해변 풍경 1" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
@@ -21,7 +21,7 @@
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/3.png"
+          <img src="/images/mainBeach/image.png"
                class="d-block w-100" alt="해변 풍경 3" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
@@ -62,8 +62,8 @@
 
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
-      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupList')">
-        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
+      <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
+        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">위치공유</p>
       </div>
     </div>
 
@@ -84,6 +84,7 @@
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.firstAid})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('FirstAid')">
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">응급대처법</p>
         </div>
+        
       </div>
     </div>
     </div>

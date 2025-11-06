@@ -102,7 +102,7 @@
         <!-- 경로를 '/group'으로 변경 (GroupList 페이지로 연결) -->
         <div class="nav-item-custom" @click="goTo('/group')">
           <i class="fas fa-users fs-4 mb-1" :style="navIconStyle('/group')"></i>
-          <span class="fs-7 fw-bold" :style="navTextStyle('/group')">그룹</span>
+          <span class="fs-7 fw-bold" :style="navTextStyle('/group')">위치공유</span>
         </div>
 
         <div class="nav-item-custom" @click="goToSelectedBeach">

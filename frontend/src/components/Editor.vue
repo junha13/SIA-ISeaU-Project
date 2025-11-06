@@ -23,7 +23,7 @@ export default {
             [{ size: ['small', false, 'large', 'huge'] }],
             [{ color: [] }, { background: [] }],
             [{ align: [] }],
-            ['link', 'image', 'video']
+            ['image']
           ]
         }
         // more options
@@ -82,7 +82,7 @@ export default {
   overflow-x: hidden;
 }
 .ql-editor img {
-  max-width: 200% !important;
+  max-width: 250px !important;
   max-height: 200px !important;
   object-fit: cover; /* 비율 깨짐 방지용으로 추천 */
 }

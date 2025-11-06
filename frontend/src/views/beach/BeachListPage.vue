@@ -25,26 +25,36 @@
             class="form-control"
             placeholder="해수욕장 검색..."
             v-model="searchParams.keyword"
-            @keyup.enter="resetInfinite"
-            aria-label="해수욕장 검색"
+            @keyup.enter="loadData" aria-label="해수욕장 검색"
             style="border-radius: 0.475rem 0 0 0.475rem;"
           />
           <button
             class="btn"
             type="button"
-            @click="resetInfinite"
-            :style="{ backgroundColor: mainColor, color: 'white', border: 'none', borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }"
+            @click="loadData" :style="{ backgroundColor: mainColor, color: 'white', border: 'none', borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }"
           >
             <i class="fas fa-search"></i>
           </button>
         </div>
       </div>
 
-      <div class="d-flex overflow-auto gap-2 mb-3 pb-2" style="white-space: nowrap;">
-        <button v-for="tab in tabCondition" :key="tab.value" :class="['btn','btn-sm', 'rounded-pill', activeTab === tab.value ? 'tab-btn-primary' : 'tab-btn-light-secondary']"
-          @click="activeTab = tab.value">
-          {{ tab.label }}
-        </button>
+      <div
+      class="d-flex overflow-auto gap-2 mb-3 pb-2"
+      style="white-space: nowrap;"
+      >
+      <button
+      v-for="tab in tagFilterOptions"
+      :key="tab.value"
+      :class="[
+      'btn',
+      'btn-sm',
+      'rounded-pill',
+      activeTab === tab.value ? 'tab-btn-primary' : 'tab-btn-light-secondary'
+      ]"
+      @click="activeTab = tab.value"
+      >
+      {{ tab.label }}
+      </button>
       </div>
 
       <div class="d-flex align-items-center justify-content-between">
@@ -116,7 +126,7 @@
                 <p class="text-muted fs-7 mb-2">{{ beach.address }}</p>
 
                 <div class="d-flex gap-2 mb-3">
-                  <span v-for="(tag, index) in beach.tags" :key="index" :class="['badge', 'px-2', 'py-1', 'fw-bold', tagClass(tag)]">
+                  <span v-for="(tag, index) in beach.tags" :key="index" :class="['badge', 'px-3', 'py-2', 'fw-bold']" :style="tagClass(tag)" style="font-size:11px;">
                     {{ tag }}
                   </span>
                 </div>
@@ -131,20 +141,7 @@
             </div>
           </div>
 
-          <!-- 🔻 무한 스크롤 컴포넌트 -->
-          <InfiniteLoading
-            :identifier="infiniteId"
-            @infinite="infiniteHandler">
-            <template #spinner>{{ blank }} </template>
-            <template #complete>{{ blank }}</template>
-            <template #error="{ retry }">
-              <div class="text-center py-3">
-                로딩 실패 <button class="btn btn-sm btn-outline-secondary ms-2" @click="retry()">다시시도</button>
-              </div>
-            </template>
-          </InfiniteLoading>
-
-        </div>
+          </div>
       </div>
     </div>
   </div>
@@ -226,12 +223,8 @@ import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia';
 import { useBeachStore } from '@/stores/beachStore';
 
-//import InfiniteLoading from 'infinite-loading-vue3-ts'
-
 import bottomSheet from '@/components/BottomSheet.vue'
 
-
-const blank = ""
 
 const store = useStore();
 const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(store)
@@ -244,12 +237,8 @@ const favoriteBeachIds = ref([]);
 const isLoading = ref(false);
 const apiError = ref(null);
 
-// ▶ 무한스크롤 상태
-const page = ref(1);                   // 다음에 요청할 페이지
-const size = ref(10);                  // 페이지 크기(백엔드와 동일)
-const hasMore = ref(true);             // 더 가져올 수 있는지
-const infiniteId = ref(0);             // 변경되면 InfiniteLoading이 초기화됨
-
+const FAVORITES_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites`;
+const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`;
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -257,6 +246,31 @@ const darkColor = '#0B1956';
 const activeTab = ref('all');
 const viewMode = ref('list');
 const currentSort = ref('name');
+
+// ✅ 태그 필터링을 위한 고정 옵션
+const tagFilterOptions = ref([
+{ value: 'all', label: '전체' },
+{ value: 'favorite', label: '즐겨찾기' },
+{ value: '핫플', label: '핫플' },
+{ value: '레저', label: '레저' },
+{ value: '수영', label: '수영' },
+{ value: '가족', label: '가족' },
+{ value: '산책', label: '산책' },
+{ value: '서핑', label: '서핑' },
+{ value: '한적', label: '한적' },
+{ value: '반려동물 동반', label: '반려동물 동반' },
+]);
+
+// ********** 데이터 로딩 및 필터링 로직 **********
+// activeTab watch 로직: activeTab이 변경되면 loadData를 다시 호출하여 필터링합니다.
+watch(activeTab, (newValue, oldValue) => {
+if (newValue !== oldValue) {
+// '즐겨찾기' 탭은 프론트엔드 필터링을 사용하므로 API 호출을 건너뜁니다.
+if (newValue !== 'favorite') {
+loadData();
+}
+}
+});
 
 const tabCondition = tabOptions
 const sortCondition = sortOptions
@@ -284,35 +298,46 @@ onMounted(() => {
   fetchFavoriteIds();
   header.value = "해수욕장 리스트"
   getLocation();
-  //resetInfinite();
 });
-
-// 📌 목록/검색 조건 초기화 후 다시 불러오기 (무한스크롤 리셋)
-function resetInfinite() {
-  page.value = 1;           // 다음 요청 페이지 초기화
-  hasMore.value = true;     // 더 불러올 수 있음
-  beaches.value = [];       // 화면 목록 비우고
-  infiniteId.value++;       // InfiniteLoading 새로고침 트리거
-  loadData();               // 첫 페이지 다시 호출
-}
 
 async function loadData() {
   isLoading.value = true;
   apiError.value = null;
+  beaches.value = [];
   try {
     const backendSort = sortMap[currentSort.value] ?? 'name_asc';
 
-    // 백엔드 DTO(BeachListRequest)에 맞춰 최소 필드만 전송
-    const payload = {
+      const payload = {
       region: searchParams.value.region || '',
       sort: backendSort,
-      // keyword는 백에서 아직 안 받는 듯 → 받게 되면 여기에 추가
-    };
+      // 'all'이나 'favorite'이 아닐 때만 태그 필터를 백엔드에 전달
+      tagFilter: (activeTab.value !== 'all' && activeTab.value !== 'favorite')
+      ? activeTab.value
+      : null,
+      userLatitude: latitude.value,
+      userLongitude: longitude.value,
 
-    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
-    beaches.value = response.data.result
+      };
+
+    const response = await axios.post(BEACH_LIST_API_URL, payload);
+    
+      beaches.value = (response.data.result || []).map(b => {
+    // tagsString 필드가 DTO에 없거나 비어있는 경우를 대비하여 안전하게 배열로 변환
+    const tagsList = b.tagsString
+    ? b.tagsString.split(',').map(tag => tag.trim()).filter(tag => tag)
+    : [];
+
+    return {
+    ...b,
+    tags: tagsList,
+    // distance 필드가 없으면 빈 문자열 할당 (템플릿 오류 방지)
+    distance: b.distance || '',
+    };
+    }); 
+
   } catch (error) {
     apiError.value = error;
+    console.error("😥 데이터 로딩 실패:", error);
   } finally {
     isLoading.value = false;
   }
@@ -322,9 +347,25 @@ async function loadData() {
 const fetchFavoriteIds = async () => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
-    const resData = res.data?.data?.result;
+    
+    // ⭐ [수정 반영] 서버 응답 구조에 유연하게 대처합니다. (res.data.result 또는 res.data.data.result)
+    let resData = res.data?.result || res.data?.data?.result;
+
+    if (!resData) {
+      resData = res.data?.data?.result;
+    }
+    
+    // ID 목록 갱신: 리스트가 아닌 단일 값이 오더라도 배열로 만듭니다.
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
-    console.log("⭐ 즐겨찾기 API 응답:", favoriteBeachIds.value);
+    
+    // 👇👇👇 [로그 추가] 서버 응답 원본 확인 👇👇👇
+    console.log('⭐ API 원본 응답:', res.data);
+    console.log(`⭐ [성공] 즐겨찾기 ID ${favoriteBeachIds.value.length}개 로드 완료.`);
+    if (favoriteBeachIds.value.length === 0) {
+        console.log("⭐ (주의) 로드된 ID 목록이 비어 있습니다. (백엔드 확인 필요)");
+    }
+    // 👆👆👆 [로그 추가] 서버 응답 원본 확인 👆👆👆
+
   } catch (error) {
     console.error("즐겨찾기 초기 로딩 실패:", error);
     favoriteBeachIds.value = [];
@@ -342,92 +383,57 @@ function selectSort(sortValue) {
   loadData();
 }
 
-// 📥 무한스크롤 핸들러
-async function infiniteHandler($state) {
-  if (!hasMore.value) {
-    $state.complete();
-    return;
-  }
-  try {
-    const backendSort = sortMap[currentSort.value] ?? 'name_asc';
-    const payload = {
-      region: searchParams.value.region || '',
-      sort: backendSort,
-      page: page.value,
-      size: size.value,
-      // keyword: searchParams.value.keyword, // 백에서 받으면 주석 해제
-    };
-
-    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`, payload);
-    const list = res.data?.result ?? [];
-
-    // 중복 방지 후 추가
-    const existing = new Set(beaches.value.map(b => b.beachNumber));
-    const toAdd = list.filter(b => !existing.has(b.beachNumber));
-
-    await new Promise(r => setTimeout(r, 600)); // 👈 지연 딜레이 0.6초
-
-    if (toAdd.length) beaches.value.push(...toAdd);
-
-    // 다음 페이지 계산
-    hasMore.value = !!res.data?.hasMore && list.length > 0;
-    page.value = res.data?.nextPage ?? (page.value + 1);
-
-    // v3-infinite-loading 상태 업데이트
-    if (hasMore.value) $state.loaded();
-    else $state.complete();
-
-    // 결과가 하나도 없고 처음 요청이라면 완료 처리
-    if (!hasMore.value && beaches.value.length === 0) $state.complete();
-  } catch (err) {
-    apiError.value = err;
-    $state.error();
-  }
-}
-
-// [수정] 즐겨찾기 토글 (console.log 추가)
 async function toggleFavorite(beachNumber) {
   const isCurrentlyFavorite = favoriteBeachIds.value.includes(beachNumber);
 
-  // 1. UI 상태 먼저 변경!
+  // 1. UI 상태 변경 (Optimistic Update)
   if (isCurrentlyFavorite) {
     favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
-    console.log('💔 즐겨찾기 제거 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
   } else {
     favoriteBeachIds.value.push(beachNumber);
-    console.log('💖 즐겨찾기 추가 (UI):', JSON.stringify(favoriteBeachIds.value)); // <-- 로그 추가 (배열 내용 확인)
   }
 
-  // 2. API 요청 보내기
+  // 2. API 요청
   try {
     if (isCurrentlyFavorite) {
       await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/${beachNumber}`);
-      console.log(`⭐ ${beachNumber} 즐겨찾기 삭제 성공`);
     } else {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites`, { beachNumber });
-      console.log(`⭐ ${beachNumber} 즐겨찾기 추가 성공`);
+      await axios.post(FAVORITES_API_URL, { beachNumber });
     }
+    
+    // ⭐ [핵심] API 성공 후, ID 목록을 다시 가져와 UI를 강제 동기화합니다.
+    await fetchFavoriteIds();
+    
   } catch (error) {
     console.error("😥 즐겨찾기 토글 API 실패:", error);
 
-    // 3. API 실패 시, UI 상태 원래대로 되돌리기!
+    // 💡 409 Conflict에 대한 특정 메시지 처리 및 재동기화
+    if (error.response && error.response.status === 409) {
+      alert("이미 등록된 해수욕장입니다. 목록을 다시 불러옵니다.");
+      await fetchFavoriteIds(); // DB 상태와 UI를 다시 맞춥니다.
+      return; 
+    }
+
+    // 롤백 (일반 오류)
     if (isCurrentlyFavorite) {
       favoriteBeachIds.value.push(beachNumber);
-      console.log('롤백: 즐겨찾기 다시 추가 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
     } else {
       favoriteBeachIds.value = favoriteBeachIds.value.filter(id => id !== beachNumber);
-      console.log('롤백: 즐겨찾기 다시 제거 (UI)', JSON.stringify(favoriteBeachIds.value)); // <-- 롤백 로그
     }
     alert("즐겨찾기 변경 중 오류가 발생했습니다. 다시 시도해 주세요.");
   }
 }
+// ********** Computed 속성 및 기타 **********
 
+const dbOnlyList = computed(() => beaches.value);
+/**
+ * 클라이언트 측 필터링: 서버에서 받은 전체 목록(beaches)에 대해 검색어와 탭 필터를 적용합니다.
+ */
 const filteredBeachList = computed(() => {
   const kw = (searchParams.value.keyword || '').trim().toLowerCase();
-
   let list = dbOnlyList.value;
 
-  // ✅ 프론트 검색(부분일치)
+  // 1. 검색어 필터링 (프론트엔드)
   if (kw) {
     list = list.filter(b => {
       const name = (b.beachName || '').toLowerCase();
@@ -437,31 +443,38 @@ const filteredBeachList = computed(() => {
     });
   }
 
-  // ⭐ 즐겨찾기 탭일 때만 추가 필터
+  // 2. 탭 필터링 (프론트엔드)
   if (activeTab.value === 'favorite') {
     list = list.filter(b => favoriteBeachIds.value.includes(b.beachNumber));
   }
-
   return list;
 });
 
-const dbOnlyList = computed(() => beaches.value);
-const isSelected = (id) => beachStore.isSelected(id)
-const toggleSelect = (id, name) => beachStore.toggleSelectBeach(id, name)
+const
+isSelected = id => beachStore.isSelected(id);
+const
+toggleSelect = (id, name) => beachStore.toggleSelectBeach(id, name);
+const
+isFavorite = id => favoriteBeachIds.value.includes(id);
+const
+goToDetail = id => router.push(`/beach/${id}`);
 
-// [수정] isFavorite 함수 (console.log 추가)
-const isFavorite = id => {
-  const result = favoriteBeachIds.value.includes(id);
-  // console.log(`isFavorite(${id}) 호출됨, 결과: ${result}`); // <-- 로그 추가 (너무 많이 찍힐 수 있음)
-  return result;
+
+// 태그에 따라 색상 클래스 지정
+const tagClass = (tag) => {
+  const palette = {
+    '핫플':           ['#FDE2E4', '#7A1D2F'], // 연한 레드
+    '레저':           ['#D7F3F7', '#0B5E65'], // 연한 시안/민트
+    '수영':           ['#D6E9FF', '#0B4F8A'], // 연한 블루
+    '가족':           ['#DFF5E1', '#1B5E20'], // 연한 그린
+    '산책':           ['#FFF6D1', '#7A5E00'], // 연한 옐로
+    '서핑':           ['#F1F3F5', '#343A40'], // 라이트 그레이
+    '한적':           ['#F8FAFC', '#111827'], // 아주 연한 슬레이트
+    '반려동물 동반':   ['#EAEAEA', '#1F2937'], // 밝은 그레이
+  };
+  const [bg, fg] = palette[tag] || ['#F3F4F6', '#111827']; // 기본값
+  return { backgroundColor: bg, color: fg };
 };
-
-const goToDetail = id => router.push(`/beach/${id}`);
-const tagClass = tag => ({
-  '안전': 'bg-secondary', '수영': 'bg-info', '서핑': 'bg-info',
-  '산책': 'bg-warning', '가족': 'bg-success',
-}[tag] || 'bg-light text-dark');
-
 // 지도 부분 (변경 없음)
 const beachMap = ref(null)
 let map
@@ -572,20 +585,17 @@ function fmtDist(m) {
 
 <style scoped>
 .beach-card .fa-heart.text-danger {
-    /* 빨간색을 강제로 적용 */
     color: var(--bs-danger, #dc3545) !important; 
-    /* Bootstrap 변수 사용 또는 #dc3545 같은 hex 값 사용 */
 }
 .beach-card .fa-heart.text-muted {
-    /* 회색을 강제로 적용 */
     color: var(--bs-gray-600, #6c757d) !important;
 }
 .beach-list-page { padding-top: 10px; }
 .beach-card { transition: transform 0.2s; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.05) !important; }
 .beach-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; }
-.beach-image-placeholder { width: 100px; height: 100px; flex: 0 0 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; overflow: hidden;}
+.beach-image-placeholder { width: 100px; height: 100px; background-color: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; border-radius: .25rem; }
 .beach-image-placeholder > p { line-height: 1.2; padding: .2rem; font-size: .65rem !important; }
-.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: static; top: 0; left: 0; border-radius: .25rem; }
+.beach-image-placeholder > img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; border-radius: .25rem; }
 .rating-badge { position: absolute; bottom: 5px; right: 5px; font-size: .75rem; z-index: 10; }
 .badge { font-size: .65rem; padding: .3em .6em; }
 .tab-btn-primary { background-color: v-bind(mainColor) !important; border-color: v-bind(mainColor) !important; color: white !important; }
@@ -593,7 +603,6 @@ function fmtDist(m) {
 .dropdown-toggle { box-shadow: none !important; }
 .overflow-auto { -ms-overflow-style: none; scrollbar-width: none; }
 .overflow-auto::-webkit-scrollbar { display: none; }
-
 .scroll-box {
   height: 400px;
   overflow-y: auto;
@@ -606,5 +615,13 @@ function fmtDist(m) {
 .loading {
   text-align: center;
   padding: 12px;
+}
+
+.beach-image-placeholder {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  min-height: 100px;
+  flex: 0 0 100px; /* flex-basis 고정 + shrink 방지 */
 }
 </style>

@@ -52,12 +52,14 @@
 	</select>
 	
 	<update id="updateUserLocation" parameterType="RequestUserLocationDTO">
-		UPDATE tb_user
-		    SET location = ST_SetSRID(
-		        ST_MakePoint(#{longitude}, #{latitude}),
-		        4326
-		    )
-		    WHERE user_number = #{userNumber};
+	    UPDATE tb_user
+	    SET
+	        location = ST_SetSRID(
+	            ST_MakePoint(#{longitude}, #{latitude}),
+	            4326
+	        ),
+	        status = #{userStatus}
+	    WHERE user_number = #{userNumber};
 	</update>
 
 </mapper>

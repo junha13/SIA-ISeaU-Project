@@ -1,9 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
-
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
+
+// Spring Boot static 폴더 (frontend 기준 상대경로)
+const springBootStatic = path.resolve(__dirname, '../backend/springboot/src/main/resources/static')
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -27,14 +30,14 @@ export default defineConfig({
               theme_color: '#ffffff',
               icons: [
                   {
-                      src: 'pwa-192x192.png',
+                      src: 'iseau-192.png',
                       sizes: '192x192',
                       type: 'image/png',
                       // 📌 icons의 purpose 속성 설정: maskable 아이콘을 반드시 포함해야 합니다.
                       purpose: 'maskable'
                   },
                   {
-                      src: 'pwa-512x512.png',
+                      src: 'iseau-512.png',
                       sizes: '512x512',
                       type: 'image/png'
                   }
@@ -74,6 +77,9 @@ export default defineConfig({
                 changeOrigin: true
             }
         }
-    }
-
+    },
+    build: {
+        outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
+        emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+    },
 })

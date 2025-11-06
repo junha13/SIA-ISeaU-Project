@@ -26,8 +26,10 @@ public class LocationService {
     	dao.updateUserLocation(dto);
     	
     	Double distance = data.getDistance();
-    	data.setInterval(30000);  // 30초
-    	if(distance < 30) data.setInterval(3000); // 3초
+    	data.setInterval(5000);  // 30초
+    	if(distance < 30) data.setInterval(5000); // 3초
+    	
+    	data.setGroupNumber(dto.getGroupNumber());
     	
 		map.put("result", data);
 		
@@ -42,8 +44,10 @@ public class LocationService {
     	dao.updateUserLocation(dto);
 		
 		Double distance = data.getDistance();
-		data.setInterval(30000);  // 30초
-		if(distance < 30) data.setInterval(3000); // 3초
+		data.setInterval(5000);  // 30초
+		if(distance < 30) data.setInterval(5000); // 3초
+		
+		data.setGroupNumber(dto.getGroupNumber());
 		
 		map.put("result", data);
 		

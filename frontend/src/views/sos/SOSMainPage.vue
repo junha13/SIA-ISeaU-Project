@@ -86,7 +86,6 @@ onMounted(() => {
   header.value = '긴급신고'
 })
 
-
 const sosStore = useSOSStore();
 const { showConfirmModal } = useConfirmModal();
 
@@ -97,12 +96,18 @@ const safetyColor = '#8482FF';
 const cautionColor = '#FFB354';
 const dangerColor = '#EB725B';
 
-// 카드별 배경 이미지 매핑 (경로는 public 디렉터리 기준)
+// 카드별 이미지 매핑
 const cardImages = {
   jellyfish: '/images/sosButton/jellyfish.png',
   lifeguard: '/images/sosButton/lifeguard.png',
 
 };
+
+/*
+=========================================================
+ 긴급신고 로직
+=========================================================
+*/
 
 // ===== 플랫폼 판단 유틸 =====
 const isMobileEnv = () => {
@@ -112,15 +117,10 @@ const isMobileEnv = () => {
 
 // ===== 실제 다이얼 호출 =====
 // - 모바일: 전화앱 호출 (tel:)
-// - PC/미지원: 번호 복사 + 안내
+// - PC: 미지원 안내
 const dial = async (displayTitle, number) => {
   try {
     sosStore.setLoading(true);
-
-    // // 스토어에 logEmergencyCall이 존재하면 로깅 (없으면 무시)
-    // if (typeof sosStore.logEmergencyCall === 'function') {
-    //   await sosStore.logEmergencyCall({ title: displayTitle, target: number }).catch(() => {});
-    // }
 
     if (isMobileEnv()) {
       // 모바일: 전화 앱 호출
@@ -151,15 +151,16 @@ const dial = async (displayTitle, number) => {
 // 신고 타깃: '119' | '122' | 'lifeguard'
 const handleEmergencyCall = async (target) => {
   
-  // 1) 타깃별 텍스트/번호 맵
+  // 타깃별 텍스트/번호
   const CONFIG = {
     '119':        { title: '119 긴급 신고', number: '119' },
-    '112':        { title: '112 경찰 신고', number: '112'},
+    '112':        { title: '112 경찰 신고', number: '112' },
     'lifeguard':  { title: '라이프가드 신고', number: null } // 고정번호가 없으니 별도 처리
   };
 
   const cfg = CONFIG[target];
 
+  // 기본 확인 모달
   const confirmed = await showConfirmModal({
     title: cfg.title,
     message: `${cfg.title}에 바로 연결할까요?`,
@@ -169,7 +170,7 @@ const handleEmergencyCall = async (target) => {
   });
   if (!confirmed) return;
 
-  // 실제 다이얼 (로딩/로깅 포함)
+  // 실제 다이얼
   await dial(cfg.title, cfg.number);
 };
 </script>
