@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # 1. 스프링 부트 컨테이너 설정
+  iseau:
+    image: iseau-image:latest # 🚨 본인의 스프링 부트 이미지 이름으로 변경하세요
+    container_name: iseau      # Nginx 설정 파일에서 사용한 이름
+    ports:
+      - "8080"                      # 외부에 노출하지 않고 내부 네트워크에만 8080 포트 오픈
+    networks:
+      - my_network                  # 공통 네트워크에 연결
+
+  # 2. Nginx 컨테이너 설정
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    volumes:
+      # 설정 파일 마운트 (Step 2에서 만든 default.conf)
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      # 🚨 SSL 인증서 파일 마운트 (인증서 경로를 실제 파일 위치로 변경해야 합니다)
+      # - ./certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"                     # 로컬 80 포트를 Nginx 80에 연결 (HTTP)
+      - "443:443"                   # 로컬 443 포트를 Nginx 443에 연결 (HTTPS)
+    networks:
+      - my_network
+    depends_on:
+      - iseau                  # spring-app이 먼저 시작되도록 의존성 설정
+
+# 3. 네트워크 정의
+networks:
+  my_network:
+    driver: bridge
