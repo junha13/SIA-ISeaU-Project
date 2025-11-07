@@ -1,91 +1,65 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
-  mapper-control-tower.xml
-  - tb_control_tower CRUD
-  - tb_manager (배정/해제/목록)
-  - 삭제 전 참조 카운트(tb_beach, tb_manager)
-  주의: map-underscore-to-camel-case=true 가정
+  관제/매니저 이름 기반 조회 매퍼
 -->
-
 <mapper namespace="lx.iseau.feature.controltower.ControlTowerDAO">
 
-  <!-- ===== Control Tower CRUD ===== -->
+    <!-- 관제타워 이름으로 매니저 단건 -->
+    <select id="selectManagerByControlTowerName"
+            parameterType="string"
+            resultType="ManagerInfoDTO">
+        SELECT
+            m.manager_number                 AS managerNumber,
+            u.user_name                      AS userName,
+            u.mobile                         AS mobile,
+            u.email                          AS email
+        FROM tb_control_tower ct
+        JOIN tb_manager m
+          ON m.control_tower_number = ct.control_tower_number
+        JOIN tb_user u
+          ON u.user_number = m.manager_number
+        WHERE ct.control_tower_name = #{controlTowerName}
+        LIMIT 1
+    </select>
 
-  <insert id="insertControlTower" parameterType="string" useGeneratedKeys="true" keyProperty="controlTowerNumber" keyColumn="control_tower_number">
-    INSERT INTO tb_control_tower (control_tower_name)
-    VALUES (#{name})
-  </insert>
+    <!-- 매니저(사용자) 이름으로 매니저 단건 -->
+    <select id="selectManagerByUserName"
+            parameterType="string"
+            resultType="ManagerInfoDTO">
+        SELECT
+            m.manager_number   AS managerNumber,
+            u.user_name        AS userName,
+            u.mobile           AS mobile,
+            u.email            AS email
+        FROM tb_manager m
+        JOIN tb_user u
+          ON u.user_number = m.manager_number
+        WHERE u.user_name = #{userName}
+        LIMIT 1
+    </select>
 
-  <select id="selectControlTowerById" parameterType="int" resultType="lx.iseau.feature.controltower.ControlTowerDTO">
-    SELECT
-      control_tower_number AS controlTowerNumber,
-      control_tower_name   AS controlTowerName
-    FROM tb_control_tower
-    WHERE control_tower_number = #{id}
-  </select>
-
-  <select id="selectControlTowers" resultType="lx.iseau.feature.controltower.ControlTowerDTO">
-    SELECT
-      control_tower_number AS controlTowerNumber,
-      control_tower_name   AS controlTowerName
-    FROM tb_control_tower
-    ORDER BY control_tower_number
-  </select>
-
-  <update id="updateControlTowerName">
-    UPDATE tb_control_tower
-    SET control_tower_name = #{name}
-    WHERE control_tower_number = #{id}
-  </update>
-
-  <delete id="deleteControlTower">
-    DELETE FROM tb_control_tower
-    WHERE control_tower_number = #{id}
-  </delete>
-
-  <!-- ===== 참조 카운트(삭제 보호) ===== -->
-
-  <select id="countBeachesUsingTower" parameterType="int" resultType="int">
-    SELECT COUNT(*) FROM tb_beach WHERE control_tower_number = #{id}
-  </select>
-
-  <select id="countManagersUsingTower" parameterType="int" resultType="int">
-    SELECT COUNT(*) FROM tb_manager WHERE control_tower_number = #{id}
-  </select>
-
-  <!-- ===== Managers under a tower ===== -->
-
-  <select id="selectManagersByTower" parameterType="int" resultType="lx.iseau.feature.controltower.ManagerSummaryDTO">
-    SELECT
-      m.manager_number AS managerNumber,
-      u.user_name      AS userName,
-      u.mobile         AS mobile,
-      u.email          AS email
-    FROM tb_manager m
-    JOIN tb_user u
-      ON u.user_number = m.manager_number
-    WHERE m.control_tower_number = #{id}
-    ORDER BY m.manager_number
-  </select>
-
-  <!--
-    주의: tb_manager.manager_number는 SERIAL PK로 선언되어 있으나,
-          FK로 tb_user.user_number를 참조합니다.
-          => INSERT 시 manager_number에 "기존 user_number"를 그대로 넣어야 합니다.
-  -->
-  <insert id="insertManagerToTower">
-    INSERT INTO tb_manager (manager_number, control_tower_number)
-    VALUES (#{managerUserNumber}, #{controlTowerNumber})
-  </insert>
-
-  <delete id="deleteManagerFromTower">
-    DELETE FROM tb_manager
-    WHERE control_tower_number = #{controlTowerNumber}
-      AND manager_number = #{managerUserNumber}
-  </delete>
+    <!-- 매니저번호로 처리 리스트 (task + watch + user(location)) -->
+    <select id="selectTasksByManager"
+            parameterType="int"
+            resultType="TaskItemDTO">
+        SELECT
+            t.task_number      AS taskNumber,
+            t.task_accepted    AS taskAccepted,
+            t.task_processed   AS taskProcessed,
+            w.occurred_at      AS occurredAt,
+            w.heart_rate       AS heartRate,
+            w.spo2             AS spo2,
+            ST_Y(u.location::geometry) AS userLat,
+            ST_X(u.location::geometry) AS userLon
+        FROM tb_task t
+        JOIN tb_watch w ON w.watch_number = t.watch_number
+        JOIN tb_user  u ON u.user_number = w.user_number
+        WHERE t.manager_number = #{managerNumber}
+        ORDER BY w.occurred_at DESC
+    </select>
 
 </mapper>
