@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lx.iseau.feature.watch.WatchDAO">
+
+    <!-- tb_watch insert -->
+    <insert id="insertWatchEvent" parameterType="lx.iseau.feature.watch.dto.WatchEventDTO"
+            useGeneratedKeys="true" keyProperty="watchNumber" keyColumn="watch_number">
+        INSERT INTO tb_watch
+        (heart_rate, spo2, occurred_at, user_number)
+        VALUES
+        (#{heartRate}, #{spo2}, #{occurredAt}, #{userNumber})
+    </insert>
+
+    <!-- user -> beach -> control_tower 찾기 -->
+    <select id="findControlTowerNumberByUser" parameterType="int" resultType="int">
+        SELECT b.control_tower_number
+        FROM tb_user u
+        JOIN tb_beach b ON u.beach_number = b.beach_number
+        WHERE u.user_number = #{userNumber}
+    </select>
+</mapper>

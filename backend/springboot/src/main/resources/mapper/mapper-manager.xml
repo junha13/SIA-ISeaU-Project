@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lx.iseau.feature.manager.ManagerDAO">
+
+    <!-- 가장 간단한 배정 규칙: 해당 관제의 가장 번호가 작은 매니저 1명 -->
+    <select id="findAnyManagerByControlTower" parameterType="int" resultType="int">
+        SELECT MIN(manager_number)
+        FROM tb_manager
+        WHERE control_tower_number = #{controlTowerNumber}
+    </select>
+</mapper>

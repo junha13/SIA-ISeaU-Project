@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  mapper-control-tower.xml
+  - tb_control_tower CRUD
+  - tb_manager (배정/해제/목록)
+  - 삭제 전 참조 카운트(tb_beach, tb_manager)
+  주의: map-underscore-to-camel-case=true 가정
+-->
+
+<mapper namespace="lx.iseau.feature.controltower.ControlTowerDAO">
+
+  <!-- ===== Control Tower CRUD ===== -->
+
+  <insert id="insertControlTower" parameterType="string" useGeneratedKeys="true" keyProperty="controlTowerNumber" keyColumn="control_tower_number">
+    INSERT INTO tb_control_tower (control_tower_name)
+    VALUES (#{name})
+  </insert>
+
+  <select id="selectControlTowerById" parameterType="int" resultType="lx.iseau.feature.controltower.ControlTowerDTO">
+    SELECT
+      control_tower_number AS controlTowerNumber,
+      control_tower_name   AS controlTowerName
+    FROM tb_control_tower
+    WHERE control_tower_number = #{id}
+  </select>
+
+  <select id="selectControlTowers" resultType="lx.iseau.feature.controltower.ControlTowerDTO">
+    SELECT
+      control_tower_number AS controlTowerNumber,
+      control_tower_name   AS controlTowerName
+    FROM tb_control_tower
+    ORDER BY control_tower_number
+  </select>
+
+  <update id="updateControlTowerName">
+    UPDATE tb_control_tower
+    SET control_tower_name = #{name}
+    WHERE control_tower_number = #{id}
+  </update>
+
+  <delete id="deleteControlTower">
+    DELETE FROM tb_control_tower
+    WHERE control_tower_number = #{id}
+  </delete>
+
+  <!-- ===== 참조 카운트(삭제 보호) ===== -->
+
+  <select id="countBeachesUsingTower" parameterType="int" resultType="int">
+    SELECT COUNT(*) FROM tb_beach WHERE control_tower_number = #{id}
+  </select>
+
+  <select id="countManagersUsingTower" parameterType="int" resultType="int">
+    SELECT COUNT(*) FROM tb_manager WHERE control_tower_number = #{id}
+  </select>
+
+  <!-- ===== Managers under a tower ===== -->
+
+  <select id="selectManagersByTower" parameterType="int" resultType="lx.iseau.feature.controltower.ManagerSummaryDTO">
+    SELECT
+      m.manager_number AS managerNumber,
+      u.user_name      AS userName,
+      u.mobile         AS mobile,
+      u.email          AS email
+    FROM tb_manager m
+    JOIN tb_user u
+      ON u.user_number = m.manager_number
+    WHERE m.control_tower_number = #{id}
+    ORDER BY m.manager_number
+  </select>
+
+  <!--
+    주의: tb_manager.manager_number는 SERIAL PK로 선언되어 있으나,
+          FK로 tb_user.user_number를 참조합니다.
+          => INSERT 시 manager_number에 "기존 user_number"를 그대로 넣어야 합니다.
+  -->
+  <insert id="insertManagerToTower">
+    INSERT INTO tb_manager (manager_number, control_tower_number)
+    VALUES (#{managerUserNumber}, #{controlTowerNumber})
+  </insert>
+
+  <delete id="deleteManagerFromTower">
+    DELETE FROM tb_manager
+    WHERE control_tower_number = #{controlTowerNumber}
+      AND manager_number = #{managerUserNumber}
+  </delete>
+
+</mapper>
