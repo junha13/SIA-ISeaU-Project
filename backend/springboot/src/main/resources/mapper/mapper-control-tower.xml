@@ -1,65 +1,88 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-<!--
-  관제/매니저 이름 기반 조회 매퍼
--->
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="lx.iseau.feature.controltower.ControlTowerDAO">
 
-    <!-- 관제타워 이름으로 매니저 단건 -->
-    <select id="selectManagerByControlTowerName"
-            parameterType="string"
-            resultType="ManagerInfoDTO">
+    <!-- =========================
+         매니저 기본정보 조회
+         ========================= -->
+    <select id="selectManagerInfoByManagerNumber" resultType="ManagerInfoDTO">
         SELECT
-            m.manager_number                 AS managerNumber,
-            u.user_name                      AS userName,
-            u.mobile                         AS mobile,
-            u.email                          AS email
-        FROM tb_control_tower ct
-        JOIN tb_manager m
-          ON m.control_tower_number = ct.control_tower_number
-        JOIN tb_user u
-          ON u.user_number = m.manager_number
-        WHERE ct.control_tower_name = #{controlTowerName}
-        LIMIT 1
-    </select>
-
-    <!-- 매니저(사용자) 이름으로 매니저 단건 -->
-    <select id="selectManagerByUserName"
-            parameterType="string"
-            resultType="ManagerInfoDTO">
-        SELECT
-            m.manager_number   AS managerNumber,
-            u.user_name        AS userName,
-            u.mobile           AS mobile,
-            u.email            AS email
+            u.user_name AS managerName,
+            u.mobile    AS mobile,
+            u.email     AS email
         FROM tb_manager m
         JOIN tb_user u
           ON u.user_number = m.manager_number
-        WHERE u.user_name = #{userName}
+        WHERE m.manager_number = #{managerNumber}
         LIMIT 1
     </select>
 
-    <!-- 매니저번호로 처리 리스트 (task + watch + user(location)) -->
-    <select id="selectTasksByManager"
-            parameterType="int"
-            resultType="TaskItemDTO">
-        SELECT
-            t.task_number      AS taskNumber,
-            t.task_accepted    AS taskAccepted,
-            t.task_processed   AS taskProcessed,
-            w.occurred_at      AS occurredAt,
-            w.heart_rate       AS heartRate,
-            w.spo2             AS spo2,
-            ST_Y(u.location::geometry) AS userLat,
-            ST_X(u.location::geometry) AS userLon
-        FROM tb_task t
-        JOIN tb_watch w ON w.watch_number = t.watch_number
-        JOIN tb_user  u ON u.user_number = w.user_number
-        WHERE t.manager_number = #{managerNumber}
-        ORDER BY w.occurred_at DESC
-    </select>
+    <!-- =========================
+         매니저 기본정보 수정
+         ========================= -->
+    <update id="updateManagerInfoByManagerNumber" parameterType="map">
+        UPDATE tb_user u
+           SET user_name = COALESCE(#{managerName}, u.user_name),
+               mobile    = COALESCE(#{mobile}, u.mobile),
+               email     = COALESCE(#{email}, u.email)
+          FROM tb_manager m
+         WHERE u.user_number = m.manager_number
+         	AND m.manager_number = #{managerNumber}
+    </update>
+
+    <!-- =========================
+         매니저 처리 리스트 (간단)
+         - tb_task + tb_watch + tb_user(피처) + tb_manager + tb_user(매니저)
+         - locationText: (해변/바다) 간단 라벨
+         ========================= -->
+    <select id="selectTaskListByManagerNumber"
+	        resultType="TaskListDTO">
+	  SELECT
+	    t.task_number    AS taskNumber,
+	    t.task_processed AS taskProcessed,
+	    w.occurred_at    AS occurredAt,
+	    u.birth_date     AS birthDate,
+	    u.gender         AS gender
+	  FROM tb_task t
+	  JOIN tb_watch   w ON w.watch_number   = t.watch_number
+	  JOIN tb_user    u ON u.user_number    = w.user_number
+	  JOIN tb_manager m ON m.manager_number = t.manager_number
+	  WHERE m.manager_number = #{managerNumber}
+	  ORDER BY w.occurred_at DESC
+	</select>
+
+    <!-- =========================
+         처리 상세 (taskNumber)
+         ========================= -->
+    <select id="selectTaskDetailByTaskNumber"
+	        parameterType="int"
+	        resultType="TaskDetailDTO">
+	  SELECT
+	    t.task_number    AS taskNumber,
+	    t.task_processed AS taskProcessed,
+	    ST_X(u.location::geometry) AS userLon,
+	    ST_Y(u.location::geometry) AS userLat,
+	    u.birth_date     AS birthDate,
+	    u.gender         AS gender,
+	    w.occurred_at    AS occurredAt,
+	    w.heart_rate     AS heartRate,
+	    w.spo2           AS spo2
+	  FROM tb_task t
+	  JOIN tb_watch w ON w.watch_number = t.watch_number
+	  JOIN tb_user  u ON u.user_number  = w.user_number
+	  WHERE t.task_number = #{taskNumber}
+	  LIMIT 1
+	</select>
+
+    <!-- =========================
+         처리완료 플래그 수정
+         ========================= -->
+    <update id="updateTaskProcessed">
+        UPDATE tb_task
+           SET task_processed = #{taskProcessed}
+         WHERE task_number    = #{taskNumber}
+    </update>
 
 </mapper>

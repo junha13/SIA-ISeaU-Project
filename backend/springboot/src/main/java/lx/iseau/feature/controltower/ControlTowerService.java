@@ -3,58 +3,56 @@ package lx.iseau.feature.controltower;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
-import lx.iseau.feature.task.TaskItemDTO;
-import lx.iseau.feature.control.ManagerSummaryDTO;
 
-/**
- * 관제 서비스
- * - DB 접근은 DAO에 위임
- * - 컨트롤러에선 Map과 헤더만 세팅, 여기서 결과 조립
- */
 @Service
-@RequiredArgsConstructor
 public class ControlTowerService {
 
-    private final ControlTowerDAO dao;
+    @Autowired
+    private ControlTowerDAO dao;
 
-    /** 관제타워 이름으로 매니저 + 처리리스트 묶어서 반환 */
-    public Map<String, Object> getManagerSummaryByTowerName(String controlTowerName) {
-        // 1) 타워명으로 매니저 한 명 조회(요구사항: 한 타워당 한 명)
-        ManagerSummaryDTO manager = dao.selectManagerByControlTowerName(controlTowerName);
-
-        // 2) 없으면 빈 리스트로 응답
-        if (manager == null) {
-            return Map.of(
-                "manager", null,
-                "tasks", List.of()
-            );
-        }
-
-        // 3) 매니저의 처리 목록(Task + Watch + User.location) 조회
-        List<TaskListItemDTO> tasks = dao.selectTasksByManagerNumber(manager.getManagerNumber());
-
-        // 4) 하나의 묶음(Map)으로 반환
-        return Map.of(
-            "manager", manager,
-            "tasks", tasks
-        );
+    // ============ 매니저 기본정보 조회 ============
+    public ManagerInfoDTO getManagerInfoByManagerNumber(int managerNumber) {
+        return dao.selectManagerInfoByManagerNumber(managerNumber);
     }
 
-    /** 매니저 이름으로 매니저 + 처리리스트 묶어서 반환 */
-    public Map<String, Object> getManagerSummaryByManagerName(String managerName) {
-        ManagerSummaryDTO manager = dao.selectManagerByManagerName(managerName);
-        if (manager == null) {
-            return Map.of(
-                "manager", null,
-                "tasks", List.of()
-            );
-        }
-        List<TaskListItemDTO> tasks = dao.selectTasksByManagerNumber(manager.getManagerNumber());
-        return Map.of(
-            "manager", manager,
-            "tasks", tasks
-        );
+
+    // ============ 매니저 기본정보 수정 ============
+    public int updateManagerInfoByManagerNumber(Map<String, Object> body) {
+        // 기대 키: managerName(기존 식별), userName(새 이름), mobile, email
+        String managerName = str(body.get("managerName"));
+        String maName    = str(body.get("userName"));
+        String mobile      = str(body.get("mobile"));
+        String email       = str(body.get("email"));
+        if (managerName == null || managerName.isBlank()) return 0;
+        return dao.updateManagerInfoByManagerNumber(managerName, userName, mobile, email);
+    }
+
+    // ============ 처리 리스트 ============
+    public List<TaskListDTO> getTaskListByManagerNumber(int managerNumber) {
+        if (managerName == null || managerName.isBlank()) return List.of();
+        return dao.getTaskListByManagerNumber(managerName);
+    }
+
+    // ============ 처리 상세 ============
+    public TaskDetailDTO getTaskDetailByTaskNumber(int taskNumber) {
+        return dao.getTaskDetailByTaskNumber(taskNumber);
+    }
+
+    // ============ 처리완료 플래그 ============
+    public int markTaskProcessed(Map<String, Object> body) {
+        Integer taskNumber = intOrNull(body.get("taskNumber"));
+        Integer processed  = intOrNull(body.get("processed"));
+        if (taskNumber == null) return 0;
+        if (processed == null) processed = 1; // 기본값 1(처리완료)
+        return dao.updateTaskProcessed(taskNumber, processed);
+    }
+
+    // ====== 유틸 ======
+    private String str(Object o) { return (o == null) ? null : String.valueOf(o); }
+    private Integer intOrNull(Object o) {
+        try { return (o == null) ? null : Integer.parseInt(String.valueOf(o)); }
+        catch (Exception e) { return null; }
     }
 }

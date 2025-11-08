@@ -1,102 +1,76 @@
 package lx.iseau.feature.watch;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpSession;
-import lx.iseau.feature.task.TaskDAO;
-import lx.iseau.feature.task.TaskDTO;
-import lx.iseau.feature.watch.dto.WatchEventDTO;
-
-/**
- * 핵심 로직 (최소 기능)
- * 1) 워치 이벤트 저장(tb_watch)
- * 2) 사용자 -> 해수욕장 -> 관제센터 조회
- * 3) 가장 간단한 매칭 규칙으로 담당자 1명 선택 후 태스크 생성(tb_task)
- */
 @Service
 public class WatchService {
 
     @Autowired
-    private HttpSession httpSession;
+    private WatchDAO dao;
 
-    @Autowired
-    private WatchDAO watchDAO;
+    // 임계치(예시): HR<50 또는 SpO2<90이면 위험으로 판단
+    private static final int HR_DANGER = 50;
+    private static final int SPO2_DANGER = 90;
 
-    @Autowired
-    private lx.iseau.feature.manager.ManagerDAO managerDAO;
-
-    @Autowired
-    private TaskDAO taskDAO;
-
-    // 세션에서 로그인 사용자 번호 꺼내기 (없으면 null)
-    private Integer getLoggedInUserNumber() {
-        Object val = httpSession.getAttribute("userNumber");
-        return (val instanceof Integer) ? (Integer) val : null;
-    }
-
-    @Transactional
-    public Map<String, Object> ingestAndDispatch(Integer heartRate, Integer spo2, String occurredAtIso) {
-        Map<String, Object> result = new HashMap<>();
-
-        // 0) 로그인 사용자 확인
-        Integer userNumber = getLoggedInUserNumber();
-        if (userNumber == null) {
-            result.put("ok", false);
-            result.put("message", "로그인이 필요합니다.");
-            return result;
+    /**
+     * 1) watch 단건 조회
+     * 2) 임계치 평가(위험?) → 아니면 createdTask=false
+     * 3) 유저→비치→관제→매니저(1:1) 찾기
+     * 4) tb_task 생성(중복 방지: 동일 watch_number로는 1회 생성 권장)
+     */
+    public Map<String, Object> evaluateAndDispatch(Map<String, Object> body) {
+        Map<String, Object> res = new HashMap<>();
+        if (body == null || body.get("watchNumber") == null) {
+            res.put("createdTask", false);
+            res.put("reason", "missing_watchNumber");
+            return res;
         }
 
-        // 1) 문자열 -> Timestamp 안전 변환 (실패 시 현재시각)
-        Timestamp occurredAt;
-        try {
-            occurredAt = Timestamp.from(Instant.parse(occurredAtIso));
-        } catch (DateTimeParseException e) {
-            occurredAt = new Timestamp(System.currentTimeMillis());
+        Integer watchNumber = (body.get("watchNumber") instanceof Number)
+                ? ((Number) body.get("watchNumber")).intValue()
+                : null;
+
+        // 1) watch 조회
+        Map<String, Object> w = dao.selectWatchByNumber(watchNumber);
+        if (w == null) {
+            res.put("createdTask", false);
+            res.put("reason", "watch_not_found");
+            return res;
         }
 
-        // 2) 워치 이벤트 저장
-        WatchEventDTO watch = new WatchEventDTO();
-        watch.setHeartRate(heartRate);
-        watch.setSpo2(spo2);
-        watch.setOccurredAt(occurredAt);
-        watch.setUserNumber(userNumber);
-        watchDAO.insertWatchEvent(watch); // watch.watchNumber 채워짐(Generated Key)
+        Integer hr         = (Integer) w.get("heartRate");
+        Integer spo2       = (Integer) w.get("spo2");
+        Integer userNumber = (Integer) w.get("userNumber");
 
-        // 3) 사용자 -> 관제센터 찾기 (tb_user -> tb_beach -> tb_control_tower)
-        Integer controlTowerNumber = watchDAO.findControlTowerNumberByUser(userNumber);
-        if (controlTowerNumber == null) {
-            result.put("ok", true);
-            result.put("message", "관제센터가 지정되지 않아 태스크를 생성하지 않았습니다.");
-            result.put("watchNumber", watch.getWatchNumber());
-            return result;
+        // 2) 임계치 평가
+        boolean danger = (hr != null && hr < HR_DANGER) || (spo2 != null && spo2 < SPO2_DANGER);
+        if (!danger) {
+            res.put("createdTask", false);
+            res.put("reason", "normal");
+            return res;
         }
 
-        // 4) 관제센터의 담당자 1명 할당 (가장 번호가 작은 담당자)
-        Integer managerNumber = managerDAO.findAnyManagerByControlTower(controlTowerNumber);
+        // 3) 매니저(1:1) 찾기
+        Integer managerNumber = dao.findManagerByUser(userNumber);
         if (managerNumber == null) {
-            result.put("ok", true);
-            result.put("message", "해당 관제센터에 담당자가 없어 태스크를 생성하지 않았습니다.");
-            result.put("watchNumber", watch.getWatchNumber());
-            return result;
+            res.put("createdTask", false);
+            res.put("reason", "manager_not_found");
+            return res;
         }
 
-        // 5) 태스크 생성 (accepted=0, processed=0 기본값)
-        TaskDTO task = new TaskDTO();
-        task.setManagerNumber(managerNumber);
-        task.setWatchNumber(watch.getWatchNumber());
-        taskDAO.insertTask(task);
+        // 4) 업무 생성
+        //  - 중복 방지 권장: DB에 UNIQUE(watch_number) 추가 권장
+        //    ALTER TABLE tb_task ADD CONSTRAINT uq_task_watch UNIQUE (watch_number);
+        //    이미 존재 시 insert가 0건이거나 에러 → 아래 insertTask는 0/1로만 판단
+        int rows = dao.insertTaskIfAbsent(managerNumber, watchNumber);
 
-        result.put("ok", true);
-        result.put("watchNumber", watch.getWatchNumber());
-        result.put("taskNumber", task.getTaskNumber());
-        return result;
+        res.put("createdTask", rows > 0);
+        res.put("managerNumber", managerNumber);
+        res.put("watchNumber", watchNumber);
+        return res;
     }
 }
