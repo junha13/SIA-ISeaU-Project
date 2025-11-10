@@ -22,7 +22,6 @@ public class WatchController {
         Map<String, Object> result = service.evaluateAndDispatch(body);
         return ResponseEntity
                 .ok()
-                .header("api", "watch/evaluateAndDispatch")
                 .body(Map.of("result", result));
     }
 }
