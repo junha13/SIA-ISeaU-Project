@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
+    xmlns:tools="http://schemas.android.com/tools"
+    >
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.health.PERMISSION_SELF" />
@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- ✅ API 34+ 필수 권한 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
 
     <uses-feature android:name="android.hardware.type.watch" />
@@ -17,8 +16,10 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/wear_app_name"
         android:supportsRtl="true"
+
+        android:name="com.lx.iseau.presentation.ISeaUApp"
         android:theme="@android:style/Theme.DeviceDefault">
 
         <uses-library
@@ -43,18 +44,14 @@
             </intent-filter>
         </activity>
 
-        <!-- ✅ foregroundServiceType 추가 -->
         <service
             android:name="com.lx.iseau.presentation.SafetyMonitoringService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="health">
 
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/health_services_config" />
+            android:foregroundServiceType="health"
+            tools:ignore="Instantiatable">
         </service>
 
     </application>
-
 </manifest>
