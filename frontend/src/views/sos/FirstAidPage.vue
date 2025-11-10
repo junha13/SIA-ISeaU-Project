@@ -1,17 +1,5 @@
 <template>
   <div class="simple-report-page container-fluid p-3">
-    <!-- Header 
-    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-chevron-left me-2 fs-5" @click="$router.back()" style="cursor: pointer;" :style="{ color: darkColor }"></i>
-        <h5 class="fw-bolder mb-0" :style="{ color: darkColor }">응급 대처법</h5>
-      </div>
-      <div>
-        <i class="fas fa-bell me-3 fs-5" :style="{ color: dangerColor }"></i>
-        <i class="fas fa-bars fs-5" :style="{ color: darkColor }"></i>
-      </div>
-    </div>
-    -->
 
     <h6 class="fw-bold mb-3" :style="{ color: darkColor }">상황 설명</h6>
 
@@ -53,17 +41,16 @@
         119 신고하기
       </button>
     </div>
-  </div>
-
   <!-- 상세 모달 -->
-  <FirstAidModal
-    :isVisible="showModal"
-    :caseTitle="selectedCaseTitle"
-    :steps="steps"
-    :loading="detailLoading"
-    :error="detailError"
-    @update:isVisible="(v) => (showModal = v)"
-  />
+    <FirstAidModal
+      :isVisible="showModal"
+      :caseTitle="selectedCaseTitle"
+      :steps="steps"
+      :loading="detailLoading"
+      :error="detailError"
+      @update:isVisible="(v) => (showModal = v)"
+    />
+  </div>
 </template>
 
 <script setup>

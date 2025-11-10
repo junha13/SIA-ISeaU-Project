@@ -260,15 +260,6 @@ onMounted(() => {
   getLocation();
 });
 
-// 📌 목록/검색 조건 초기화 후 다시 불러오기 (무한스크롤 리셋)
-function resetInfinite() {
-  page.value = 1;           // 다음 요청 페이지 초기화
-  hasMore.value = true;     // 더 불러올 수 있음
-  beaches.value = [];       // 화면 목록 비우고
-  infiniteId.value++;       // InfiniteLoading 새로고침 트리거
-  loadData();               // 첫 페이지 다시 호출
-}
-
 async function loadData() {
   isLoading.value = true;
   apiError.value = null;
@@ -289,7 +280,7 @@ async function loadData() {
       };
 
     const response = await axios.post(BEACH_LIST_API_URL, payload);
-
+    
       beaches.value = (response.data.result || []).map(b => {
     // tagsString 필드가 DTO에 없거나 비어있는 경우를 대비하여 안전하게 배열로 변환
     const tagsList = b.tagsString
@@ -302,7 +293,7 @@ async function loadData() {
     // distance 필드가 없으면 빈 문자열 할당 (템플릿 오류 방지)
     distance: b.distance || '',
     };
-    });
+    }); 
 
   } catch (error) {
     apiError.value = error;
@@ -316,7 +307,7 @@ async function loadData() {
 const fetchFavoriteIds = async () => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/beach/favorites/my`);
-
+    
     // ⭐ [수정 반영] 서버 응답 구조에 유연하게 대처합니다. (res.data.result 또는 res.data.data.result)
 
     let resData = res.data?.result || res.data?.data?.result;
@@ -325,10 +316,10 @@ const fetchFavoriteIds = async () => {
     if (!resData) {
       resData = res.data?.data?.result;
     }
-
+    
     // ID 목록 갱신: 리스트가 아닌 단일 값이 오더라도 배열로 만듭니다.
     favoriteBeachIds.value = Array.isArray(resData) ? resData : resData ? [resData] : [];
-
+    
     // 👇👇👇 [로그 추가] 서버 응답 원본 확인 👇👇👇
     console.log('⭐ API 원본 응답:', res.data);
     console.log(`⭐ [성공] 즐겨찾기 ID ${favoriteBeachIds.value.length}개 로드 완료.`);
@@ -371,10 +362,10 @@ async function toggleFavorite(beachNumber) {
     } else {
       await axios.post(FAVORITES_API_URL, { beachNumber });
     }
-
+    
     // ⭐ [핵심] API 성공 후, ID 목록을 다시 가져와 UI를 강제 동기화합니다.
     await fetchFavoriteIds();
-
+    
   } catch (error) {
     console.error("😥 즐겨찾기 토글 API 실패:", error);
 
@@ -382,7 +373,7 @@ async function toggleFavorite(beachNumber) {
     if (error.response && error.response.status === 409) {
       alert("이미 등록된 해수욕장입니다. 목록을 다시 불러옵니다.");
       await fetchFavoriteIds(); // DB 상태와 UI를 다시 맞춥니다.
-      return;
+      return; 
     }
 
     // 롤백 (일반 오류)
@@ -490,7 +481,7 @@ function getLocation() {
 
 <style scoped>
 .beach-card .fa-heart.text-danger {
-    color: var(--bs-danger, #dc3545) !important;
+    color: var(--bs-danger, #dc3545) !important; 
 }
 .beach-card .fa-heart.text-muted {
     color: var(--bs-gray-600, #6c757d) !important;

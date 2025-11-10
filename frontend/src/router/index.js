@@ -45,6 +45,7 @@ import ControlLayout from '@/views/control/ControlLayout.vue' // 저희가 만�
 import CCTVMonitoring from '@/views/control/CCTVMonitoring.vue'
 import ReportDetail from '@/views/control/ReportDetail.vue'
 
+
 const routes = [
     // ----------------------------------------------------
     // 1. 레이아웃 제외 (인증 페이지)
@@ -94,6 +95,7 @@ const routes = [
             },
         ],
     },
+
     // ----------------------------------------------------
     // 2. 레이아웃 적용 (메인 페이지)
     // ----------------------------------------------------

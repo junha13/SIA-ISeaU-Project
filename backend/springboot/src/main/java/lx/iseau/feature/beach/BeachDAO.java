@@ -38,7 +38,8 @@ public interface BeachDAO {
     int updateBeachComment(ResponseBeachCommentDTO dto);
     // 방문자 리뷰 삭제
     int deleteBeachComment(ResponseBeachCommentDTO dto);
-	
+    // 방문자 내 리뷰 목록 조회
+    List<ResponseBeachCommentDTO> getMyBeachComments(@Param("userNumber") int userNumber, @Param("sort") String sort);
 	
 	//public ResponseBeachPestDTO getBeachDetailPest(int beachNumber);
 }

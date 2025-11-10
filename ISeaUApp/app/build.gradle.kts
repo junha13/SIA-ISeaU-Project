@@ -45,24 +45,12 @@ dependencies {
     // 2. Wearable Data Layer (워치 데이터 수신)
     implementation(libs.play.services.wearable)
 
-
-    // Ktor Client (HTTP 통신)
-    implementation("io.ktor:ktor-client-core:2.3.8")
-    implementation("io.ktor:ktor-client-cio:2.3.8") // CIO 엔진 사용
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.8") // JSON 직렬화
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.8")
-
-    // kotlinx.coroutines (비동기 처리)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
     // 기존 의존성
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
-    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -20,10 +20,10 @@
         b.open_date,
         b.close_date,
         COALESCE(c.review_count, 0) AS review_count,
-
+        
         -- ✅ [핵심 수정] 태그를 쉼표로 연결하여 하나의 문자열로 조회
         STRING_AGG(t_name.tag_name, ',') AS tags_string
-
+        
         <if test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         , ST_Distance(
             b.location,
@@ -31,17 +31,17 @@
         ) AS distance_meters
         </if>
     FROM tb_beach b
-
+    
     -- 태그 목록 조회를 위한 LEFT JOIN
     LEFT JOIN tb_beach_tag_list t_list ON t_list.beach_number = b.beach_number
     LEFT JOIN tb_beach_tag t_name ON t_name.tag_number = t_list.tag_number
-
+    
     LEFT JOIN (
         SELECT beach_number, COUNT(*) AS review_count
         FROM tb_beach_comment_list
         GROUP BY beach_number
     ) c ON c.beach_number = b.beach_number
-
+    
     WHERE 1=1
 
     <if test="region != null and region != ''">
@@ -51,11 +51,11 @@
     <if test="category != null and category != ''">
       AND b.category = #{category}
     </if>
-
+    
     <if test="tagFilter != null and tagFilter != ''">
       AND t_name.tag_name = #{tagFilter}
     </if>
-
+    
     GROUP BY
         b.beach_number, b.beach_name, b.beach_image, b.beach_information, b.rating,
         b.approved_by_ministry, b.address, b.location, b.mobile, b.open_date, b.close_date,
@@ -63,7 +63,7 @@
         <if test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         , distance_meters
         </if>
-
+        
     <choose>
 <when test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         ORDER BY distance_meters ASC, b.beach_name ASC

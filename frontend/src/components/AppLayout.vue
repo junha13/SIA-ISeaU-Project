@@ -83,7 +83,9 @@
           leave-active-class="animate__animated animate__fadeOut fast-route"
           mode="out-in"
         >
-          <component :is="Component" :key="route.fullPath" />
+          <div class="route-shell" :key="route.fullPath">
+            <component :is="Component" />
+          </div>
         </transition>
       </router-view>
     </main>
