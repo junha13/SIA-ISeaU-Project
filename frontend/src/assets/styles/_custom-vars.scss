@@ -1,0 +1,57 @@
+// src/assets/styles/_custom-vars.scss
+
+// ----------------------------------------------------
+// 1. 필수 BASE 파일 임포트 (변수 오버라이드를 위해 반드시 먼저)
+// ----------------------------------------------------
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/mixins";
+
+// ----------------------------------------------------
+// 2. Iseau 변수 정의 및 Bootstrap 변수 오버라이드
+// ----------------------------------------------------
+
+// Iseau Custom Colors
+$iseu-primary: #0092BA;
+$iseu-secondary: #0B1956;
+$iseu-success: #7EEC85;
+$iseu-warning: #FFB354;
+$iseu-danger: #EB725B;
+$iseu-emergency: #B93F67;
+
+// Bootstrap 기본 색상 오버라이드
+$primary: $iseu-primary;
+$secondary: $iseu-secondary;
+$success: $iseu-success;
+$warning: $iseu-warning;
+$danger: $iseu-danger;
+
+// $theme-colors 맵 확장 (Emergency 색상 추가)
+$theme-colors: map-merge(
+                $theme-colors,
+                (
+                        "emergency": $iseu-emergency
+                )
+);
+
+// ----------------------------------------------------
+// 3. Iseau의 커스텀 클래스 정의
+// ----------------------------------------------------
+
+.text-emergency {
+  color: $iseu-emergency !important;
+}
+.bg-emergency {
+  background-color: $iseu-emergency !important;
+}
+.border-emergency {
+  border-color: $iseu-emergency !important;
+}
+
+// ----------------------------------------------------
+// 4. Bootstrap 코어 임포트 (최종 CSS 생성)
+// 오버라이드가 완료된 후, 이 한 줄이 Bootstrap의 모든 CSS를 생성합니다.
+// ----------------------------------------------------
+@import "bootstrap/scss/bootstrap";
