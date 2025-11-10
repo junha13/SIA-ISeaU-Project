@@ -12,8 +12,8 @@ public class WatchService {
     @Autowired
     private WatchDAO dao;
 
-    // 임계치(예시): HR<50 또는 SpO2<90이면 위험으로 판단
-    private static final int HR_DANGER = 50;
+    // 임계치(예시): HR<55 또는 SpO2<90이면 위험으로 판단
+    private static final int HR_DANGER = 55;
     private static final int SPO2_DANGER = 90;
 
     /**
@@ -23,11 +23,11 @@ public class WatchService {
      * 4) tb_task 생성(중복 방지: 동일 watch_number로는 1회 생성 권장)
      */
     public Map<String, Object> evaluateAndDispatch(Map<String, Object> body) {
-        Map<String, Object> res = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         if (body == null || body.get("watchNumber") == null) {
-            res.put("createdTask", false);
-            res.put("reason", "missing_watchNumber");
-            return res;
+            map.put("createdTask", false);
+            map.put("reason", "missing_watchNumber");
+            return map;
         }
 
         Integer watchNumber = (body.get("watchNumber") instanceof Number)
@@ -37,9 +37,9 @@ public class WatchService {
         // 1) watch 조회
         Map<String, Object> w = dao.selectWatchByNumber(watchNumber);
         if (w == null) {
-            res.put("createdTask", false);
-            res.put("reason", "watch_not_found");
-            return res;
+            map.put("createdTask", false);
+            map.put("reason", "watch_not_found");
+            return map;
         }
 
         Integer hr         = (Integer) w.get("heartRate");
@@ -49,17 +49,17 @@ public class WatchService {
         // 2) 임계치 평가
         boolean danger = (hr != null && hr < HR_DANGER) || (spo2 != null && spo2 < SPO2_DANGER);
         if (!danger) {
-            res.put("createdTask", false);
-            res.put("reason", "normal");
-            return res;
+            map.put("createdTask", false);
+            map.put("reason", "normal");
+            return map;
         }
 
         // 3) 매니저(1:1) 찾기
         Integer managerNumber = dao.findManagerByUser(userNumber);
         if (managerNumber == null) {
-            res.put("createdTask", false);
-            res.put("reason", "manager_not_found");
-            return res;
+            map.put("createdTask", false);
+            map.put("reason", "manager_not_found");
+            return map;
         }
 
         // 4) 업무 생성
@@ -68,9 +68,9 @@ public class WatchService {
         //    이미 존재 시 insert가 0건이거나 에러 → 아래 insertTask는 0/1로만 판단
         int rows = dao.insertTaskIfAbsent(managerNumber, watchNumber);
 
-        res.put("createdTask", rows > 0);
-        res.put("managerNumber", managerNumber);
-        res.put("watchNumber", watchNumber);
-        return res;
+        map.put("createdTask", rows > 0);
+        map.put("managerNumber", managerNumber);
+        map.put("watchNumber", watchNumber);
+        return map;
     }
 }
