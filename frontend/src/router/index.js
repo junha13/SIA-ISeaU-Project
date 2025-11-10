@@ -37,6 +37,15 @@ import PostDetail from '@/views/post/PostDetail.vue'
 import PostList from '@/views/post/PostList.vue'
 import PostWrite from '@/views/post/PostWrite.vue'
 
+// ----------------------------------------------------
+// ✅ Views (Control) - 새로운 관제 시스템 컴포넌트 추가
+// ----------------------------------------------------
+// 관제 시스템 컴포넌트는 src/views/control 폴더에 있다고 가정합니다.
+import ControlLayout from '@/views/control/ControlLayout.vue' // 저희가 만든 MainLayout
+import CCTVMonitoring from '@/views/control/CCTVMonitoring.vue'
+import ReportDetail from '@/views/control/ReportDetail.vue'
+
+
 const routes = [
     // ----------------------------------------------------
     // 1. 레이아웃 제외 (인증 페이지)
@@ -60,6 +69,31 @@ const routes = [
         path: '/reset-password',
         name: 'ResetPassword',
         component: ResetPasswordPage
+    },
+    // ----------------------------------------------------
+    // 1-1. ✅ 관제 시스템 레이아웃 적용 (신규 추가)
+    // ----------------------------------------------------
+    {
+        path: '/control', // 관제 시스템의 기본 경로
+        component: ControlLayout, // 관제 전용 레이아웃 적용
+        children: [
+            // 기본 경로 진입 시 CCTV 관제 페이지로 리다이렉트
+            { path: '', redirect: 'cctv' },
+
+            // CCTV 관제 페이지
+            {
+                path: 'cctv',
+                name: 'CCTVControl', // 이름 충돌을 피하기 위해 'Control' 접미사 추가
+                component: CCTVMonitoring
+            },
+
+            // 신고 상세 페이지
+            {
+                path: 'report',
+                name: 'ReportControl', // 이름 충돌을 피하기 위해 'Control' 접미사 추가
+                component: ReportDetail
+            },
+        ],
     },
 
     // ----------------------------------------------------

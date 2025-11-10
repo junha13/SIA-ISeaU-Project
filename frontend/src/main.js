@@ -8,6 +8,8 @@ import axios from 'axios'
 axios.defaults.withCredentials = true
 
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap-icons/font/bootstrap-icons.css'
+
 import { quillEditor } from 'vue3-quill'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
@@ -37,6 +39,9 @@ import '@douxcode/vue-spring-bottom-sheet/dist/style.css'
 
 // 무한스크롤
 import { InfiniteLoading } from 'infinite-loading-vue3-ts';
+
+// 2. 커스텀 SCSS 임포트 (색상 변수 적용)
+import '@/assets/styles/_custom-vars.scss';
 
 const app = createApp(App)
 app.use(createPinia())
