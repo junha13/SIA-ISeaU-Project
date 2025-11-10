@@ -57,17 +57,14 @@
     </div>
   </div>
 </template>
-
-
 <script setup>
-import { ref, watch, computed } from 'vue' // 💡 computed 추가
+import { ref, watch, computed } from 'vue'
 import axios from 'axios'
 
-const message = ref('') // 💡 메시지 초기값 제거
-// const canCreate = ref(false) // 💡 [제거] computed로 대체
+const message = ref('')
 
 const props = defineProps({
-  isVisible: { type: Boolean, default: false },
+  isVisible: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:isVisible', 'group-created'])
@@ -75,103 +72,110 @@ const emit = defineEmits(['update:isVisible', 'group-created'])
 const groupName = ref('')
 const isLoading = ref(false)
 
-// 💡 [추가] "생성" 버튼 활성화 조건
-// groupName이 비어있지 않고, 로딩 중이 아닐 때
 const canCreate = computed(() => {
   return groupName.value.trim().length > 0 && !isLoading.value
 })
 
 /**
- * 모달의 모든 상태를 초기화합니다.
- */
+ * 모달의 모든 상태를 초기화합니다.
+ */
 const resetState = () => {
-  groupName.value = ''
-  isLoading.value = false
-  message.value = '' // 💡 초기화
+  groupName.value = ''
+  isLoading.value = false
+  message.value = ''
 }
 
 /**
- * 모달 닫기
- */
+ * 모달 닫기
+ */
 const close = () => {
-  if (isLoading.value) return
-  emit('update:isVisible', false)
+  if (isLoading.value) return
+  emit('update:isVisible', false)
 }
 
 /**
- * 💡 [수정] 입력 필드 핸들러
+ * 입력 필드 핸들러
  */
 function handleInput(e) {
-  groupName.value = e.target.value
-  // 💡 중복 체크 API 호출 제거
+  groupName.value = e.target.value
   if (!groupName.value.trim()) {
     message.value = '그룹 이름을 입력해주세요'
   } else {
-    message.value = '' // 💡 메시지 클리어
+    message.value = ''
   }
 }
 
-
-
-
 /**
- * 그룹 생성
- */
+ * 그룹 생성
+ */
 const createGroup = async () => {
 
-  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/create`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/create`;
 
-  // 💡 [수정] computed된 canCreate를 사용
-  if (!canCreate.value || isLoading.value) return
-  
-  isLoading.value = true
-  message.value = '' 
+  if (!canCreate.value || isLoading.value) return
+  
+  isLoading.value = true
+  message.value = '' 
 
-  try {
-    const response = await axios.post(
-      url, 
-      { groupName: groupName.value },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        // 💡 [수정] withCredentials 제거 (토큰 사용)
-        timeout: 5000,
-      }
-    )
-    
-    // 💡 [수정] 백엔드가 "1인 1그룹" 정책을 적용했으므로,
-    //          실패 시(result: false) 메시지를 표시해야 함
-    if (response.data.data.result === 'true') {
-      const newGroupId = response.data.data.newGroupId;
-      emit('group-created', newGroupId) 
-      emit('update:isVisible', false) 
-    } else {
-      // 💡 백엔드가 보낸 '실패' 메시지 (예: "이미 그룹이 있습니다.")
-      message.value = response.data.message || "그룹 생성에 실패했습니다.";
-    }
+  try {
+    const response = await axios.post(
+      url, 
+      { groupName: groupName.value },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 5000,
+      }
+    )
+    
+    // 💡 [수정] 컨트롤러가 'data'로 감싼 내부 객체를 사용
+    const responseData = response.data.data; 
 
-  } catch (err) {
-    console.error('[CreateGroupModal] createGroup error:', err);
-    if (err.response && err.response.data && err.response.data.message) {
-      // 💡 백엔드가 500 에러와 함께 보낸 메시지
-      message.value = err.response.data.message 
-    } else {
-      message.value = "그룹 생성 중 오류가 발생했습니다."
-    }
-  } finally {
-    isLoading.value = false
-  }
+    // 💡 [최종 수정] 
+    // 성공 응답 (log: {success: true, newGroupId: 37})을 확인
+    if (responseData && responseData.success === true) {
+      const newGroupId = responseData.newGroupId;
+      emit('group-created', newGroupId) 
+      emit('update:isVisible', false) 
+    
+    // 💡 [최종 수정] 
+    // 200 OK 응답이지만, 비즈니스 로직 실패 시 (log: {success: false, message: "..."})
+    } else if (responseData && responseData.message) { 
+      message.value = responseData.message;
+      console.warn('[CreateGroupModal] 비즈니스 로직 실패:', responseData.message);
+    
+    } else {
+      // 💡 [수정] 
+      // 알 수 없는 응답 구조 (if, else if 모두 실패)
+      console.error('[CreateGroupModal] 알 수 없는 응답 구조:', response.data);
+      message.value = "알 수 없는 응답을 받았습니다.";
+    }
+
+  } catch (err) {
+    // 💡 [수정] 
+    // 4xx/5xx 네트워크/서버 오류
+    console.error('[CreateGroupModal] createGroup error:', err);
+    if (err.response && err.response.data && err.response.data.message) {
+      message.value = err.response.data.message 
+    } else {
+      message.value = "그룹 생성 중 오류가 발생했습니다."
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 모달 닫힐 때 리셋
 watch(
-  () => props.isVisible,
-  (now) => {
-    if (!now) {
-      resetState()
-    }
-  }
+  () => props.isVisible,
+  (now) => {
+    if (!now) {
+      resetState()
+    }
+  }
 )
 </script>
+
+
 <style scoped>
 .modal-backdrop {
   position: fixed;

@@ -65,7 +65,7 @@
         </if>
         
     <choose>
-      <when test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
+<when test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         ORDER BY distance_meters ASC, b.beach_name ASC
       </when>
       <when test="sort == 'review_desc'">
@@ -84,7 +84,6 @@
       </otherwise>
     </choose>
     </select>
-
   <select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
     <![CDATA[
     SELECT beach_number,
