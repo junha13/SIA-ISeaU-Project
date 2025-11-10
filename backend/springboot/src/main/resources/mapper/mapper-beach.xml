@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="lx.iseau.feature.beach.BeachDAO">
 
   <select id="findBeacheList" parameterType="BeachListRequest" resultType="BeachVO">
-<<<<<<< HEAD
     <![CDATA[
-=======
->>>>>>> origin/develop
     SELECT
         b.beach_number,
         b.beach_name,
@@ -25,8 +19,9 @@
         b.close_date,
         COALESCE(c.review_count, 0) AS review_count,
         
-        -- ✅ [핵심 수정] 태그를 쉼표로 연결하여 하나의 문자열로 조회
+        -- ✅ 태그를 쉼표로 연결하여 하나의 문자열로 조회
         STRING_AGG(t_name.tag_name, ',') AS tags_string
+    ]]>
         
         <if test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         , ST_Distance(
@@ -34,7 +29,9 @@
             ST_SetSRID(ST_MakePoint(#{userLongitude}, #{userLatitude}), 4326)::geography
         ) AS distance_meters
         </if>
+    <![CDATA[
     FROM tb_beach b
+    ]]>
     
     -- 태그 목록 조회를 위한 LEFT JOIN
     LEFT JOIN tb_beach_tag_list t_list ON t_list.beach_number = b.beach_number
@@ -52,10 +49,6 @@
       AND b.address LIKE CONCAT(#{region}, '%')
     </if>
 
-    <if test="category != null and category != ''">
-      AND b.category = #{category}
-    </if>
-    
     <if test="tagFilter != null and tagFilter != ''">
       AND t_name.tag_name = #{tagFilter}
     </if>
@@ -69,12 +62,9 @@
         </if>
         
     <choose>
-<<<<<<< HEAD
-=======
       <when test="sort == 'distance_asc' and userLatitude != null and userLongitude != null">
         ORDER BY distance_meters ASC, b.beach_name ASC
       </when>
->>>>>>> origin/develop
       <when test="sort == 'review_desc'">
         ORDER BY COALESCE(c.review_count, 0) DESC,
                  b.rating DESC,
@@ -90,13 +80,9 @@
         ORDER BY b.beach_number ASC
       </otherwise>
     </choose>
-    </select>
+  </select>
 
-<<<<<<< HEAD
-    </select>
 
-=======
->>>>>>> origin/develop
   <select id="getBeachDetailInfo" parameterType="int" resultType="ResponseBeachDTO">
     <![CDATA[
     SELECT beach_number,

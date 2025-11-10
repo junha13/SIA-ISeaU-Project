@@ -17,7 +17,16 @@ public class LocationController {
 
 	
     private final LocationService service;
-    
+    @RequestMapping("/update")
+    public ResponseEntity<?> updateUserLocation(@RequestBody RequestUserLocationDTO dto) {
+        // Service에 위치 업데이트 로직 위임
+        Map<String, Object> result = service.updateUserLocation(dto);
+        
+        return ResponseEntity
+                .ok()
+                .header("api", "location/update")
+                .body(Map.of("data", result));
+    }
     /**
      * 내위치와 바운더리 비교
      */

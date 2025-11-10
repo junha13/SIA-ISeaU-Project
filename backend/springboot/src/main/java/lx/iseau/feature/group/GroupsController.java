@@ -140,4 +140,24 @@ public class GroupsController {
                 .body(Map.of("data", result));
     }
     
+    /**
+     * POST /api/groups/settings : 알림 설정 저장/업데이트
+     */
+    @RequestMapping("/settings/{groupNumber}")
+    public ResponseEntity<?> saveGroupSettings(@PathVariable("groupNumber") int groupNumber, // 💡 그룹 ID를 URL 경로에서 받음
+    	    @RequestBody RequestGroupSettingsDTO dto) {
+    	dto.setGroupNumber(groupNumber);
+        Map<String, Object> result = service.saveGroupSettings(dto);
+
+        if (Boolean.FALSE.equals(result.get("success"))) {
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+        
+        return ResponseEntity
+                .ok()
+                .header("api", "Groups/saveGroupSettings")
+                .body(Map.of("data", result));
+    }
+    
+    
 }

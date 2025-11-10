@@ -3,14 +3,17 @@ package lx.iseau.feature.group;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import java.time.LocalDateTime;
-import java.util.List;
 
-// --- 공통 응답 ---
+/**
+ * 초대 수락/거절 요청 DTO (POST /groups/invitations/accept, /reject)
+ * DB: tb_group_member 테이블의 status 컬럼을 업데이트/삭제하는 데 사용됨.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class RequestLocationShare {
-    private Integer invitationId; // 초대 식별 ID (DB 설계 필요)
-    private Integer groupId;
+public class RequestLocationShare {
+
+	private Integer invitationId;
+    
+  
 }
