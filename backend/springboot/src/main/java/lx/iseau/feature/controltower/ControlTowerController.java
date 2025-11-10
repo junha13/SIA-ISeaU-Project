@@ -42,8 +42,8 @@ public class ControlTowerController {
     // =========================
     // 매니저 처리 리스트 (간단 목록)
     // =========================
-    @RequestMapping("/tasks/list/{managerNumber}")
-    public ResponseEntity<?> getTaskListByManagerNumber(@PathVariable int managerNumber) {
+    @RequestMapping("/task/list")
+    public ResponseEntity<?> getTaskListByManagerNumber(@RequestParam int managerNumber) {
         // TODO: 로그인 붙이면 여기서 인증값으로 교체 예정 (managerNumber 무시)
     	List<TaskListDTO> result = service.getTaskListByManagerNumber(managerNumber);
         return ResponseEntity
@@ -55,8 +55,8 @@ public class ControlTowerController {
     // 처리 상세정보 (taskNumber 기준 단건)
     // 리턴: user(location, birth_date, gender, watch(occurred_at, heart_rate, spo2), task(task_processed))
     // =========================
-    @RequestMapping("/tasks/detail/{taskNumber}")
-    public ResponseEntity<?> getTaskDetailByTaskNumber(@PathVariable int taskNumber) {
+    @RequestMapping("/task/detail")
+    public ResponseEntity<?> getTaskDetailByTaskNumber(@RequestParam int taskNumber) {
         TaskDetailDTO map = service.getTaskDetailByTaskNumber(taskNumber);
         return ResponseEntity
                 .ok()
@@ -67,7 +67,7 @@ public class ControlTowerController {
     // 처리완료/취소 플래그 업데이트
     // Body: { "taskNumber": 123, "processed": 0 }  // 기본 0
     // =========================
-    @RequestMapping("/tasks/markProcessed")
+    @RequestMapping("/task/markProcessed")
     public ResponseEntity<?> markTaskProcessed(@RequestBody Map<String, Object> body) {
         int updated = service.updateTaskProcessed(body);
         return ResponseEntity
