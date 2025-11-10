@@ -5,16 +5,18 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 /**
- * 그룹 초대 요청 (POST /groups/invite)에 사용되는 DTO
+ * 그룹 멤버 초대 요청 DTO (POST /api/groups/invite)
+ * DB: tb_group_member 테이블에 status='PENDING' 행을 삽입
  */
-@Data 
-@NoArgsConstructor // 기본 생성자
-@AllArgsConstructor // 전체 필드 생성자
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RequestGroupInviteDTO {
 
     private Integer groupId;
     private String targetUserId;
     private String markerColor;
-    private Integer inviterUserNumber;
-    private Integer targetUserNumber;  // 초대 대상자의 user_number (PK)
-} 
+    
+    private Integer inviterUserNumber;       
+    private Integer targetUserNumber; 
+}

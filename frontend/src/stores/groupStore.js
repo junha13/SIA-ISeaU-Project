@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { groupApi } from '@/api/group'; // 🚨 'groupApi'가 정의되어 있다고 가정합니다.
+import { groupApi } from '@/api/group'; 
 import { useConfirmModal } from '@/utils/modalUtils';
-import axios from 'axios'; // 🚨 'axios' import
+import axios from 'axios'; 
 
 // 🚨 API 엔드포인트 URL (groupApi에 정의되지 않았을 경우 대비)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -87,19 +87,21 @@ export const useGroupStore = defineStore('group', () => {
         if (receivedInvitation.value) return;
 
         try {
-            // 🚨 'groupApi'가 아닌 'axios'를 직접 사용했으므로
-            // 래핑되지 않은 전체 응답(response)을 받습니다.
+            // 🚨 'axios'를 직접 사용했으므로 response.data.data 형태를 가정합니다.
             const response = await axios.get(PENDING_URL, { withCredentials: true });
             
-            // 🚨 [수정 불필요]
-            // axios 원본 응답이므로 response.data.data가 맞습니다.
-            const data = response.data.data;
+            // 💡 [수정] axios 응답에서 최상위 data 필드의 result 또는 invitations를 확인
+            // 서버 응답 형태가 { data: { success: true, result: [...] } } 또는 
+            // { data: { success: true, invitations: [...] } } 일 수 있습니다.
+            // 서버가 보내는 실제 리스트 필드 이름(invitations)으로 가정하고 수정
+            const responseData = response.data.data || response.data; // 컨트롤러 래핑을 대비하여 데이터 경로를 유동적으로 설정
+            const invitationList = responseData.invitations || responseData.result || []; // 초대 리스트 필드 확인
 
-            // 1. 대기 중인 초대가 있는지 확인 (count > 0)
-            if (data && data.count > 0) {
-                console.log("대기 중인 초대 발견:", data.invitations[0]);
+            // 1. 대기 중인 초대가 있는지 확인 (리스트의 길이 확인)
+            if (invitationList.length > 0) {
+                console.log("대기 중인 초대 발견:", invitationList[0]);
                 // 2. 첫 번째 초대장을 스토어 상태에 저장 (이 순간 App.vue의 모달이 뜸)
-                receivedInvitation.value = data.invitations[0];
+                receivedInvitation.value = invitationList[0];
             } else {
                 console.log("대기 중인 초대 없음.");
                 receivedInvitation.value = null;
@@ -119,11 +121,12 @@ export const useGroupStore = defineStore('group', () => {
             return; 
         }
 
-        console.log(`[수락 시작] invitationId: ${invitation.invitationId} 수락 API 호출 시도...`); 
+        const groupId = invitation.id; // 💡 [수정] invitation.invitationId 대신 invitation.id 사용
+        console.log(`[수락 시작] invitationId: ${groupId} 수락 API 호출 시도...`); 
 
         try {
             // 1. API 호출 (useApi.js가 응답 본문 { data: {...} }를 반환)
-            const response = await groupApi.acceptLocationSharing({ invitationId: invitation.invitationId });
+            const response = await groupApi.acceptLocationSharing({ invitationId: groupId });
             
             // 🚨 [수정 완료] 
             // response.data.data.success (X) -> response.data.success (O)
@@ -164,11 +167,12 @@ export const useGroupStore = defineStore('group', () => {
             return; 
         }
 
-        console.log(`[거절 시작] invitationId: ${invitation.invitationId} 거절 API 호출 시도...`); 
+        const groupId = invitation.id; // 💡 [수정] invitation.invitationId 대신 invitation.id 사용
+        console.log(`[거절 시작] invitationId: ${groupId} 거절 API 호출 시도...`); 
 
         try {
             // 1. API 호출
-            const response = await groupApi.rejectLocationSharing({ invitationId: invitation.invitationId });
+            const response = await groupApi.rejectLocationSharing({ invitationId: groupId });
             
             // 🚨 [수정 완료] 
             // response.data.data.success (X) -> response.data.success (O)
@@ -212,8 +216,8 @@ export const useGroupStore = defineStore('group', () => {
         fetchLocations,
         acceptInvitation,
         rejectInvitation,
-        checkPendingInvitations, // 🚨 App.vue가 사용할 수 있도록 반환
-        closeModal, // 🚨 반환 (선택 사항)
+        checkPendingInvitations, 
+        closeModal, 
         getActiveGroupLocations,
         getActiveGroupId,
         getMyGroupList,

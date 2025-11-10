@@ -5,23 +5,150 @@
 
 <mapper namespace="lx.iseau.feature.group.GroupsDAO">
 
-    <insert id="insertGroup" parameterType="RequestGroupDTO"> 
-		INSERT INTO tb_group (
-            group_leader, group_member, group_name, 
-            group_accepted, marker_color
+    <insert id="insertGroup" parameterType="RequestGroupDTO" useGeneratedKeys="true" keyProperty="groupNumber">
+        INSERT INTO tb_group (
+            group_leader, group_name
         )
-		VALUES (
-            #{userId}, #{userId}, #{groupName}, 
-            'Y', 'blue'
+        VALUES (
+            #{groupLeader}, #{groupName}
         )
-	</insert>
-	
+    </insert>
+
+    <insert id="insertGroupMember" parameterType="map">
+        INSERT INTO tb_group_member (
+            group_number, group_member_number, marker_color, group_accepted
+        )
+        VALUES (
+            #{groupNumber}, #{userNumber}, #{markerColor}, 
+            <choose>
+                <when test="status == 'ACCEPTED'"> 'Y' </when>
+                <when test="status == 'PENDING'"> 'N' </when> 
+                <otherwise> 'N' </otherwise>
+            </choose>
+        )
+    </insert>
+    
     <select id="SelectdoubleCheckByGroupName" parameterType="RequestGroupDTO" resultType="Integer">
         SELECT COUNT(*) AS cnt
         FROM tb_group
         WHERE 
-        	group_leader = #{userId}
+        	group_leader = #{groupLeader}
         	AND group_name = #{groupName}
+    </select>
+    
+    <select id="findGroupsByUserNumber" parameterType="int" resultType="ResponseGroupListItemDTO">
+        SELECT
+            g.group_number AS id,
+            g.group_name AS name,
+            (SELECT COUNT(*) FROM tb_group_member gm_count
+             WHERE gm_count.group_number = g.group_number
+             AND gm_count.group_accepted = 'Y') AS memberCount
+        FROM tb_group_member gm
+        JOIN tb_group g ON gm.group_number = g.group_number
+        WHERE
+            gm.group_member_number = #{userNumber}
+            AND gm.group_accepted = 'Y'
+    </select>
+    
+<select id="findPendingInvitationsByMember" parameterType="int" resultType="map">
+        SELECT     
+            g.group_number AS Id,  /* 프론트엔드에서 group_number를 invitationId로 사용 */
+            g.group_name AS groupName,
+            
+            u.user_name AS inviterName,      /* 💡 초대자의 이름 */
+            u.mobile AS inviterPhone,        /* 💡 초대자의 전화번호 */
+            
+            -- PENDING 상태인 멤버 정보
+            gm.group_member_number AS userNumber,
+            
+            -- 그룹의 현재 승인된 멤버 수 계산 (선택 사항이지만 목록 조회 DTO를 대체하기 위해 포함)
+            (SELECT COUNT(*) 
+             FROM tb_group_member gm_count 
+             WHERE gm_count.group_number = g.group_number
+             AND gm_count.group_accepted = 'Y') AS memberCount
+        FROM
+            tb_group_member gm
+        JOIN 
+            tb_group g ON gm.group_number = g.group_number
+        JOIN
+            tb_user u ON g.group_leader = u.user_number  /* 💡 그룹 리더 (초대자) 정보 조인 */
+        WHERE
+            gm.group_member_number = #{userNumber}
+            AND gm.group_accepted = 'N'
+    </select>
+    
+    <update id="updateInviteStatus" parameterType="map">
+        <if test="status == 'ACCEPTED'">
+            UPDATE tb_group_member
+            SET group_accepted = 'Y'
+            WHERE
+                group_number = #{invitationId}
+                AND group_member_number = #{userNumber}
+                AND group_accepted = 'N'
+        </if>
+        <if test="status == 'REJECTED'">
+            DELETE FROM tb_group_member
+            WHERE
+                group_number = #{invitationId}
+                AND group_member_number = #{userNumber}
+                AND group_accepted = 'N'
+        </if>
+    </update>
+
+    <select id="findGroupMemberLocations" parameterType="ResponseGroupMemberLocationDTO" resultType="ResponseGroupMemberLocationDTO">
+    SELECT
+        u.user_number AS id,
+        ST_Y(u.location::geometry) AS lat,
+        ST_X(u.location::geometry) AS lng,
+        u.user_name AS name,
+        gm.marker_color AS color,
+        
+        -- 💡 [수정] DB 상태 ('Y'/'N')를 프론트엔드 상태 ('online'/'pending')로 변환
+        CASE gm.group_accepted
+            WHEN 'Y' THEN 'online'
+            WHEN 'N' THEN 'pending'
+            ELSE 'offline'
+        END AS status, 
+        
+        u.status AS userStatus,
+        
+        ST_DistanceSphere(
+            u.location::geometry,
+            ST_SetSRID(ST_MakePoint(#{myLongitude}, #{myLatitude}), 4326)
+        ) AS distance
+    
+    FROM tb_group_member gm
+    JOIN tb_user u ON gm.group_member_number = u.user_number WHERE
+        gm.group_number = #{groupNumber}
+        AND gm.group_accepted = 'Y'
+</select>
+
+    <select id="findGroupByGroupNumber" resultType="ResponseGroupDTO" parameterType="int">
+        SELECT 
+            group_number,
+            group_leader,
+            group_name
+        FROM 
+            tb_group
+        WHERE 
+            group_number = #{groupNumber}
+        LIMIT 1
+    </select>
+
+    <select id="findGroupLeaderByGroupId" resultType="int" parameterType="int">
+        SELECT 
+            group_leader
+        FROM 
+            tb_group
+        WHERE 
+            group_number = #{groupId} LIMIT 1
+    </select>
+    
+    <select id="findGroupIdByUser" parameterType="int" resultType="Integer">
+        SELECT group_number
+        FROM tb_group_member
+        WHERE group_member_number = #{userNumber}
+          AND group_accepted = 'Y'
     </select>
     
     <select id="findUserNumberById" parameterType="string" resultType="Integer">
@@ -29,164 +156,62 @@
         FROM tb_user
         WHERE id = #{userId}
     </select>
-
-    <select id="findGroupsByUserNumber" parameterType="int" resultType="ResponseGroupListItemDTO">
-        SELECT
-            g.group_number AS id,
-            g.group_name AS name,
-            (SELECT COUNT(*) 
-             FROM tb_group gm 
-             WHERE gm.group_leader = g.group_leader 
-               AND gm.group_name = g.group_name
-               AND gm.group_accepted = 'Y' -- 수락한 멤버만 카운트
-            ) AS memberCount
-        FROM
-            tb_group g
-        WHERE
-            g.group_member = #{userNumber} -- 내가 멤버로 속한
-            AND g.group_accepted = 'Y' -- 수락된 그룹만
-        GROUP BY 
-            g.group_number, g.group_name, g.group_leader
-        ORDER BY
-            g.group_name
-    </select>
-
-    <insert id="insertInvitation" parameterType="RequestGroupInviteDTO">
-        INSERT INTO tb_group (
-            group_leader,   group_member,   group_name,     group_accepted, marker_color
-        )
-        SELECT
-            g.group_leader,        -- 현재 그룹(groupId)의 리더
-            #{targetUserNumber},   -- 초대 대상자 (DTO에서 받음)
-            g.group_name,          -- 현재 그룹(groupId)의 이름
-            'N',                   -- 상태: 'N' (초대 대기)
-            #{markerColor}         -- DTO에서 받음
-        FROM tb_group g
-        WHERE g.group_number = #{groupId}
-        LIMIT 1 </insert>
-
-    <select id="findInvitationById" parameterType="int" resultType="InvitationDTO">
-        SELECT     
-            g.group_number        AS invitationId,    g.group_number        AS groupId,         
-            g.group_leader        AS inviterUserNumber, g.group_member        AS targetUserNumber,  'PENDING'             AS status,          g.marker_color        AS markerColor,
-            g.group_name          AS groupName
-            -- u.user_name AS inviterName (필요시 tb_user JOIN 추가)
-        FROM
-             tb_group g
-        WHERE
-            g.group_number = #{invitationId}
-            AND g.group_accepted = 'N' -- 'N' (초대 대기) 상태인 것만
-    </select>
     
-    <update id="updateInviteStatus" parameterType="map">
-        <if test="status == 'ACCEPTED'">
-            UPDATE tb_group
-            SET group_accepted = 'Y'
-            WHERE
-                group_number = #{invitationId}
-                AND group_accepted = 'N'
-        </if>
-        <if test="status == 'REJECTED'">
-            DELETE FROM tb_group
-            WHERE
-                group_number = #{invitationId}
-                AND group_accepted = 'N'
-        </if>
-    </update>
-
-    <insert id="insertGroupMember" parameterType="RequestGroupDTO">
-        INSERT INTO tb_group (
-            group_leader, group_member, group_name,
-            group_accepted, marker_color
-        ) VALUES (
-            #{groupLeader}, #{groupMember}, #{groupName},
-            'Y', #{markerColor}
-        )
-    </insert>
-
-   <select id="findGroupMemberLocations" parameterType="ResponseGroupMemberLocationDTO" resultType="ResponseGroupMemberLocationDTO">
-	    WITH CurrentGroup AS (
-	        SELECT
-	            group_leader,
-	            group_name
-	        FROM tb_group
-	        WHERE group_number = #{groupNumber}
-	        LIMIT 1
-	    )
-	    SELECT
-	        -- 🔹 요청자가 보낸 정보도 같이 내려주기
-	        #{groupNumber}  AS groupNumber,
-	        #{myLatitude}   AS myLatitude,
-	        #{myLongitude}  AS myLongitude,
-	
-	        -- 🔹 기존 컬럼들
-	        u.user_number AS id,
-	        ST_Y(u.location::geometry) AS lat,
-	        ST_X(u.location::geometry) AS lng,
-	        u.user_name AS name,
-	        g.marker_color AS color,
-	        CASE
-	            WHEN g.group_accepted = 'Y' THEN 'online'
-	            WHEN g.group_accepted = 'N' THEN 'pending'
-	            ELSE 'unknown'
-	        END AS status,
-	        u.status AS userStatus,
-	        
-	        (NOW() AT TIME ZONE 'UTC')::timestamp AS lastUpdate,
-	
-	        -- 🔹 여기서 “내 위치 → 이 멤버 위치” 거리 계산 (m 단위)
-	        ST_DistanceSphere(
-	            u.location::geometry,
-	            ST_SetSRID(ST_MakePoint(#{myLongitude}, #{myLatitude}), 4326)
-	        ) AS distance
-	
-	    FROM tb_group g
-	    JOIN tb_user u
-	      ON g.group_member = u.user_number
-	    JOIN CurrentGroup cg
-	      ON g.group_leader = cg.group_leader
-	     AND g.group_name  = cg.group_name
-            
-    </select>
-
-    <select id="findGroupLeaderByGroupId" resultType="int" parameterType="int">
-    SELECT 
-        group_leader
-    FROM 
-        tb_group
-    WHERE 
-        group_number = #{groupId} LIMIT 1
-</select>
-<select id="findPendingInvitationsByMember" parameterType="int" resultType="InvitationDTO">
-    SELECT     
-        g.group_number        AS invitationId,    
-        g.group_number        AS groupId,         
-        g.group_leader        AS inviterUserNumber, 
-        g.group_member        AS targetUserNumber,  
-        'PENDING'             AS status,          
-        g.marker_color        AS markerColor,
-        g.group_name          AS groupName,
-        (SELECT u.user_name FROM tb_user u WHERE u.user_number = g.group_leader) AS inviterName
-    FROM
-         tb_group g
-    WHERE
-        g.group_member = #{userNumber} -- 현재 로그인한 사용자
-        AND g.group_accepted = 'N'     -- 'N' (초대 대기) 상태인 것만
-</select>
-<delete id="deleteGroupAsLeader" parameterType="int">
-        DELETE FROM tb_group g1
-        USING tb_group g2
-        WHERE
-            g2.group_number = #{groupId}
-            AND g1.group_leader = g2.group_leader
-            AND g1.group_name = g2.group_name
-    </delete>
-
-    <delete id="leaveGroupAsMember" parameterType="map">
+    <delete id="deleteGroup" parameterType="map">
         DELETE FROM tb_group
         WHERE
             group_number = #{groupId}
-            AND group_member = #{userNumber}
-            AND group_leader != #{userNumber}
+            AND group_leader = #{leaderUserNumber}
     </delete>
+    
+    <delete id="deleteGroupMembersByGroupId" parameterType="int">
+        DELETE FROM tb_group_member WHERE group_number = #{groupId}
+    </delete>
+    
+    <delete id="deleteGroupSettingsByGroupId" parameterType="int">
+        DELETE FROM tb_group_settings WHERE group_number = #{groupId}
+    </delete>
+    
+    <delete id="leaveGroupAsMember" parameterType="map">
+        DELETE FROM tb_group_member 
+        WHERE
+            group_number = #{groupNumber}
+            AND group_member_number = #{userNumber}
+    </delete>
+<select id="getGroupSettings" parameterType="int" resultType="RequestGroupSettingsDTO">
+    SELECT
+        group_number AS groupNumber,
+        tide_alert AS tideAlert,
+        group_leave_level1_alert AS groupLeaveLevel1Alert,
+        group_leave_level1_distance AS groupLeaveLevel1Distance,
+        group_leave_level2_alert AS groupLeaveLevel2Alert,
+        group_leave_level2_distance AS groupLeaveLevel2Distance,
+        group_leave_level3_alert AS groupLeaveLevel3Alert,
+        group_leave_level3_distance AS groupLeaveLevel3Distance
+    FROM tb_group_settings
+    WHERE group_number = #{groupNumber}
+</select>
+
+    <insert id="insertOrUpdateGroupSettings" parameterType="RequestGroupSettingsDTO">
+        INSERT INTO tb_group_settings (
+            group_number, tide_alert, group_leave_level1_alert, 
+            group_leave_level1_distance, group_leave_level2_alert, 
+            group_leave_level2_distance, group_leave_level3_alert, 
+            group_leave_level3_distance
+        )
+        VALUES (
+            #{groupNumber}, #{tideAlert}, #{groupLeaveLevel1Alert},
+            #{groupLeaveLevel1Distance}, #{groupLeaveLevel2Alert},
+            #{groupLeaveLevel2Distance}, #{groupLeaveLevel3Alert},
+            #{groupLeaveLevel3Distance}
+        )
+        ON CONFLICT (group_number) DO UPDATE SET
+            tide_alert = EXCLUDED.tide_alert,
+            group_leave_level1_alert = EXCLUDED.group_leave_level1_alert,
+            group_leave_level1_distance = EXCLUDED.group_leave_level1_distance,
+            group_leave_level2_alert = EXCLUDED.group_leave_level2_alert,
+            group_leave_level2_distance = EXCLUDED.group_leave_level2_distance,
+            group_leave_level3_alert = EXCLUDED.group_leave_level3_alert,
+            group_leave_level3_distance = EXCLUDED.group_leave_level3_distance
+    </insert>
 </mapper>
