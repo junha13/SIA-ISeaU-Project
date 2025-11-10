@@ -319,7 +319,7 @@ public class GroupsService {
      }
      
      // 2. DAO를 호출하여 PENDING 상태인 초대 목록을 조회
-     List<ResponseGroupListItemDTO> invitationList = dao.findPendingInvitationsByMember(userNumber);
+     List<Map<String, Object>> invitationList = dao.findPendingInvitationsByMember(userNumber);
 
      map.put("result", invitationList);
      map.put("success", true);
@@ -436,8 +436,11 @@ public class GroupsService {
 	        // settings.setUserNumber(0);
 	    }
 
+	    Map<String, Object> dataMap = new HashMap<>();
+	    dataMap.put("settings", settings); // settings를 data 안에 넣음
+
 	    map.put("success", true);
-	    map.put("settings", settings); 
+	    map.put("data", dataMap); // 최상위 Map에 "data" 키로 삽입
 	    return map;
 	}
     // NOTE: validateAndGetPendingInvitation 헬퍼 메서드는 제거됨.

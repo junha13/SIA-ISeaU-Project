@@ -71,9 +71,12 @@ public interface GroupsDAO {
     // 14. 그룹장 번호 조회 (GroupService에서 사용)
 	Integer findGroupLeaderByGroupId(@Param("groupId") int groupId);
 	
-	// GroupsDAO.java 인터페이스 내부에 추가
+	// 15. GroupsDAO.java 인터페이스 내부에 추가
 	RequestGroupSettingsDTO getGroupSettings(@Param("groupNumber") int groupNumber);
+	// 16. 그룹세팅
 	int insertOrUpdateGroupSettings(RequestGroupSettingsDTO dto);
-	// PENDING 상태인 초대 목록 조회 (ResponseGroupListItemDTO 사용)
-	List<ResponseGroupListItemDTO> findPendingInvitationsByMember(@Param("userNumber") int userNumber);
+	// 17. PENDING 상태인 초대 목록 조회 (초대자 정보 포함)
+	List<Map<String, Object>> findPendingInvitationsByMember(@Param("userNumber") int userNumber);
+	
+	
 }

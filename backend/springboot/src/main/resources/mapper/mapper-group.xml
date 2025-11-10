@@ -50,17 +50,28 @@
             AND gm.group_accepted = 'Y'
     </select>
     
-    <select id="findPendingInvitationsByMember" parameterType="int" resultType="ResponseGroupListItemDTO">
+<select id="findPendingInvitationsByMember" parameterType="int" resultType="map">
         SELECT     
-            g.group_number        AS id,    
-            g.group_name          AS name,
+            g.group_number AS Id,  /* 프론트엔드에서 group_number를 invitationId로 사용 */
+            g.group_name AS groupName,
+            
+            u.user_name AS inviterName,      /* 💡 초대자의 이름 */
+            u.mobile AS inviterPhone,        /* 💡 초대자의 전화번호 */
+            
+            -- PENDING 상태인 멤버 정보
+            gm.group_member_number AS userNumber,
+            
+            -- 그룹의 현재 승인된 멤버 수 계산 (선택 사항이지만 목록 조회 DTO를 대체하기 위해 포함)
             (SELECT COUNT(*) 
              FROM tb_group_member gm_count 
              WHERE gm_count.group_number = g.group_number
              AND gm_count.group_accepted = 'Y') AS memberCount
-             FROM
-             tb_group_member gm
-        JOIN tb_group g ON gm.group_number = g.group_number
+        FROM
+            tb_group_member gm
+        JOIN 
+            tb_group g ON gm.group_number = g.group_number
+        JOIN
+            tb_user u ON g.group_leader = u.user_number  /* 💡 그룹 리더 (초대자) 정보 조인 */
         WHERE
             gm.group_member_number = #{userNumber}
             AND gm.group_accepted = 'N'
@@ -168,18 +179,18 @@
             AND group_member_number = #{userNumber}
     </delete>
 <select id="getGroupSettings" parameterType="int" resultType="RequestGroupSettingsDTO">
-        SELECT
-            group_number,
-            tide_alert,
-            group_leave_level1_alert,
-            group_leave_level1_distance,
-            group_leave_level2_alert,
-            group_leave_level2_distance,
-            group_leave_level3_alert,
-            group_leave_level3_distance
-        FROM tb_group_settings
-        WHERE group_number = #{groupNumber}
-    </select>
+    SELECT
+        group_number AS groupNumber,
+        tide_alert AS tideAlert,
+        group_leave_level1_alert AS groupLeaveLevel1Alert,
+        group_leave_level1_distance AS groupLeaveLevel1Distance,
+        group_leave_level2_alert AS groupLeaveLevel2Alert,
+        group_leave_level2_distance AS groupLeaveLevel2Distance,
+        group_leave_level3_alert AS groupLeaveLevel3Alert,
+        group_leave_level3_distance AS groupLeaveLevel3Distance
+    FROM tb_group_settings
+    WHERE group_number = #{groupNumber}
+</select>
 
     <insert id="insertOrUpdateGroupSettings" parameterType="RequestGroupSettingsDTO">
         INSERT INTO tb_group_settings (

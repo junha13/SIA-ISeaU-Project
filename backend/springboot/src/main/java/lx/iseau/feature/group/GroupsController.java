@@ -6,7 +6,9 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 // import org.springframework.web.bind.annotation.RequestAttribute; // 임시 제거
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -143,7 +145,7 @@ public class GroupsController {
     /**
      * POST /api/groups/settings : 알림 설정 저장/업데이트
      */
-    @RequestMapping("/settings/{groupNumber}")
+    @PostMapping("/settings/{groupNumber}")
     public ResponseEntity<?> saveGroupSettings(@PathVariable("groupNumber") int groupNumber, // 💡 그룹 ID를 URL 경로에서 받음
     	    @RequestBody RequestGroupSettingsDTO dto) {
     	dto.setGroupNumber(groupNumber);
@@ -159,5 +161,22 @@ public class GroupsController {
                 .body(Map.of("data", result));
     }
     
+ // --- 2. 알림 설정 조회 (GET 요청) ---
+    @GetMapping("/settings/{groupNumber}") // GET 요청만 처리
+    public ResponseEntity<?> getGroupSettings(@PathVariable("groupNumber") int groupNumber) {
+        
+        Map<String, Object> result = service.getGroupSettings(groupNumber);
+        
+        // 💡 서비스에서 에러 응답을 반환했을 경우 (그룹 ID 누락 등)
+        if (Boolean.FALSE.equals(result.get("success"))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+
+        return ResponseEntity
+                .ok()
+                .header("api", "Groups/getGroupSettings")
+                // 💡 클라이언트 기대 구조: { "data": { "settings": {...} } }
+                .body(Map.of("data", result));
+    }
     
 }
