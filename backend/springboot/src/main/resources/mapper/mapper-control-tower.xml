@@ -22,7 +22,7 @@
     <!-- =========================
          매니저 기본정보 수정
          ========================= -->
-    <update id="updateManagerInfoByManagerNumber" parameterType="map">
+    <update id="updateManagerInfoByManagerNumber" parameterType="ManagerInfoDTO">
         UPDATE tb_user u
            SET user_name = COALESCE(#{managerName}, u.user_name),
                mobile    = COALESCE(#{mobile}, u.mobile),
@@ -37,7 +37,7 @@
          - tb_task + tb_watch + tb_user(피처) + tb_manager + tb_user(매니저)
          - locationText: (해변/바다) 간단 라벨
          ========================= -->
-    <select id="selectTaskListByManagerNumber"
+    <select id="getTaskListByManagerNumber"
 	        resultType="TaskListDTO">
 	  SELECT
 	    t.task_number    AS taskNumber,
@@ -56,7 +56,7 @@
     <!-- =========================
          처리 상세 (taskNumber)
          ========================= -->
-    <select id="selectTaskDetailByTaskNumber"
+    <select id="getTaskDetailByTaskNumber"
 	        parameterType="int"
 	        resultType="TaskDetailDTO">
 	  SELECT

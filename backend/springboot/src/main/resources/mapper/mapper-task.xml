@@ -4,7 +4,7 @@
 <mapper namespace="lx.iseau.feature.task.TaskDAO">
 
     <!-- tb_task insert -->
-    <insert id="insertTask" parameterType="lx.iseau.feature.task.dto.TaskDTO"
+    <insert id="insertTask" parameterType="TaskDTO"
             useGeneratedKeys="true" keyProperty="taskNumber" keyColumn="task_number">
         INSERT INTO tb_task (manager_number, watch_number)
         VALUES (#{managerNumber}, #{watchNumber})
@@ -12,7 +12,7 @@
 
     <!-- 관제센터별 대기 태스크 -->
     <select id="selectPendingTasksByControlTower" parameterType="int"
-            resultType="lx.iseau.feature.task.dto.TaskListItemDTO">
+            resultType="TaskListDTO">
         SELECT t.task_number, t.task_accepted, t.task_processed,
                t.manager_number, t.watch_number,
                w.heart_rate, w.spo2
@@ -27,7 +27,7 @@
 
     <!-- 매니저의 진행중 태스크 -->
     <select id="selectOpenTasksByManager" parameterType="int"
-            resultType="lx.iseau.feature.task.dto.TaskListItemDTO">
+            resultType="TaskListDTO">
         SELECT t.task_number, t.task_accepted, t.task_processed,
                t.manager_number, t.watch_number,
                w.heart_rate, w.spo2

@@ -15,10 +15,7 @@ public interface ControlTowerDAO {
     ManagerInfoDTO selectManagerInfoByManagerNumber(@Param("managerNumber") int managerNumber);
 
     // 매니저 기본정보 수정
-    int updateManagerInfoByManagerNumber(@Param("managerNumber") int managerNumber,
-							             @Param("managerName") String managerName,
-							             @Param("mobile") String mobile,
-							             @Param("email") String email);
+    int updateManagerInfoByManagerNumber(ManagerInfoDTO dto);
 
     // 처리 리스트
     List<TaskListDTO> getTaskListByManagerNumber(@Param("managerNumber") int managerNumber);
