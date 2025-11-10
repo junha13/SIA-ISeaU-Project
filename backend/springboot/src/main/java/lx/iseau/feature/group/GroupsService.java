@@ -29,6 +29,7 @@ public class GroupsService {
 	
 	private final HttpSession session;
 
+	
 	// Group
 	@Transactional
 	public Map<String, Object> createGroup(RequestGroupDTO dto) {
@@ -47,22 +48,6 @@ public class GroupsService {
 	    }
 	    
 	    return map;
-	}
-	
-	// 그룹명 더블체크
-	@Transactional
-	public Map<String, Object> doubleCheckGroupName(RequestGroupDTO dto) { // 파라미터는 유지하되 내부에서 임시 ID 사용
-		Map<String, Object> map = new HashMap<>();
-		
-		if(dto.getGroupName().trim().isEmpty()) return Map.of("result", "empty");
-		
-		dto.setGroupName(dto.getGroupName().trim());
-		dto.setUserId((Integer) session.getAttribute("userNumber"));
-		int num = dao.SelectdoubleCheckByGroupName(dto);
-		
-		
-		map.put("result", num == 0 ? "true" : "false"); // 중복 없어야 true
-		return map;
 	}
 	
 	/**
@@ -226,11 +211,11 @@ public class GroupsService {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	public Map<String, Object> getGroupMemberLocations(int groupId) {
+	@Transactional
+	public Map<String, Object> getGroupMemberLocations(ResponseGroupMemberLocationDTO dto) {
 		Map<String, Object> map = new HashMap<>();
 		// REVIEW: 그룹 존재 여부, 조회 권한 확인 로직 추가 가능
-		List<ResponseGroupMemberLocationDTO> locationList = dao.findGroupMemberLocations(groupId);
+		List<ResponseGroupMemberLocationDTO> locationList = dao.findGroupMemberLocations(dto);
 		map.put("result", locationList);
 		return map;
 	}

@@ -11,17 +11,17 @@
           <div class="d-flex justify-content-between flex-wrap text-muted small fw-semibold">
             <!-- 작성자, 분류, 날짜 정보 (좌측) -->
             <div class="d-flex align-items-center text-gray-600 mb-2 fs-6">
-              <span class="badge badge-light-secondary fw-bold rounded-pill me-3">{{ post.boardName }}</span>
+              <span class="fw-bold rounded-pill me-3 px-3 py-1" :style="badgeStyle">{{ post.boardName }}</span>
               <span class="me-3">작성자: <span class="text-dark fw-semibold">{{ post.id }}</span></span>
               <span class="text-gray-500">{{ post.createdAt }}</span>
             </div>
             <!-- 조회수, 추천수 정보 (우측 - 아이콘 축소) -->
             <div class="d-flex align-items-center mb-2 fs-6">
               <span class="text-gray-600 me-3">
-                <i class="ki-duotone ki-eye fs-6 me-1 text-info"></i> 조회 {{ post.viewCount }}
+                <i class="ki-duotone ki-eye fs-6 me-1" :style="iconInfo"></i> 조회 {{ post.viewCount }}
               </span>
               <span class="text-gray-600">
-                <i class="ki-duotone ki-heart fs-6 me-1 text-danger"></i> 추천 {{ post.recommendCount }}
+                <i class="ki-duotone ki-heart fs-6 me-1" :style="iconDanger"></i> 추천 {{ post.recommendCount }}
               </span>
             </div>
           </div>
@@ -42,19 +42,27 @@
         <!-- 버튼: 크기 축소, 정렬 우측 유지, 순서 변경 -->
         <div class="d-flex justify-content-end gap-2 pt-3 border-top">
           <!-- 1. 추천 버튼 (크기: btn-sm, 텍스트 크기: fs-6) -->
-          <button v-if="!recommendedByMe" class="btn btn-dark btn-sm fw-bold shadow-sm d-flex align-items-center justify-content-start ps-3 pe-4" @click="requestRecommendPost(post.postNumber)">
-            <i class="ki-duotone ki-heart fs-6 me-1 text-danger"></i> <span class="text-white fs-6">추천 ({{ recommendCount }})</span>
+          <button v-if="!recommendedByMe" class="btn btn-sm fw-bold shadow-sm d-flex align-items-center justify-content-start ps-3 pe-4"
+                  :style="btnDark" @click="requestRecommendPost(post.postNumber)">
+            <i class="ki-duotone ki-heart fs-6 me-1" :style="iconDanger"></i>
+            <span class="text-white fs-6">추천 ({{ recommendCount }})</span>
           </button>
-          <button v-if="recommendedByMe" class="btn btn-dark btn-sm fw-bold shadow-sm d-flex align-items-center justify-content-start ps-3 pe-4" @click="requestRecommendPost(post.postNumber)">
-            <i class="ki-duotone ki-heart fs-6 me-1 text-danger"></i> <span class="text-white fs-6">추천취소 ({{ recommendCount }})</span>
+          <button v-if="recommendedByMe" class="btn btn-sm fw-bold shadow-sm d-flex align-items-center justify-content-start ps-3 pe-4"
+                  :style="btnDark" @click="requestRecommendPost(post.postNumber)">
+            <i class="ki-duotone ki-heart fs-6 me-1" :style="iconDanger"></i>
+            <span class="text-white fs-6">추천취소 ({{ recommendCount }})</span>
           </button>
           <!-- 2. 수정 버튼 (크기: btn-sm, 텍스트 크기: fs-6) -->
-          <button v-if="loginId === post.id" class="btn btn-dark btn-sm fw-bold d-flex align-items-center justify-content-start ps-3 pe-4" @click="editPost">
-            <i class="ki-duotone ki-pencil fs-6 me-1"></i> <span class="text-white fs-6">수정</span>
+          <button v-if="loginId === post.id" class="btn btn-sm fw-bold d-flex align-items-center justify-content-start ps-3 pe-4"
+                  :style="btnDark" @click="editPost">
+            <i class="ki-duotone ki-pencil fs-6 me-1"></i>
+            <span class="text-white fs-6">수정</span>
           </button>
-          <!-- 3. 삭제 버튼 (크기: btn-sm, 텍스트 크기: fs-6) -->
-          <button v-if="loginId === post.id" class="btn btn-dark btn-sm fw-bold d-flex align-items-center justify-content-start ps-3 pe-4" @click="confirmDelete">
-            <i class="ki-duotone ki-trash fs-6 me-1 text-danger"></i> <span class="text-white fs-6">삭제</span>
+
+          <button v-if="loginId === post.id" class="btn btn-sm fw-bold d-flex align-items-center justify-content-start ps-3 pe-4"
+                  :style="btnDark" @click="confirmDelete">
+            <i class="ki-duotone ki-trash fs-6 me-1" :style="iconDanger"></i>
+            <span class="text-white fs-6">삭제</span>
           </button>
         </div>
       </div>
@@ -74,7 +82,7 @@
                 placeholder="댓글을 입력하세요"
                 @keyup.enter="requestAddComment(post.postNumber)"
             />
-            <button class="btn btn-dark fw-bold text-nowrap" @click="requestAddComment(post.postNumber)">등록</button>
+           <button class="btn fw-bold text-nowrap" :style="btnDark" @click="requestAddComment(post.postNumber)">등록</button>
           </div>
 
           <!-- 댓글 리스트 -->
@@ -88,9 +96,9 @@
               <div class="d-flex flex-column align-items-end">
                   <small class="text-muted fs-7 mb-2">{{ comment.createdAt }}</small>
                   <!-- 댓글 삭제 버튼도 Dark 스타일로 변경 -->
-                  <button v-if="loginId === comment.id" class="btn btn-sm btn-dark fw-semibold" @click="removeComment(index)">
-                    <span class="text-white">삭제</span>
-                  </button>
+                <button v-if="loginId === comment.id" class="btn btn-sm fw-semibold" :style="btnDark" @click="removeComment(index)">
+                  <span class="text-white">삭제</span>
+                </button>
               </div>
             </li>
           </ul>
@@ -252,6 +260,20 @@ async function requestRecommendPost(postNumber) {
   //   () => route.params.id,
   //   (newId) => requestPostDetail(newId)
   // )
+const HEX = {
+  primary: '#0B1956',   // 진남색(액션용)
+  accent:  '#0092BA',   // 보조 블루(정보 아이콘)
+  danger:  '#EB725B',   // 위험/삭제 아이콘
+  grayTxt: '#495057',
+  grayBd:  '#D1D1D1',
+  badgeBg: '#F1F3F5',
+};
+
+// 공통 버튼/배지/아이콘 스타일
+const btnDark   = { backgroundColor: HEX.primary, color: '#fff', border: `1px solid ${HEX.primary}` };
+const badgeStyle= { backgroundColor: HEX.badgeBg, color: HEX.grayTxt, border: 'none' };
+const iconInfo  = { color: HEX.accent };
+const iconDanger= { color: HEX.danger };
 
 </script>
 

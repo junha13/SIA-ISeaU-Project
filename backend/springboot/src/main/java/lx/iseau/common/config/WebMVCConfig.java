@@ -36,7 +36,6 @@ public class WebMVCConfig implements WebMvcConfigurer {
 //        registry.addViewController("/**/{path:[^\\.]*}")
 //                .setViewName("forward:/index.html");
     }
-
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/resources/**").addResourceLocations("classpath:/resources/");

@@ -40,7 +40,7 @@ public interface GroupsDAO {
 
 
 	// --- (D) 그룹 위치 조회 (tb_group에서 'Y'인 멤버만) ---
-	List<ResponseGroupMemberLocationDTO> findGroupMemberLocations(int groupId);
+	List<ResponseGroupMemberLocationDTO> findGroupMemberLocations(ResponseGroupMemberLocationDTO dto);
 	
 	
 

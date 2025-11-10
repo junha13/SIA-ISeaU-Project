@@ -16,4 +16,5 @@ public class BeachListRequest {
     private String category;
     private Integer page;      // 1부터
     private Integer size;      // 10까지
+    private String tagFilter;
 }

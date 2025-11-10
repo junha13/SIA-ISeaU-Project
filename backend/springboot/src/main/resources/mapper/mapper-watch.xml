@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lx.iseau.feature.watch.WatchDAO">
+
+  <!-- 워치 단건 조회 -->
+  <select id="selectWatchByNumber" parameterType="int" resultType="map">
+    SELECT
+      w.watch_number AS watchNumber,
+      w.user_number  AS userNumber,
+      w.heart_rate   AS heartRate,
+      w.spo2         AS spo2,
+      w.occurred_at  AS occurredAt
+    FROM tb_watch w
+    WHERE w.watch_number = #{watchNumber}
+  </select>
+
+  <!-- 유저 → 비치 → 관제 → 매니저(1:1) -->
+  <select id="findManagerByUser" parameterType="int" resultType="int">
+    SELECT m.manager_number
+    FROM tb_user u
+    JOIN tb_beach b ON b.beach_number = u.beach_number
+    JOIN tb_manager m ON m.control_tower_number = b.control_tower_number
+    WHERE u.user_number = #{userNumber}
+    LIMIT 1
+  </select>
+
+  <!-- tb_task 생성 (이미 존재하면 만들지 않음) -->
+  <!-- DB에 UNIQUE(watch_number) 있는 경우: 단순 INSERT로도 충분 -->
+  <insert id="insertTaskIfAbsent" parameterType="map">
+    INSERT INTO tb_task (manager_number, watch_number)
+    SELECT #{managerNumber}, #{watchNumber}
+    WHERE NOT EXISTS (
+      SELECT 1 FROM tb_task t WHERE t.watch_number = #{watchNumber}
+    )
+  </insert>
+
+</mapper>

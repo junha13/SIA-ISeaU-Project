@@ -12,22 +12,22 @@
       <div class="carousel-inner rounded-3 overflow-hidden">
         <div class="carousel-item active">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/1.png"
-               class="d-block w-100" alt="해변 풍경 1" style="height: 200px; object-fit: cover;">
+          <img src="/images/mainBeach/123.jpg"
+               class="d-block w-100" alt="해변 풍경 1" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <img src="/images/mainBeach/2.png"
-               class="d-block w-100" alt="해변 풍경 2" style="height: 200px; object-fit: cover;">
+               class="d-block w-100" alt="해변 풍경 2" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
-          <img src="/images/mainBeach/3.png"
-               class="d-block w-100" alt="해변 풍경 3" style="height: 200px; object-fit: cover;">
+          <img src="/images/mainBeach/image.png"
+               class="d-block w-100" alt="해변 풍경 3" style="height: 270px; object-fit: cover;">
         </div>
         <div class="carousel-item">
           <!-- 더미 이미지 (main.png 참고) -->
           <img src="/images/mainBeach/4.png"
-               class="d-block w-100" alt="해변 풍경 4" style="height: 200px; object-fit: cover;">
+               class="d-block w-100" alt="해변 풍경 4" style="height: 270px; object-fit: cover;">
         </div>
         <!-- ... 추가 슬라이드 항목 ... -->
       </div>
@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <div class="p-1 mt-5 rounded">
+    <div class="p-1 mt-5 ">
 
     <!-- 3. 주요 기능 카드 4개 (Grid Layout) -->
     <div class="row g-3">
@@ -63,7 +63,7 @@
       <!-- 카드 3: 그룹 -->
      <div class="col-6">
       <div class="feature-card" :style="{ borderColor: cautionColor, backgroundImage: `url(${cardImages.GroupList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('GroupMain')">
-        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">그룹</p>
+        <p class="card-top-right fw-bolder fs-1 mt-2 me-2">위치공유</p>
       </div>
     </div>
 
@@ -76,7 +76,7 @@
       <!-- 카드 5: 게시글 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
-          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">게시글 리스트</p>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">커뮤니티</p>
         </div>
       </div>
       <!-- 카드 6: 응급대처법 -->
@@ -84,6 +84,7 @@
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.firstAid})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('FirstAid')">
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">응급대처법</p>
         </div>
+
       </div>
     </div>
     </div>
@@ -170,9 +171,12 @@ const goToPage = (pageName) => {
 </script>
 
 <style scoped>
-html, body {
-  overflow: hidden;   /* 바깥 스크롤 죽이기 */
+/* Main Page Custom Styles */
+.main-page {
+  /* App.vue의 padding-bottom만큼 고려하여 높이 설정 */
+  height: calc(100vh - 55px - 60px); /* 화면 전체 - 헤더 - 푸터 (App.vue의 크기에 따라 조정 필요) */
 }
+
 /* 알림 섹션 */
 .alert-section {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);

@@ -22,4 +22,4 @@ public class ResponseBeachDangerDTO {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm") // 응답을 분까지만 보이게
 	private Date forecastTime;
 	
-}
+} 

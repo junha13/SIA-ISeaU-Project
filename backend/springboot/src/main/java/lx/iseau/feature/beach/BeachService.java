@@ -60,7 +60,8 @@ public class BeachService  {
                 vo.getMobile(),
                 vo.getOpenDate(),
                 vo.getCloseDate(),
-                vo.getReviewCount()
+                vo.getReviewCount(),
+                vo.getTagsString()
             ));
         }
 
@@ -135,29 +136,48 @@ public class BeachService  {
 	    return map;
 	}
 
-	@Transactional // 데이터를 변경하므로 readOnly=false (기본값)
-    public int insertFavorite(int userNumber, int beachNumber) {
-        // DB에 전달할 VO 객체 생성
-        BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
-        beachFavorite.setUserNumber(userNumber);
-        beachFavorite.setBeachNumber(beachNumber);
-        
-        // DAO 호출하여 INSERT 실행
-        // (주의: 이미 즐겨찾기된 경우 DB 제약조건 위반 예외 발생 가능)
-        return dao.insertFavorite(beachFavorite);
-    }
+	
 
-    
-    @Transactional
-    public int removeFavorite(int userNumber, int beachNumber) {
-        // DB에 전달할 VO 객체 생성
-        BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
-        beachFavorite.setUserNumber(userNumber);
-        beachFavorite.setBeachNumber(beachNumber);
-        
-        // DAO 호출하여 DELETE 실행
-        return  dao.removeFavorite(beachFavorite);
-    }
+	@Transactional
+	public int insertFavorite(int beachNumber) {
+	    
+	    // 1. 세션에서 userNumber 획득 (인증 체크)
+	    int userNumber = requireLoginUserNumber();
+	    // 💡 인증 실패 처리: userNumber가 0이면, 등록 불가 (Controller에서 401 처리)
+	    if (userNumber == 0) return 0; 	    
+	    // 2. DB에 전달할 VO 객체 생성
+	    BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
+	    beachFavorite.setUserNumber(userNumber); 
+	    beachFavorite.setBeachNumber(beachNumber);	    
+	    try {
+	        // 3. DAO 호출하여 INSERT 실행
+	        // (DB 제약 조건 위반 예외가 발생하면 Controller로 전달됨)
+	        return dao.insertFavorite(beachFavorite);
+	        
+	    } catch (Exception e) {
+	        
+	        if (e.getMessage() != null && (e.getMessage().contains("Duplicate entry") || e.getMessage().contains("ConstraintViolation"))) {
+	       
+	             return -1;
+	        }
+	        
+	        // 그 외 예상치 못한 DB 오류는 다시 던지거나 0을 반환합니다.
+	        throw new RuntimeException("즐겨찾기 저장 중 예상치 못한 오류 발생", e);
+	    }
+	}
+	// BeachService.java 내 removeFavorite 메소드
+
+	@Transactional
+	public int removeFavorite(int beachNumber) {	    
+	    // 1. 세션에서 userNumber 획득 (인증 체크)
+	    int userNumber = requireLoginUserNumber();	    
+	    // 2. 인증 실패 처리: userNumber가 0이면, 제거 불가
+	    if (userNumber == 0) return 0; 	    
+	    BeachFavoritesVO beachFavorite = new BeachFavoritesVO();
+	    beachFavorite.setUserNumber(userNumber);
+	    beachFavorite.setBeachNumber(beachNumber);	    	   
+	    return dao.removeFavorite(beachFavorite);
+	}
     
     @Transactional(readOnly = true)
     public boolean checkFavoriteExists(int userNumber, int beachNumber) {

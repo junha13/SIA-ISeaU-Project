@@ -2,9 +2,9 @@
   <div class="safety-guide-page container-fluid p-0">
     <div class="p-3">
       <div id="safetyGuideCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-        <div class="carousel-inner rounded-3 overflow-hidden bg-light" style="height: 200px;">
+        <div class="carousel-inner rounded-3 overflow-hidden bg-light" style="height: 300px;">
           <div class="carousel-item active h-100 d-flex justify-content-center align-items-center">
-            <h6 class="text-muted">해수욕장 안전 가이드</h6>
+            <img src="/public/images/beach/safetyguide.jpg" class="w-100 h-100">
           </div>
         </div>
         <div class="carousel-indicators-custom d-flex justify-content-center mt-3">
@@ -76,7 +76,7 @@ const videoModalUrl = ref('');
 // --- Safety Learning Items ---
 const safetyItems = [
   { 
-    title: '준비 자세의 필요성', 
+    title: '준비 운동의 필요성', 
     icon: 'fas fa-exchange-alt', 
     color: mainColor, 
     videos: ['9XOvMD2HQE4', '-01E_ccUJbo', 'xAjvHjIldjA'] 

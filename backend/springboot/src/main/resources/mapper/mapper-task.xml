@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lx.iseau.feature.task.TaskDAO">
+
+    <!-- tb_task insert -->
+    <insert id="insertTask" parameterType="TaskDTO"
+            useGeneratedKeys="true" keyProperty="taskNumber" keyColumn="task_number">
+        INSERT INTO tb_task (manager_number, watch_number)
+        VALUES (#{managerNumber}, #{watchNumber})
+    </insert>
+
+    <!-- 관제센터별 대기 태스크 -->
+    <select id="selectPendingTasksByControlTower" parameterType="int"
+            resultType="TaskListDTO">
+        SELECT t.task_number, t.task_accepted, t.task_processed,
+               t.manager_number, t.watch_number,
+               w.heart_rate, w.spo2
+        FROM tb_task t
+        JOIN tb_manager m ON t.manager_number = m.manager_number
+        JOIN tb_watch w ON t.watch_number = w.watch_number
+        WHERE m.control_tower_number = #{controlTowerNumber}
+          AND COALESCE(t.task_accepted,0) = 0
+          AND COALESCE(t.task_processed,0) = 0
+        ORDER BY t.task_number DESC
+    </select>
+
+    <!-- 매니저의 진행중 태스크 -->
+    <select id="selectOpenTasksByManager" parameterType="int"
+            resultType="TaskListDTO">
+        SELECT t.task_number, t.task_accepted, t.task_processed,
+               t.manager_number, t.watch_number,
+               w.heart_rate, w.spo2
+        FROM tb_task t
+        JOIN tb_watch w ON t.watch_number = w.watch_number
+        WHERE t.manager_number = #{managerNumber}
+          AND COALESCE(t.task_accepted,0) = 1
+          AND COALESCE(t.task_processed,0) = 0
+        ORDER BY t.task_number DESC
+    </select>
+
+    <!-- 수락 -->
+    <update id="acceptTask">
+        UPDATE tb_task
+           SET task_accepted = 1
+         WHERE task_number = #{taskNumber}
+           AND manager_number = #{managerNumber}
+           AND COALESCE(task_processed,0) = 0
+           AND COALESCE(task_accepted,0) = 0
+    </update>
+
+    <!-- 완료 -->
+    <update id="completeTask">
+        UPDATE tb_task
+           SET task_processed = 1
+         WHERE task_number = #{taskNumber}
+           AND manager_number = #{managerNumber}
+           AND COALESCE(task_processed,0) = 0
+    </update>
+</mapper>

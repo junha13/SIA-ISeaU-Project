@@ -145,12 +145,12 @@ public class BeachController {
 	
 	@RequestMapping("/favorites")
 	public ResponseEntity<?> insertFavorite(@RequestBody ResponseFavoritesDTO dto) {
-	    int userNumber = 1; // 테스트용
+	
         // 2. DTO에서 beachNumber 가져오기
         int beachNumber = dto.getBeachNumber();
         try {
             // 3. 서비스 호출
-            int result = service.insertFavorite(userNumber, beachNumber);
+            int result = service.insertFavorite(beachNumber);
 
             // 4. 성공 응답 반환
             return ResponseEntity
@@ -169,11 +169,10 @@ public class BeachController {
     public ResponseEntity<?> removeFavorite( @PathVariable int beachNumber
             // @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        int userNumber = 1; // 임시 userNumber
 
         try {
      
-            int result = service.removeFavorite(userNumber, beachNumber);
+            int result = service.removeFavorite(beachNumber);
 
             return ResponseEntity
                     .ok()
