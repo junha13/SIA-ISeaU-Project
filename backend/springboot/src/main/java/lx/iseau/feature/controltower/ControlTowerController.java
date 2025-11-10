@@ -53,8 +53,8 @@ public class ControlTowerController {
     // =========================
     // 매니저 기본정보 수정 (이름, 전화, 이메일)
     // =========================
-    @RequestMapping("/manager/info/update")
-    public ResponseEntity<?> updateManagerInfo(@PathVariable int managerNumber,
+    @RequestMapping("/manager/info/update/{managerNumber}")
+    public ResponseEntity<?> updateManagerInfoByManagerNumber(@PathVariable int managerNumber,
     		@RequestBody ManagerInfoDTO dto) {
     	dto.setManagerNumber(managerNumber);
     	Map<String, Object> result = service.updateManagerInfoByManagerNumber(dto);
