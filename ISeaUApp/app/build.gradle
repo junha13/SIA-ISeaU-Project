@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.lx.iseau"
         minSdk = 24
-        targetSdk = 34 // 사용자 요청: 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -21,10 +21,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // isMinifyEnabled -> minifyEnabled로 수정하여 Kotlin DSL 오류 해결
+            minifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
             )
         }
     }
