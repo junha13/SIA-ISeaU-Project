@@ -20,7 +20,6 @@
             <span class="fw-bold">2023-11-29 06:26:27</span>
           </div>
           <div class="text-center">
-            <span class="text-muted d-block small">발생 구역</span>
             <span class="fw-bold">해양 안전 구역 A</span>
           </div>
         </div>
@@ -31,8 +30,10 @@
     </div>
 
     <div class="row g-4">
-      <div class="col-lg-8">
-        <div class="row g-3">
+      
+      <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
+        
+        <div class="row g-3 flex-shrink-0">
           <div
             v-for="cam in cams.slice(0, 4)"
             :key="cam.id"
@@ -63,39 +64,11 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="col-lg-4">
         
-        <div class="card p-3 border-0 shadow-sm mb-4">
-          <h6 class="fw-bold mb-3 small" style="color: #333;">현장 지도 오버뷰</h6>
-          <div
-            class="map-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted"
-            style="background-color: #F0F2F5;"
-          >
-            [지도/레이아웃 Placeholder]
-          </div>
-        </div>
-
-        <div class="card p-3 border-0 shadow-sm">
-          <h6 class="fw-bold mb-3 small" style="color: #333;">감지 정보 통계</h6>
-          <div
-            class="chart-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted"
-            style="background-color: #F0F2F5;"
-          >
-            [통계 그래프 Placeholder]
-          </div>
-        </div>
-        
-      </div>
-    </div>
-    
-    <div class="row mt-2"> 
-      <div class="col-lg-8"> 
-        <div class="card p-3 border-0 shadow-sm" style="background-color: #FFFFFF;">
+        <div class="card p-3 border-0 shadow-sm flex-shrink-0" style="background-color: #FFFFFF;">
           <h6 class="text-muted fw-bold mb-3 small">이벤트 로그 (Timeline)</h6>
 
-          <div class="d-flex flex-column gap-2">
+          <div class="d-flex flex-column gap-2 log-scroll-area">
             <div
               class="log-entry p-2 small rounded fw-semibold"
               style="background-color: #F8F9FA; border-left: 4px solid var(--iseu-danger); color: #333;"
@@ -125,6 +98,36 @@
             </div>
           </div>
         </div>
+        
+      </div>
+
+      <div class="col-lg-4 d-flex flex-column" style="gap: 1.5rem;">
+        
+        <div class="d-flex justify-content-end align-items-end flex-shrink-0" style="height: 30px;">
+            <button class="btn btn-sm btn-link p-0 fw-bold" style="color: #6c757d; margin-right: 0.5rem;">알림</button>
+            <button class="btn btn-sm btn-link p-0 fw-bold" style="color: var(--iseu-primary);">상세</button>
+        </div>
+        
+        <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 2;">
+          <h6 class="fw-bold mb-3 small" style="color: #333;">현장 지도 오버뷰</h6>
+          <div
+            class="map-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted h-100"
+            style="background-color: #F0F2F5;"
+          >
+            [지도/레이아웃 Placeholder]
+          </div>
+        </div>
+
+        <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 1;">
+          <h6 class="fw-bold mb-3 small" style="color: #333;">감지 정보 통계</h6>
+          <div
+            class="chart-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted h-100"
+            style="background-color: #F0F2F5;"
+          >
+            [통계 그래프 Placeholder]
+          </div>
+        </div>
+        
       </div>
     </div>
     
@@ -240,16 +243,22 @@ const selectedCam = ref(1);
 /* --- --- */
 
 /* 지도 및 통계 컨테이너 높이 조정 (우측 패널) */
-/* 한 화면에 담기도록 높이 대폭 축소 (이전 300px, 250px에서 축소) */
+
+/* Flexbox를 사용하여 내부 요소를 균등하게 채우므로, 개별 height 속성은 제거함 */
 .map-placeholder-base {
-    /* 높이 축소 */
-    height: 200px;
+    /* height 속성 제거 */
     font-size: 1rem;
 }
 .chart-placeholder-base {
-    /* 높이 축소 */
-    height: 150px;
+    /* height 속성 제거 */
     font-size: 1rem;
+}
+
+/* 로그 스크롤 영역 높이 제한 */
+.log-scroll-area {
+    /* 로그가 스크롤 되도록 높이 제한 (픽셀 조정) */
+    max-height: 150px; 
+    overflow-y: auto;
 }
 
 /* 선택 프레임 강조 */
