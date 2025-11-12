@@ -15,12 +15,14 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import com.lx.iseau.presentation.theme.ISeaUAppTheme
+
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
@@ -91,6 +93,7 @@ class ISeaUWear : ComponentActivity() {
         setTheme(android.R.style.Theme_DeviceDefault)
 
         // 💡 [수정] Application 클래스에서 ViewModel 인스턴스를 가져와 초기화
+        // (AndroidManifest.xml에 android:name="com.lx.iseau.presentation.ISeaUApp" 등록 필수)
         healthViewModel = (application as ISeaUApp).healthViewModel
 
         requestPermissionsIfNecessary()

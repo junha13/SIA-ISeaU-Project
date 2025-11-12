@@ -1,76 +1,88 @@
+// lx.iseau.feature.watch.WatchService.java
 package lx.iseau.feature.watch;
 
-import java.util.HashMap;
+import lx.iseau.feature.fcm.FcmService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 @Service
+@RequiredArgsConstructor
 public class WatchService {
 
-    @Autowired
-    private WatchDAO dao;
+    private final WatchDAO watchDao;
+    private final FcmService fcmService;
 
-    // 임계치(예시): HR<50 또는 SpO2<90이면 위험으로 판단
-    private static final int HR_DANGER = 50;
-    private static final int SPO2_DANGER = 90;
+    @Transactional
+    public void processHeartRateData(HeartRateRequest request) {
+
+        // 1. DTO 변환 및 시간 파싱
+        WatchDataDTO watchData = new WatchDataDTO();
+        watchData.setHeartRate(request.getHeartRate());;
+        watchData.setUserNumber(request.getUserNumber());
+
+        try {
+            // ISO 8601 문자열을 Instant로 변환 (Kotlin Ktor에서 보낸 형식)
+            watchData.setOccurredAt(Instant.parse(request.getOccurredAt()));
+        } catch (DateTimeParseException e) {
+            System.err.println("시간 파싱 오류: " + request.getOccurredAt() + ". 현재 시간으로 대체.");
+            watchData.setOccurredAt(Instant.now());
+        }
+
+        // 2. DB 저장 (tb_watch에 INSERT)
+        watchDao.insertWatchEvent(watchData);
+        System.out.println("✅ Watch Event DB 저장 완료. userNumber: " + watchData.getUserNumber() + ", HR: " + watchData.getHeartRate());
+
+        // 3. 긴급 알림 처리 (FCM 발송)
+        if (request.getIsEmergency() != null && request.getIsEmergency()) {
+            handleEmergencyAlert(watchData);
+        }
+    }
 
     /**
-     * 1) watch 단건 조회
-     * 2) 임계치 평가(위험?) → 아니면 createdTask=false
-     * 3) 유저→비치→관제→매니저(1:1) 찾기
-     * 4) tb_task 생성(중복 방지: 동일 watch_number로는 1회 생성 권장)
+     * 💡 [추가된 코드]: DB에 저장된 심박수 데이터를 조회합니다.
+     * @param watchNumber 조회할 watchNumber (tb_watch의 PK)
+     * @return 조회된 데이터 Map
      */
-    public Map<String, Object> evaluateAndDispatch(Map<String, Object> body) {
-        Map<String, Object> res = new HashMap<>();
-        if (body == null || body.get("watchNumber") == null) {
-            res.put("createdTask", false);
-            res.put("reason", "missing_watchNumber");
-            return res;
+    public Map<String, Object> getWatchData(int watchNumber) {
+        return watchDao.selectWatchByNumber(watchNumber);
+    }
+
+    private void handleEmergencyAlert(WatchDataDTO watchData) {
+        // 3-1. userNumber를 통해 담당 매니저 찾기
+        Integer managerNumber = watchDao.findManagerByUser(watchData.getUserNumber());
+
+        if (managerNumber == null || managerNumber == 0) {
+            System.err.println("❌ 긴급 알림: User " + watchData.getUserNumber() + "에 연결된 매니저를 찾을 수 없습니다.");
+            return;
         }
 
-        Integer watchNumber = (body.get("watchNumber") instanceof Number)
-                ? ((Number) body.get("watchNumber")).intValue()
-                : null;
+        // 3-2. tb_task 생성 (최초 경고 시에만)
+        Map<String, Integer> taskParams = Map.of(
+                "managerNumber", managerNumber,
+                "watchNumber", Math.toIntExact(watchData.getWatchNumber()) // INSERT 후 자동 생성된 번호 사용
+        );
+        watchDao.insertTaskIfAbsent(taskParams);
 
-        // 1) watch 조회
-        Map<String, Object> w = dao.selectWatchByNumber(watchNumber);
-        if (w == null) {
-            res.put("createdTask", false);
-            res.put("reason", "watch_not_found");
-            return res;
-        }
+        // 3-3. 담당 매니저에게 FCM 알림 발송 (관제 페이지 푸시)
+        // [중요] 매니저의 FCM 토큰 조회용 user_id를 'MANAGER_X'와 같이 규격화해야 합니다.
+        String targetUserId = "MANAGER_" + managerNumber;
 
-        Integer hr         = (Integer) w.get("heartRate");
-        Integer spo2       = (Integer) w.get("spo2");
-        Integer userNumber = (Integer) w.get("userNumber");
+        String alertMessage = String.format(
+                "사용자 %d 심박수 이상! %d BPM. 즉시 확인 필요.",
+                watchData.getUserNumber(),
+                watchData.getHeartRate()
+        );
 
-        // 2) 임계치 평가
-        boolean danger = (hr != null && hr < HR_DANGER) || (spo2 != null && spo2 < SPO2_DANGER);
-        if (!danger) {
-            res.put("createdTask", false);
-            res.put("reason", "normal");
-            return res;
-        }
-
-        // 3) 매니저(1:1) 찾기
-        Integer managerNumber = dao.findManagerByUser(userNumber);
-        if (managerNumber == null) {
-            res.put("createdTask", false);
-            res.put("reason", "manager_not_found");
-            return res;
-        }
-
-        // 4) 업무 생성
-        //  - 중복 방지 권장: DB에 UNIQUE(watch_number) 추가 권장
-        //    ALTER TABLE tb_task ADD CONSTRAINT uq_task_watch UNIQUE (watch_number);
-        //    이미 존재 시 insert가 0건이거나 에러 → 아래 insertTask는 0/1로만 판단
-        int rows = dao.insertTaskIfAbsent(managerNumber, watchNumber);
-
-        res.put("createdTask", rows > 0);
-        res.put("managerNumber", managerNumber);
-        res.put("watchNumber", watchNumber);
-        return res;
+        // FcmService의 sendAlertNotification 함수를 사용하여 발송
+        fcmService.sendAlertNotification(
+                targetUserId,
+                alertMessage,
+                watchData.getOccurredAt().toEpochMilli()
+        );
+        System.out.println("✅ FCM Alert Sent to Manager " + managerNumber);
     }
 }

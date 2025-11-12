@@ -1,70 +1,126 @@
-package com.lx.iseau;
+package com.lx.iseau
 
-import android.util.Log;
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import com.google.android.gms.wearable.*
+import com.lx.iseau.data.HeartRateRequest
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
+import java.time.Instant
 
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.WearableListenerService;
-import com.google.firebase.messaging.FirebaseMessaging;
+class WearDataListenerService : WearableListenerService() {
 
-import org.json.JSONException;
-import org.json.JSONObject;
+    private val TAG = "ISeaU_MobileListener"
 
-public class WearDataListenerService extends WearableListenerService {
+    // 💡 [수정 완료] 사용자께서 제공해주신 실제 ngrok URL을 반영했습니다.
+    private val SERVER_BASE_URL = "https://hellokiyo.ngrok.io"
+    private val SERVER_HR_API_URL = "$SERVER_BASE_URL/api/watch/heart-rate"
 
-    private static final String TAG = "ISeaU_MobileListener_Java";
-    private static final String DANGER_ALERT_PATH = "/DANGER_ALERT";
+    // 💡 TODO: 워치를 착용한 실제 사용자 번호(user_number)를 가져오는 로직 구현 필요
+    // 이 값은 서버의 tb_user에 존재하는 user_number와 일치해야 합니다.
+    private fun getCurrentUserNumber(): Int = 1 // 일단 1로 고정
 
-    @Override
-    public void onDataChanged(DataEventBuffer dataEvents) {
-        super.onDataChanged(dataEvents);
+    // Ktor HTTP 클라이언트 초기화 (JSON 직렬화 포함)
+    private val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            // kotlinx.serialization 설정
+            json(
+                // 서버가 요구하는 JSON 형식에 맞게 설정 (예: 스네이크 케이스 등)
+            )
+        }
+        // 요청 타임아웃 설정을 추가하여 네트워크 실패에 대비합니다.
+        engine {
+            requestTimeout = 10_000 // 10초 타임아웃
+        }
+    }
 
-        for (DataEvent event : dataEvents) {
-            if (event.getType() == DataEvent.TYPE_CHANGED) {
-                String path = event.getDataItem().getUri().getPath();
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-                if (DANGER_ALERT_PATH.equals(path)) {
-                    DataMap dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
-                    String alertMessage = dataMap.getString("alert_message");
-                    long timestamp = dataMap.getLong("timestamp");
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+        super.onDataChanged(dataEvents)
 
-                    Log.e(TAG, "!!! DANGER ALERT RECEIVED from Watch: " + alertMessage);
+        dataEvents.forEach { event ->
+            if (event.type == DataEvent.TYPE_CHANGED) {
+                val dataItem = event.dataItem
+                val path = dataItem.uri.path
 
-                    // FCM 발송 요청 (서버 통신 필요)
-                    requestFCMAlertToServer(alertMessage, timestamp);
+                // 긴급 알림 또는 실시간 업데이트 데이터를 수신
+                if (path?.startsWith("/DANGER_ALERT") == true || path?.startsWith("/REALTIME_HR") == true) {
+
+                    val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+
+                    // 워치에서 명시적으로 추가된 데이터 사용
+                    val heartRate = dataMap.getInt("heart_rate")
+                    val timestamp = dataMap.getLong("timestamp")
+
+                    // DTO에 기본값이 설정되었으므로, 워치 데이터가 없을 경우를 대비하여
+                    // dataMap.getBoolean("is_emergency", false)를 사용하여 안전하게 추출합니다.
+                    val isEmergency = dataMap.getBoolean("is_emergency", false)
+
+                    if (heartRate > 0) {
+                        Log.i(TAG, "Watch Data Received: HR=$heartRate, Emergency=$isEmergency, Path=$path")
+
+                        // Instant.ofEpochMilli(timestamp)는 워치에서 보낸 long 타입의 Unix Time(ms)를
+                        // ISO 8601 형식 문자열로 변환하여 서버가 요구하는 occurredAt 필드에 맞춥니다.
+                        val hrData = HeartRateRequest(
+                            userNumber = getCurrentUserNumber(),
+                            heartRate = heartRate,
+                            occurredAt = Instant.ofEpochMilli(timestamp).toString(),
+                            isEmergency = isEmergency
+                        )
+
+                        // Spring Boot 서버로 데이터 전송 (REALTIME이든 DANGER든 같은 API 사용)
+                        sendHeartRateToServer(hrData)
+                    } else {
+                        Log.e(TAG, "❌ Received invalid Heart Rate: $heartRate")
+                    }
                 }
             }
         }
     }
 
-    private void requestFCMAlertToServer(String message, long timestamp) {
-        Log.i(TAG, "Requesting server to send FCM for: " + message);
+    private fun sendHeartRateToServer(data: HeartRateRequest) {
+        Log.i(TAG, "Sending HR data to server: ${data.heartRate} BPM, Emergency: ${data.isEmergency}")
 
-        // FirebaseMessaging.getInstance().getToken()은 비동기 작업입니다.
-        Task<String> tokenTask = FirebaseMessaging.getInstance().getToken();
-
-        tokenTask.addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                String token = task.getResult();
-                Log.d(TAG, "Device FCM Token: " + token);
-
-                try {
-                    // 🚨 주의: 이 부분은 서버 API에 FCM 발송을 요청하는 실제 코드로 대체해야 합니다.
-                    JSONObject apiCallData = new JSONObject();
-                    apiCallData.put("target_fcm_token", token);
-                    apiCallData.put("alert_message", message);
-                    apiCallData.put("timestamp", timestamp);
-
-                    // TODO: MyServerApi.sendAlert(apiCallData) 와 같은 실제 서버 API 호출 코드를 구현
-                } catch (JSONException e) {
-                    Log.e(TAG, "JSON Error: " + e.getMessage());
+        serviceScope.launch {
+            try {
+                val response = httpClient.post(SERVER_HR_API_URL) {
+                    contentType(ContentType.Application.Json)
+                    setBody(data) // DTO가 JSON 본문으로 변환되어 전송됨
                 }
-            } else {
-                Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+
+                if (response.status.isSuccess()) {
+                    Log.d(TAG, "✅ Server acknowledged HR data successfully. Status: ${response.status}")
+                } else {
+                    // 서버에서 4xx나 5xx 응답이 왔을 때 상세 로그를 남깁니다.
+                    val responseBody = response.bodyAsText()
+                    Log.e(TAG, "❌ Server Error: ${response.status}. Body: $responseBody")
+                    // 400 Bad Request가 다시 발생하면, 서버의 DTO 필드명과 안드로이드 DTO 필드명이 일치하는지 재확인해야 합니다.
+                }
+
+            } catch (e: Exception) {
+                // 네트워크 연결 실패(ngrok 터널이 닫혔거나 URL이 틀렸을 때)
+                Log.e(TAG, "❌ Network Error: Failed to connect to server: ${e.message}", e)
             }
-        });
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        httpClient.close()
+        serviceScope.cancel()
+        Log.d(TAG, "Service destroyed. Resources cleaned up.")
     }
 }

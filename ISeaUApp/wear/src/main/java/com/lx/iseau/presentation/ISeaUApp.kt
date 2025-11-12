@@ -16,9 +16,4 @@ class ISeaUApp : Application(), ViewModelStoreOwner {
     val healthViewModel: HealthDataViewModel by lazy {
         ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(this))[HealthDataViewModel::class.java]
     }
-
-    // Java 코드에서 ViewModel에 접근하기 위한 public getter
-    fun getHealthViewModel(): HealthDataViewModel {
-        return healthViewModel
-    }
 }
