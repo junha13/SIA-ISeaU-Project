@@ -33,37 +33,8 @@
       
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         
-        <div class="row g-3 flex-shrink-0">
-          <div
-            v-for="cam in cams.slice(0, 4)"
-            :key="cam.id"
-            class="col-6"
-          >
-            <div
-              class="video-container-grid overflow-hidden border" 
-              :class="{
-                'is-danger-light': cam.isDanger,
-                'selected-frame-light': cam.id === selectedCam
-              }"
-              style="border-color: #EAECEF; cursor: pointer;"
-              @click="selectedCam = cam.id"
-            >
-              <div class="video-header px-2 small fw-bold d-flex justify-content-between align-items-center"
-                   style="background-color: var(--iseu-secondary); height: 30px;"
-              >
-                <span class="text-light">
-                  <i class="bi bi-camera me-1"></i> CAM {{ cam.id }}
-                </span>
-                <span :class="{'text-white': cam.isDanger, 'text-light': !cam.isDanger}" class="small">
-                    {{ cam.isDanger ? '긴급 이벤트' : '실시간' }}
-                </span>
-              </div>
-              <div class="video-placeholder-grid d-flex align-items-center justify-content-center bg-dark text-white-50">
-                <div>[Stream / Playback]</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <use-streams ws-url="ws://localhost:8000/ws/stream" :cam-ids="[1,2,3,4]" />
+
         
         <div class="card p-3 border-0 shadow-sm flex-shrink-0" style="background-color: #FFFFFF;">
           <h6 class="text-muted fw-bold mb-3 small">이벤트 로그 (Timeline)</h6>
@@ -156,6 +127,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import useStreams from '@/components/useStreams.vue'
 
 const cams = ref([
   // 2x2 그리드에 4개만 사용
