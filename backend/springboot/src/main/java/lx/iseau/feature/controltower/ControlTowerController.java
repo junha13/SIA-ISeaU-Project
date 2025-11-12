@@ -3,21 +3,22 @@ package lx.iseau.feature.controltower;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/controltower")
 @RestController
+@RequiredArgsConstructor
 public class ControlTowerController {
 
-    @Autowired
-    private ControlTowerService service;
+    private final ControlTowerService service;
 
     // =========================
     // 매니저 기본정보 조회 
     // =========================
-    @RequestMapping("/manager/info")
+    @GetMapping("/manager/info")
     public ResponseEntity<?> selectManagerInfoByManagerNumber(@RequestParam int managerNumber) {
     	// TODO: 로그인 붙이면 여기서 인증값으로 교체 예정 (managerNumber 무시)
     	Map<String, Object> result = service.selectManagerInfoByManagerNumber(managerNumber);
@@ -42,7 +43,7 @@ public class ControlTowerController {
     // =========================
     // 매니저 처리 리스트 (간단 목록)
     // =========================
-    @RequestMapping("/task/list")
+    @GetMapping("/task/list")
     public ResponseEntity<?> getTaskListByManagerNumber(@RequestParam int managerNumber) {
         // TODO: 로그인 붙이면 여기서 인증값으로 교체 예정 (managerNumber 무시)
     	List<TaskListDTO> result = service.getTaskListByManagerNumber(managerNumber);
@@ -53,9 +54,9 @@ public class ControlTowerController {
 
     // =========================
     // 처리 상세정보 (taskNumber 기준 단건)
-    // 리턴: user(location, birth_date, gender, watch(occurred_at, heart_rate, spo2), task(task_processed))
+    // 리턴: user(location, birth_date, gender, watch(occurred_at, heart_rate), task(task_processed))
     // =========================
-    @RequestMapping("/task/detail")
+    @GetMapping("/task/detail")
     public ResponseEntity<?> getTaskDetailByTaskNumber(@RequestParam int taskNumber) {
         TaskDetailDTO map = service.getTaskDetailByTaskNumber(taskNumber);
         return ResponseEntity
@@ -67,7 +68,7 @@ public class ControlTowerController {
     // 처리완료/취소 플래그 업데이트
     // Body: { "taskNumber": 123, "processed": 0 }  // 기본 0
     // =========================
-    @RequestMapping("/task/markProcessed")
+    @GetMapping("/task/markProcessed")
     public ResponseEntity<?> markTaskProcessed(@RequestBody Map<String, Object> body) {
         int updated = service.updateTaskProcessed(body);
         return ResponseEntity

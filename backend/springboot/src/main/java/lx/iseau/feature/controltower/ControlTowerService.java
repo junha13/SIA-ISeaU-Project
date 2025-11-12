@@ -4,14 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ControlTowerService {
 
-    @Autowired
-    private ControlTowerDAO dao;
+    private final ControlTowerDAO dao;
 
     // ============ 매니저 기본정보 조회 ============
     public Map<String, Object> selectManagerInfoByManagerNumber(int managerNumber) {
@@ -37,7 +38,8 @@ public class ControlTowerService {
     }
 
     // ============ 처리 상세 ============
-    public TaskDetailDTO getTaskDetailByTaskNumber(int taskNumber) {
+    public TaskDetailDTO getTaskDetailByTaskNumber(int taskNumber)
+    {
         return dao.getTaskDetailByTaskNumber(taskNumber);
     }
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,10 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequestMapping("/api/beach")
 @RestController
+@RequiredArgsConstructor
 public class BeachController {	
 	
-	@Autowired
-	private BeachService service; 
+
+	private final BeachService service;
 
 	@RequestMapping("/beaches") // 나중에 코드 최적화 해야함, 컨트롤러단은 비즈니스로직 뺴기
 	public ResponseEntity<?> getBeachList(@RequestBody BeachListRequest request) {

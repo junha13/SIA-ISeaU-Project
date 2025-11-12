@@ -19,7 +19,6 @@ public class TaskDetailDTO {
 
     private String  occurredAt;     // timestamp → 문자열 매핑(기본)
     private Integer heartRate;
-    private Integer spo2;
 
     private String  birthDate;      // DATE → 문자열 매핑(기본)
     private String  gender;         // CHAR(1)
