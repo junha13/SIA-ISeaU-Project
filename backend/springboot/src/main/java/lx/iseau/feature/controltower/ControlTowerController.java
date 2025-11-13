@@ -18,14 +18,16 @@ public class ControlTowerController {
     // =========================
     // 워치 심박수/긴급 상황 데이터 수신
     // Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
-    // 혹은 @RequestMapping("/api/watch")로 Controller 레벨 경로를 변경해야 함
+    // 혹은 @RequestMapping("/api/controltower")로 Controller 레벨 경로를 변경해야 함
     // =========================
     @PostMapping("/heart-rate")
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
         // 필수 필드 검사
         if (request.getUserNumber() == null || request.getHeartRate() == null || request.getOccurredAt() == null) {
-            System.err.println("❌ Watch API: 필수 필드 누락.");
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Required fields missing."));
+            System.err.println("❌ Watch API: 필수 필드 누락." + request);
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("success", false, "message", "Required fields missing."));
         }
 
         try {
