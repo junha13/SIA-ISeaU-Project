@@ -18,7 +18,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import java.time.Instant
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.Json // 이 import가 필요합니다.
 
 private val json = Json {
     prettyPrint = true
@@ -28,6 +28,8 @@ private val json = Json {
 class WearDataListenerService : WearableListenerService() {
 
     private val TAG = "ISeaU_MobileListener"
+
+    // 💡 [수정 완료] 사용자께서 제공해주신 실제 ngrok URL을 반영했습니다.
     private val SERVER_BASE_URL = "https://hellokiyo.ngrok.io"
     private val SERVER_HR_API_URL = "$SERVER_BASE_URL/api/controltower/heart-rate"
 
@@ -35,26 +37,19 @@ class WearDataListenerService : WearableListenerService() {
     // 이 값은 서버의 tb_user에 존재하는 user_number와 일치해야 합니다.
     private fun getCurrentUserNumber(): Int = 2 // 일단 2로 고정
 
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    // 서비스가 생성될 때가 아니라, 실제로 sendHeartRateToServer()가 처음 호출될 때 초기화됩니다.
-    private val httpClient: HttpClient by lazy {
-        Log.i(TAG, "⚡ Ktor HttpClient initialized (Lazy initialization triggered).")
-        HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(json)
-            }
-            engine {
-                // CIO 엔진 설정 (선택 사항: 타임아웃 유지)
-                requestTimeout = 10_000
-            }
+    // Ktor HTTP 클라이언트 초기화 (JSON 직렬화 포함)
+    private val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            // kotlinx.serialization 설정
+            json(json)// 서버가 요구하는 JSON 형식에 맞게 설정 (예: 스네이크 케이스 등)
+        }
+        // 요청 타임아웃 설정을 추가하여 네트워크 실패에 대비합니다.
+        engine {
+            requestTimeout = 10_000 // 10초 타임아웃
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.i(TAG, "⭐ Mobile Listener Service Initialized (onCreate).")
-    }
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onDataChanged(dataEvents: DataEventBuffer) {
@@ -86,11 +81,12 @@ class WearDataListenerService : WearableListenerService() {
                         val hrData = HeartRateRequest(
                             userNumber = getCurrentUserNumber(),
                             heartRate = heartRate,
-                            occurredAt = Instant.ofEpochMilli(timestamp).toString()
-                            //isEmergency = isEmergency
+                            occurredAt = Instant.ofEpochMilli(timestamp).toString(),
+                            isEmergency = isEmergency
                         )
                         Log.i(TAG, "Attempting to send data to server for HR=${hrData.heartRate}")
 
+                        // Spring Boot 서버로 데이터 전송 (REALTIME이든 DANGER든 같은 API 사용)
                         sendHeartRateToServer(hrData)
                     } else {
                         Log.e(TAG, "❌ Received invalid Heart Rate: $heartRate")
@@ -105,7 +101,6 @@ class WearDataListenerService : WearableListenerService() {
 
         serviceScope.launch {
             try {
-                // httpClient가 이 시점에서 처음 사용되면, 위에서 정의된 lazy 블록이 실행됩니다.
                 val response = httpClient.post(SERVER_HR_API_URL) {
                     contentType(ContentType.Application.Json)
                     setBody(data) // DTO가 JSON 본문으로 변환되어 전송됨
@@ -127,8 +122,17 @@ class WearDataListenerService : WearableListenerService() {
         }
     }
 
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.i(TAG, "⭐ Mobile Listener Service Initializing BEFORE Ktor.") // <-- 이 로그 추가
+        // httpClient 정의는 이전에 이미 클래스 레벨에서 실행됩니다.
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        httpClient.close()
         serviceScope.cancel()
+        Log.d(TAG, "Service destroyed. Resources cleaned up.")
     }
 }

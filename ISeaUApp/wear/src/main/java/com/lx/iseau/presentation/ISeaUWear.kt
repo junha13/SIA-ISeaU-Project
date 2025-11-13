@@ -52,9 +52,9 @@ class ISeaUWear : ComponentActivity() {
 
     private fun startSafetyMonitoringService() {
         if (hasAllPermissions()) {
-            val serviceIntent = Intent(this, SafetyMonitoringService::class.java)
-            ContextCompat.startForegroundService(this, serviceIntent)
-            Log.d(TAG, "✅ SafetyMonitoringService started.")
+            // ✅ 서버 업로드 전용 서비스 실행
+            HeartRateUploadService.start(this)
+            Log.d(TAG, "✅ HeartRateUploadService started.")
         } else {
             Log.w(TAG, "❌ Cannot start service: Permissions are missing.")
         }

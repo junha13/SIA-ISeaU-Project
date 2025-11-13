@@ -36,7 +36,7 @@
         private val CHANNEL_ID = "safety_monitoring_channel"
 
         private val DANGER_HR_LOW = 50.0
-        private val DANGER_HR_HIGH = 80.0
+        private val DANGER_HR_HIGH = 150.0
 
         private var lastHeartRate: Double? = null
         private var isMonitoring = false
@@ -156,7 +156,7 @@
             }
         }
 
-        // 긴급 상황 시 모바일로 알림 전송 (기존 로직)
+        // 💡 [수정] 긴급 상황 시 모바일로 알림 전송 (기존 로직)
         private fun checkSafetyLogic() {
             val hr = lastHeartRate
 
