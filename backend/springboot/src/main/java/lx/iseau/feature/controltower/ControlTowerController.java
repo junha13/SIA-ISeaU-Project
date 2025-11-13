@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,21 +14,23 @@ public class ControlTowerController {
 
     private final ControlTowerService service;
 
+    
     // =========================
     // 워치 심박수/긴급 상황 데이터 수신
     // Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
     // 혹은 @RequestMapping("/api/watch")로 Controller 레벨 경로를 변경해야 함
     // =========================
+    /*
     @PostMapping("/heart-rate")
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
         // 필수 필드 검사
-        if (request.getUserNumber() == null || request.getHeartRate() == null || request.getOccurredAt() == null) {
+        if (request.getHeartRate() == null || request.getOccurredAt() == null) {
             System.err.println("❌ Watch API: 필수 필드 누락.");
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Required fields missing."));
         }
 
         try {
-            service.processHeartRateData(request);
+            service.processHeartRateData(request); // 저장 없이 임계치 판단 → 이상이면 FCM
             return ResponseEntity.ok().body(Map.of("success", true));
         } catch (Exception e) {
             System.err.println("❌ Watch API: 데이터 처리 중 오류 발생: " + e.getMessage());
@@ -37,7 +38,19 @@ public class ControlTowerController {
             return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Server processing error."));
         }
     }
-
+    */
+    
+    @PostMapping("/heart-rate")
+    public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest req) {
+        if (req.getOccurredAt() == null || req.getHeartRate() == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "occurred_at and heart_rate are required"
+            ));
+        }
+        service.processHeartRateData(req); // ← 이미 긴급 처리/Task 생성까지 포함
+        return ResponseEntity.ok(Map.of("result", "ok"));
+    }
+   
     // =========================
     // 매니저 기본정보 조회 
     // =========================

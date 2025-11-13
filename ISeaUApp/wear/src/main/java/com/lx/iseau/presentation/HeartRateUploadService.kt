@@ -70,6 +70,9 @@ class HeartRateUploadService : Service() {
                 val bpm = value.roundToInt()
                 val occurredAt = isoFormatter.format(Instant.now())
 
+                // 워차 화면에도 심박 표시
+                (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(bpm)
+
                 // ✅ 서버 전송
                 AlertSender.sendHeartRateAsync(occurredAt, bpm)
                 Log.i(TAG, "HR=$bpm at $occurredAt → sent")
