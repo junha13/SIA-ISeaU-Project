@@ -14,6 +14,7 @@
     android:theme="@style/Theme.ISeaUApp"
     android:usesCleartextTraffic="true"
     android:exported="true"
+    android:networkSecurityConfig="@xml/network_security_config"
 
         >
 
@@ -36,11 +37,14 @@
 
     <service
         android:name="com.lx.iseau.WearDataListenerService"
-        android:exported="true">
+        android:exported="true"
+        android:permission="com.google.android.gms.permission.BIND_LISTENER">
+        >
         <intent-filter>
-            <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-            <data android:scheme="wear" android:host="*"
+            <action android:name="com.google.android.gms.wearable.DATA_NODE_SWITCHED" />
+            <data android:scheme="wear" android:host="*" android:pathPrefix="/"
                 android:path="/start-activity" />
+            <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
         </intent-filter>
     </service>
 

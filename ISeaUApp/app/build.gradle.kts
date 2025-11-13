@@ -3,7 +3,8 @@ plugins {
     // 💡 FCM 연동에 필수적인 Firebase/Google 서비스 플러그인 추가
     id("com.google.gms.google-services")
     alias(libs.plugins.kotlin.android)
-}
+    kotlin("plugin.serialization") version "1.7.20" // 또는 사용 중인 Kotlin 버전에 맞는 버전
+    }
 
 android {
     namespace = "com.lx.iseau"
@@ -44,6 +45,7 @@ dependencies {
 
     // 2. Wearable Data Layer (워치 데이터 수신)
     implementation(libs.play.services.wearable)
+
 
 
     // Ktor Client (HTTP 통신)

@@ -4,6 +4,27 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="lx.iseau.feature.controltower.ControlTowerDAO">
 
+    <insert id="insertWatchEvent">
+        INSERT INTO tb_watch (
+            user_number,
+            heart_rate,
+            occurred_at
+        ) VALUES (
+                     #{userNumber},
+                     CAST(#{heartRate} AS INTEGER),
+                     CAST(#{occurredAt} AS TIMESTAMP)
+                 )
+            ON CONFLICT (user_number) DO UPDATE
+                                             SET heart_rate = EXCLUDED.heart_rate,
+                                             occurred_at = EXCLUDED.occurred_at
+    </insert>
+
+    <insert id="insertTaskOnEmergency">
+        INSERT INTO tb_task (manager_number, user_number, task_processed)
+        VALUES (#{managerNumber}, #{userNumber}, 0)
+    </insert>
+
+
     <!-- =========================
          매니저 기본정보 조회
          ========================= -->

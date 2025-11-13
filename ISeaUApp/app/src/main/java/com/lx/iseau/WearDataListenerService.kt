@@ -18,26 +18,30 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import java.time.Instant
+import kotlinx.serialization.json.Json // 이 import가 필요합니다.
 
+private val json = Json {
+    prettyPrint = true
+    isLenient = true
+    ignoreUnknownKeys = true
+}
 class WearDataListenerService : WearableListenerService() {
 
     private val TAG = "ISeaU_MobileListener"
 
     // 💡 [수정 완료] 사용자께서 제공해주신 실제 ngrok URL을 반영했습니다.
     private val SERVER_BASE_URL = "https://hellokiyo.ngrok.io"
-    private val SERVER_HR_API_URL = "$SERVER_BASE_URL/api/watch/heart-rate"
+    private val SERVER_HR_API_URL = "$SERVER_BASE_URL/api/controltower/heart-rate"
 
     // 💡 TODO: 워치를 착용한 실제 사용자 번호(user_number)를 가져오는 로직 구현 필요
     // 이 값은 서버의 tb_user에 존재하는 user_number와 일치해야 합니다.
-    private fun getCurrentUserNumber(): Int = 1 // 일단 1로 고정
+    private fun getCurrentUserNumber(): Int = 2 // 일단 2로 고정
 
     // Ktor HTTP 클라이언트 초기화 (JSON 직렬화 포함)
     private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             // kotlinx.serialization 설정
-            json(
-                // 서버가 요구하는 JSON 형식에 맞게 설정 (예: 스네이크 케이스 등)
-            )
+            json(json)// 서버가 요구하는 JSON 형식에 맞게 설정 (예: 스네이크 케이스 등)
         }
         // 요청 타임아웃 설정을 추가하여 네트워크 실패에 대비합니다.
         engine {
@@ -80,6 +84,7 @@ class WearDataListenerService : WearableListenerService() {
                             occurredAt = Instant.ofEpochMilli(timestamp).toString(),
                             isEmergency = isEmergency
                         )
+                        Log.i(TAG, "Attempting to send data to server for HR=${hrData.heartRate}")
 
                         // Spring Boot 서버로 데이터 전송 (REALTIME이든 DANGER든 같은 API 사용)
                         sendHeartRateToServer(hrData)
@@ -115,6 +120,13 @@ class WearDataListenerService : WearableListenerService() {
                 Log.e(TAG, "❌ Network Error: Failed to connect to server: ${e.message}", e)
             }
         }
+    }
+
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.i(TAG, "⭐ Mobile Listener Service Initializing BEFORE Ktor.") // <-- 이 로그 추가
+        // httpClient 정의는 이전에 이미 클래스 레벨에서 실행됩니다.
     }
 
     override fun onDestroy() {

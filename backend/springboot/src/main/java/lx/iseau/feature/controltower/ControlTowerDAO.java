@@ -17,6 +17,13 @@ public interface ControlTowerDAO {
     // 매니저 기본정보 수정
     int updateManagerInfoByManagerNumber(ManagerInfoDTO dto);
 
+    //user_number 기준으로 tb_watch 데이터 저장
+    int insertWatchEvent(HeartRateRequest request); // HeartRateRequest DTO를 직접 받도록 변경
+
+    //긴급 상황 발생 시 tb_task에 새 레코드 삽입
+    int insertTaskOnEmergency(@Param("managerNumber") int managerNumber,
+                              @Param("userNumber") int userNumber);
+
     // 처리 리스트
     List<TaskListDTO> getTaskListByManagerNumber(@Param("managerNumber") int managerNumber);
     

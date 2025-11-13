@@ -16,6 +16,29 @@ public class ControlTowerController {
     private final ControlTowerService service;
 
     // =========================
+    // 워치 심박수/긴급 상황 데이터 수신
+    // Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
+    // 혹은 @RequestMapping("/api/watch")로 Controller 레벨 경로를 변경해야 함
+    // =========================
+    @PostMapping("/heart-rate")
+    public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
+        // 필수 필드 검사
+        if (request.getUserNumber() == null || request.getHeartRate() == null || request.getOccurredAt() == null) {
+            System.err.println("❌ Watch API: 필수 필드 누락.");
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Required fields missing."));
+        }
+
+        try {
+            service.processHeartRateData(request);
+            return ResponseEntity.ok().body(Map.of("success", true));
+        } catch (Exception e) {
+            System.err.println("❌ Watch API: 데이터 처리 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Server processing error."));
+        }
+    }
+
+    // =========================
     // 매니저 기본정보 조회 
     // =========================
     @GetMapping("/manager/info")
