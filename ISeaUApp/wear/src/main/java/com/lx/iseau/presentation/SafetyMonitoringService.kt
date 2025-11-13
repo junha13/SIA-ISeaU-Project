@@ -36,7 +36,7 @@
         private val CHANNEL_ID = "safety_monitoring_channel"
 
         private val DANGER_HR_LOW = 50.0
-        private val DANGER_HR_HIGH = 90.0
+        private val DANGER_HR_HIGH = 150.0
 
         private var lastHeartRate: Double? = null
         private var isMonitoring = false
