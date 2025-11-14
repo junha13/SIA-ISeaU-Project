@@ -162,9 +162,9 @@ onMounted(() => {
 });
 
 // composable 우선의 인증/표시값
-const isAuth = computed(() => !!tokenIsAuthenticated.value || !!storeIsAuthenticated.value);
-const displayName = computed(() => tokenUserName.value || userInfo.value.userName || '');
-const displayMobile = computed(() => tokenUserMobile.value || userInfo.value.mobile || '');
+const isAuth = computed(() => !!tokenIsAuthenticated.value);
+const displayName = computed(() => tokenUserName.value);
+const displayMobile = computed(() => tokenUserMobile.value);
 
 // 디버그: 상태 변경 시 로그
 watch([
@@ -182,7 +182,7 @@ const dangerColor = '#EB725B';
 
 // --- State ---
 // 설정 상태를 Store의 userInfo.settings에서 가져오기
-const settings = authStore.userInfo.settings;
+// const settings = authStore.userInfo.settings;
 
 
 // --- Computed & Methods ---
@@ -200,11 +200,11 @@ const switchStyle = (isActive) => {
 /**
  * 설정 변경 시 Store Action 호출
  */
-const updateSettings = () => {
-  // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
-  // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
-  authStore.updateSettings(settings);
-};
+// const updateSettings = () => {
+//   // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
+//   // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
+//   authStore.updateSettings(settings);
+// };
 
 /**
  * 로그인 페이지로 이동

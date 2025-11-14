@@ -54,9 +54,15 @@ export function useAuthToken() {
         store.userInfo.mobile = null;
       }
 
-      // 저장된 auth 동기화(로컬스토리지에 store를 보존하는 기존 API 존재 시 활용)
-      if (typeof store.saveToSession === 'function') {
-        try { store.saveToSession(); } catch (e) { /* ignore */ }
+      // localStorage의 'auth' 페이로드도 갱신하여 스토어 복원에 사용되게 합니다.
+      try {
+        const authPayload = {
+          isAuthenticated: !!claims.value,
+          userInfo: store.userInfo
+        };
+        localStorage.setItem('auth', JSON.stringify(authPayload));
+      } catch (e) {
+        /* ignore */
       }
 
       // 다른 탭으로 변경 사항 전파는 localStorage.setItem로 이미 이루어집니다.

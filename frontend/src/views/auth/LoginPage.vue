@@ -104,28 +104,32 @@ const handleLogin = async () => {
         // composable 상태 확인 로그
         console.log('After setToken - isAuthenticated:', isAuthenticated.value, 'userName:', userName.value, 'userNumber:', userNumber.value);
       } else {
-        console.warn('No token received from login API — falling back to store update with userData');
-        // 백엔드가 토큰을 반환하지 않는 경우, 응답의 userData로 Pinia 스토어를 직접 채웁니다.
+        console.warn('No token received from login API — generating client token');
+        // 백엔드가 토큰을 반환하지 않는 경우, 간단한 클라이언트 토큰을 생성하여 사용합니다.
         try {
-          authStore.isAuthenticated = true;
-          Object.assign(authStore.userInfo, {
-            userNumber: userData.user_number || userData.userNumber || authStore.userInfo.userNumber,
-            id: userData.id || authStore.userInfo.id,
-            userName: userData.user_name || userData.userName || authStore.userInfo.userName,
-            mobile: userData.mobile || authStore.userInfo.mobile,
-            // settings는 기존값 유지
-            settings: authStore.userInfo.settings || {}
-          });
+          const createClientToken = (user) => {
+            const header = { alg: 'none', typ: 'JWT' };
+            const payload = {
+              user_number: user.user_number || user.userNumber,
+              id: user.id,
+              user_name: user.user_name || user.userName,
+              mobile: user.mobile,
+              // 만료 시간을 짧게 두거나 필요에 따라 조정
+              exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7)
+            };
+            const base64url = (obj) => {
+              const str = JSON.stringify(obj);
+              return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            };
+            const token = `${base64url(header)}.${base64url(payload)}`;
+            return token;
+          };
 
-          // 세션 대신 localStorage에 저장하도록 보조 저장 수행 (authStore.loadFromSession이 localStorage도 확인함)
-          try {
-            const payload = { isAuthenticated: true, userInfo: authStore.userInfo };
-            localStorage.setItem('auth', JSON.stringify(payload));
-          } catch (e) {
-            console.warn('Failed to persist auth to localStorage', e);
-          }
+          const clientToken = createClientToken(userData);
+          setToken(clientToken);
+          console.log('Generated client token and set it');
         } catch (e) {
-          console.error('Fallback store update failed', e);
+          console.error('Failed to generate client token:', e);
         }
       }
 
