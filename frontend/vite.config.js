@@ -73,7 +73,7 @@ export default defineConfig({
         proxy: {
             // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
-                target: 'http://localhost:8080',
+                target: import.meta.env.VITE_API_BASE_URL,
                 changeOrigin: true
             }
         }

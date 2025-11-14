@@ -15,23 +15,59 @@ public class FcmService {
 
     private final FcmDAO fcmDao;
 
+    // ************* 새롭게 추가된 private helper method *************
+    /**
+     * 사용자 ID(로그인 ID)로 DB의 user_number(PK)를 조회합니다.
+     * @param userId 사용자 ID (ex: imperson1)
+     * @return user_number (DB PK)
+     */
+    private int getUserNumber(String userId) {
+        Integer userNumber = fcmDao.getUserNumberByUserId(userId);
+        if (userNumber == null) {
+            // 사용자를 찾지 못한 경우 예외 발생
+            throw new RuntimeException("User not found for userId: " + userId);
+        }
+        return userNumber.intValue();
+    }
+    // *************************************************************
+
     @Transactional
     public void saveToken(TokenRequest tokenRequest) {
         try {
-            fcmDao.upsertToken(tokenRequest);
-            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId());
-        } catch (DataAccessException e) {
-            // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
-            System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
-            e.printStackTrace(); // 스택 트레이스를 콘솔에 출력
+            // 1. userId로 user_number를 조회
+            int userNumber = getUserNumber(tokenRequest.getUserId());
 
-            // 오류를 던져서 Spring Boot가 500 응답을 반환하고 로그를 남기도록 유도
+            // 2. user_number와 토큰을 DAO에 전달하여 upsert 실행
+            fcmDao.upsertToken(userNumber, tokenRequest.getToken());
+
+            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId() +
+                    ", UserNumber: " + userNumber);
+        } catch (DataAccessException e) {
+            System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("DB Save Failed due to DataAccessException", e);
+        } catch (RuntimeException e) {
+            // getUserNumber에서 발생한 사용자 미발견 예외 처리
+            System.err.println("🚨🚨🚨 DB 저장 실패: " + e.getMessage());
+            throw e;
         }
     }
 
+    /**
+     * 알림 발송을 위해 특정 사용자의 토큰을 조회합니다.
+     * Service 레이어에서 userId -> user_number 변환을 담당합니다.
+     * @param userId 사용자 ID
+     * @return FCM 등록 토큰
+     */
     public String getRegistrationToken(String userId) {
-        return fcmDao.getTokenByUserId(userId);
+        try {
+            int userNumber = getUserNumber(userId);
+            return fcmDao.getTokenByUserNumber(userNumber);
+        } catch (RuntimeException e) {
+            // 토큰이 없거나, 사용자 자체가 없는 경우 (getUserNumber에서 예외 발생)
+            System.err.println("❌ Could not get token: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
