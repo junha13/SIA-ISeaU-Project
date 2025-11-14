@@ -26,20 +26,17 @@
             로그인 정보 저장
           </label>
         </div>
-        <button class="btn fw-bold text-white py-2" :style="{ backgroundColor: mainColor, padding: '0.375rem 1.5rem' }"
-                @click="handleLogin">
+        <button class="btn fw-bold text-white py-2" :style="{ backgroundColor: mainColor, padding: '0.375rem 1.5rem' }" @click="handleLogin">
           로그인
         </button>
       </div>
 
       <!-- Links -->
       <div class="d-flex justify-content-end gap-3 small">
-        <a href="#" @click.prevent="$router.push({ name: 'Register' })" class="text-decoration-none"
-           :style="{ color: darkColor }">
+        <a href="#" @click.prevent="$router.push({ name: 'Register' })" class="text-decoration-none" :style="{ color: darkColor }">
           회원가입 >
         </a>
-        <a href="#" @click.prevent="$router.push({ name: 'FindAccount' })" class="text-decoration-none"
-           :style="{ color: darkColor }">
+        <a href="#" @click.prevent="$router.push({ name: 'FindAccount' })" class="text-decoration-none" :style="{ color: darkColor }">
           아이디/비밀번호 찾기 >
         </a>
       </div>
@@ -49,14 +46,16 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
-import {useRouter} from 'vue-router';
-import {useAuthStore} from '@/stores/authStore';
-import {authApi} from '@/api/auth';
-import {getTokenAndSave} from "@/utils/fcmUtils";
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useAuthToken } from '@/composables/useAuthToken';
+import { authApi } from '@/api/auth';
+import { getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { token: authToken, userNumber, userName, setToken, isAuthenticated } = useAuthToken();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -86,50 +85,54 @@ const handleLogin = async () => {
       password: password.value
     });
 
-    // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
-    const userData = result?.data; // {userNumber, id, userName, mobile}
+    // 응답 데이터 가져오기 (백엔드 응답 형식 변경: { data: {...}, token: '...' })
+    const userData = result?.data; // {user_number, id, user_name, mobile}
+    const token = result?.token;
+
+    // 디버그: 응답과 토큰 로그
+    console.log('Login API result:', result);
+    console.log('Extracted userData:', userData);
+    console.log('Extracted token:', token);
 
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
     }
 
-    // authStore에 로그인한 사용자 정보 저장
-    authStore.isAuthenticated = true;
-    authStore.userInfo.userNumber = userData.user_number;
-    authStore.userInfo.id = userData.id;
-    authStore.userInfo.userName = userData.user_name;
-    authStore.userInfo.mobile = userData.mobile || null;
-
-    console.log('로그인 후 저장된 정보:', authStore.userInfo);
-
-    // === 세션/로컬 저장소에 로그인 정보 저장 ===
-    // 목적: 페이지 새로고침이나 동일 세션 내에서 로그인 상태를 유지하기 위함
-    // 동작 원리:
-    // - rememberMe 체크 시에는 localStorage에 저장하여 브라우저 종료 후에도 유지
-    // - 체크하지 않으면 sessionStorage에 저장하여 탭/세션이 종료되면 사라짐
-    const sessionPayload = {
-      isAuthenticated: true,
-      userInfo: {
-        userNumber: userData.user_number,
-        id: userData.id,
-        userName: userData.user_name,
-        mobile: userData.mobile || null,
-      }
-    };
+    // 토큰을 composable에 등록하면 composable에서 store 동기화까지 처리합니다.
     try {
-      if (rememberMe.value) {
-        // 장기 저장 (브라우저 종료 후에도 유지)
-        localStorage.setItem('auth', JSON.stringify(sessionPayload));
+      if (token) {
+        setToken(token);
+        // composable 상태 확인 로그
+        console.log('After setToken - isAuthenticated:', isAuthenticated.value, 'userName:', userName.value, 'userNumber:', userNumber.value);
       } else {
-        // 세션 저장 (탭/브라우저 종료 시 자동 제거)
-        sessionStorage.setItem('auth', JSON.stringify(sessionPayload));
-      }
-      // Pinia 스토어에 saveToSession 헬퍼가 있으면 호출해 동기화 유지
-      if (typeof authStore.saveToSession === 'function') authStore.saveToSession();
-    } catch (e) {
-      console.error('Failed to persist auth info', e);
-    }
+        console.warn('No token received from login API — generating client token');
+        // 백엔드가 토큰을 반환하지 않는 경우, 간단한 클라이언트 토큰을 생성하여 사용합니다.
+        try {
+          const createClientToken = (user) => {
+            const header = { alg: 'none', typ: 'JWT' };
+            const payload = {
+              user_number: user.user_number || user.userNumber,
+              id: user.id,
+              user_name: user.user_name || user.userName,
+              mobile: user.mobile,
+              // 만료 시간을 짧게 두거나 필요에 따라 조정
+              exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7)
+            };
+            const base64url = (obj) => {
+              const str = JSON.stringify(obj);
+              return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            };
+            const token = `${base64url(header)}.${base64url(payload)}`;
+            return token;
+          };
 
+          const clientToken = createClientToken(userData);
+          setToken(clientToken);
+          console.log('Generated client token and set it');
+        } catch (e) {
+          console.error('Failed to generate client token:', e);
+        }
+      }
 
     console.log('FCM에 전달할 userId (로그인 ID):', userData.id);
       // 3. 🚨 FCM 토큰 저장 로직
@@ -138,7 +141,9 @@ const handleLogin = async () => {
       // FCM 실패 시에도 로그인 자체는 성공하도록 처리
       console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
     });
-
+    } catch (e) {
+      console.error('로그인 후 token 처리 중 오류:', e);
+    }
 
     // 성공 시 알림 표시 후 페이지 이동
     alert(`${userData.user_name}님 환영합니다!`);
