@@ -48,11 +48,13 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthToken } from '@/composables/useAuthToken';
 import { authApi } from '@/api/auth';
 import { getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { token: authToken, userNumber, userName, setToken, isAuthenticated } = useAuthToken();
 
 const mainColor = '#0092BA';
 const darkColor = '#0B1956';
@@ -82,59 +84,60 @@ const handleLogin = async () => {
       password: password.value
     });
 
-    // 응답 데이터 가져오기 (백엔드 응답 형식: { data: {...} })
-    const userData = result?.data; // {userNumber, id, userName, mobile}
+    // 응답 데이터 가져오기 (백엔드 응답 형식 변경: { data: {...}, token: '...' })
+    const userData = result?.data; // {user_number, id, user_name, mobile}
+    const token = result?.token;
+
+    // 디버그: 응답과 토큰 로그
+    console.log('Login API result:', result);
+    console.log('Extracted userData:', userData);
+    console.log('Extracted token:', token);
 
     if (!userData) {
       throw new Error('로그인 API 응답이 비어있습니다.');
     }
 
-    // authStore에 로그인한 사용자 정보 저장
-    authStore.isAuthenticated = true;
-    authStore.userInfo.userNumber = userData.user_number;
-    authStore.userInfo.id = userData.id;
-    authStore.userInfo.userName = userData.user_name;
-    authStore.userInfo.mobile = userData.mobile || null;
-
-    console.log('로그인 후 저장된 정보:', authStore.userInfo);
-
-    // === 세션/로컬 저장소에 로그인 정보 저장 ===
-    // 목적: 페이지 새로고침이나 동일 세션 내에서 로그인 상태를 유지하기 위함
-    // 동작 원리:
-    // - rememberMe 체크 시에는 localStorage에 저장하여 브라우저 종료 후에도 유지
-    // - 체크하지 않으면 sessionStorage에 저장하여 탭/세션이 종료되면 사라짐
-    const sessionPayload = {
-      isAuthenticated: true,
-      userInfo: {
-        userNumber: userData.user_number,
-        id: userData.id,
-        userName: userData.user_name,
-        mobile: userData.mobile || null,
-      }
-    };
+    // 토큰을 composable에 등록하면 composable에서 store 동기화까지 처리합니다.
     try {
-      if (rememberMe.value) {
-        // 장기 저장 (브라우저 종료 후에도 유지)
-        localStorage.setItem('auth', JSON.stringify(sessionPayload));
+      if (token) {
+        setToken(token);
+        // composable 상태 확인 로그
+        console.log('After setToken - isAuthenticated:', isAuthenticated.value, 'userName:', userName.value, 'userNumber:', userNumber.value);
       } else {
-        // 세션 저장 (탭/브라우저 종료 시 자동 제거)
-        sessionStorage.setItem('auth', JSON.stringify(sessionPayload));
+        console.warn('No token received from login API — falling back to store update with userData');
+        // 백엔드가 토큰을 반환하지 않는 경우, 응답의 userData로 Pinia 스토어를 직접 채웁니다.
+        try {
+          authStore.isAuthenticated = true;
+          Object.assign(authStore.userInfo, {
+            userNumber: userData.user_number || userData.userNumber || authStore.userInfo.userNumber,
+            id: userData.id || authStore.userInfo.id,
+            userName: userData.user_name || userData.userName || authStore.userInfo.userName,
+            mobile: userData.mobile || authStore.userInfo.mobile,
+            // settings는 기존값 유지
+            settings: authStore.userInfo.settings || {}
+          });
+
+          // 세션 대신 localStorage에 저장하도록 보조 저장 수행 (authStore.loadFromSession이 localStorage도 확인함)
+          try {
+            const payload = { isAuthenticated: true, userInfo: authStore.userInfo };
+            localStorage.setItem('auth', JSON.stringify(payload));
+          } catch (e) {
+            console.warn('Failed to persist auth to localStorage', e);
+          }
+        } catch (e) {
+          console.error('Fallback store update failed', e);
+        }
       }
-      // Pinia 스토어에 saveToSession 헬퍼가 있으면 호출해 동기화 유지
-      if (typeof authStore.saveToSession === 'function') authStore.saveToSession();
+
+      // FCM에 전달할 userNumber는 composable의 userNumber 또는 응답 데이터를 사용
+      const userNumberForFcm = (userNumber && userNumber.value) || userData.user_number;
+      console.log('FCM에 전달할 userNumber:', userNumberForFcm);
+      getTokenAndSave(userNumberForFcm).catch(fcmError => {
+        console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
+      });
     } catch (e) {
-      console.error('Failed to persist auth info', e);
+      console.error('로그인 후 token 처리 중 오류:', e);
     }
-
-
-    console.log('FCM에 전달할 userNumber:', userData.user_number);
-
-    // 3. 🚨 FCM 토큰 저장 로직
-    // 🚨 수정: userData.userNumber -> userData.user_number
-    getTokenAndSave(userData.user_number).catch(fcmError => {
-      // FCM 실패 시에도 로그인 자체는 성공하도록 처리
-      console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
-    });
 
 
     // 성공 시 알림 표시 후 페이지 이동

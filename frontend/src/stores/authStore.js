@@ -109,14 +109,6 @@ export const useAuthStore = defineStore('auth', () => {
             }
         });
 
-        await showConfirmModal({
-            title: '완료',
-            message: '성공적으로 로그아웃되었습니다.',
-            type: 'success',
-            autoHide: true,
-            duration: 1000,
-        });
-
         router.push({ name: 'Login' });
     };
 

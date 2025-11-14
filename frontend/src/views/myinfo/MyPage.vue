@@ -2,7 +2,7 @@
   <div class="my-page container-fluid p-3">
 
     <!-- 로그인 되어있지 않을 경우 로그인 제안, 로그인 했을 경우 사용자 정보 표시 -->
-    <div v-if="!authStore.isAuthenticated" class="col-12">
+    <div v-if="!isAuth" class="col-12">
       <div class="card mb-3 border-info">
           <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start">
             <div>
@@ -23,22 +23,22 @@
           <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
           <div class="d-flex justify-content-between py-2 border-bottom">
             <span class="text-muted">이름</span>
-            <span 
+              <span 
               class="fw-bold" 
-              :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
-              :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-              @click="!authStore.userInfo.userName && goToLogin()">
-              {{ authStore.userInfo.userName || '알 수 없음' }}
+              :class="{ 'text-primary': !displayName, 'cursor-pointer': !displayName }"
+              :style="!displayName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!displayName && goToLogin()">
+              {{ displayName || '알 수 없음' }}
             </span>
           </div>
           <div class="d-flex justify-content-between py-2">
             <span class="text-muted">전화번호</span>
             <span 
               class="fw-bold"
-              :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
-              :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-              @click="!authStore.userInfo.mobile && goToLogin()">
-              {{ authStore.userInfo.mobile || '알 수 없음' }}
+              :class="{ 'text-primary': !displayMobile, 'cursor-pointer': !displayMobile }"
+              :style="!displayMobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!displayMobile && goToLogin()">
+              {{ displayMobile || '알 수 없음' }}
             </span>
           </div>
         </div>
@@ -123,24 +123,57 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore'; // Auth Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
+import { useAuthToken } from '@/composables/useAuthToken';
 
 const store = useStore();
 
 const { header } = storeToRefs(store)
 
-onMounted(() => {
-  header.value = '내 정보'
-})
-
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore(); // Auth Store 인스턴스
+// 추출된 refs로 사용: storeToRefs로 isAuthenticated와 userInfo를 refs로 가져옵니다.
+const { isAuthenticated: storeIsAuthenticated, userInfo } = storeToRefs(authStore);
+
+const { token: tokenRef, isAuthenticated: tokenIsAuthenticated, userName: tokenUserName, userNumber: tokenUserNumber, userMobile: tokenUserMobile, clear: clearToken } = useAuthToken();
+
+onMounted(() => {
+  header.value = '내 정보'
+  // 초기 상태 로그
+  try {
+    console.log('[MyPage] mounted debug:', {
+      token: tokenRef?.value,
+      tokenIsAuthenticated: tokenIsAuthenticated?.value,
+      tokenUserName: tokenUserName?.value,
+      tokenUserNumber: tokenUserNumber?.value,
+      tokenUserMobile: tokenUserMobile?.value,
+      storeIsAuthenticated: storeIsAuthenticated?.value,
+      storeUserInfo: userInfo?.value,
+    });
+  } catch (e) {
+    console.error('[MyPage] mounted debug error', e);
+  }
+});
+
+// composable 우선의 인증/표시값
+const isAuth = computed(() => !!tokenIsAuthenticated.value || !!storeIsAuthenticated.value);
+const displayName = computed(() => tokenUserName.value || userInfo.value.userName || '');
+const displayMobile = computed(() => tokenUserMobile.value || userInfo.value.mobile || '');
+
+// 디버그: 상태 변경 시 로그
+watch([
+  () => tokenRef?.value,
+  () => tokenIsAuthenticated?.value,
+  () => storeIsAuthenticated?.value
+], ([t, tkAuth, stAuth]) => {
+  console.log('[MyPage] watch update:', { token: t, tokenAuth: tkAuth, storeAuth: stAuth, storeUserInfo: userInfo?.value });
+});
 
 // --- Color Definitions ---
 const mainColor = '#0092BA';
@@ -196,6 +229,8 @@ const handleLogout = async () => {
     try {
       // Auth Store의 logout Action 호출 (성공 시 Store 내에서 모달 알림 및 페이지 이동 처리)
       await authStore.logout();
+        // 토큰도 제거하여 완전한 로그아웃 상태로 만듭니다.
+        try { clearToken(); } catch (e) { /* ignore */ }
     } catch (e) {
       // API 호출 실패 등의 에러 처리
       showConfirmModal({
