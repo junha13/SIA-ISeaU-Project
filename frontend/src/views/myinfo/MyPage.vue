@@ -65,15 +65,45 @@
     </div>
 
     <!-- 3. 설정 섹션 -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
-      <h6 class="fw-bold mb-3" :style="{ color: mainColor }">설정</h6>
+    <!-- <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
+      <h6 class="fw-bold mb-3" :style="{ color: mainColor }">설정</h6> -->
+
+      <!-- 그룹 이탈 알림 설정 -->
+      <!-- <h6 class="fw-bold text-muted mt-3 mb-3">그룹 이탈 알림</h6>
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <span class="text-muted small">1단계 (현재 200M)</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="level1" v-model="settings.alertLevel1" @change="updateSettings" :style="switchStyle(settings.alertLevel1)">
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <span class="text-muted small">2단계 (현재 200M)</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="level2" v-model="settings.alertLevel2" @change="updateSettings" :style="switchStyle(settings.alertLevel2)">
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom pb-4">
+        <span class="text-muted small">3단계 (현재 200M)</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="level3" v-model="settings.alertLevel3" @change="updateSettings" :style="switchStyle(settings.alertLevel3)">
+        </div>
+      </div> -->
+
+      <!-- 기타 알림 설정 -->
+      <!-- <h6 class="fw-bold text-muted mt-4 mb-3">그룹 위치 미갱신 알림</h6>
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <span class="text-muted small">그룹 위치 미갱신 알림</span>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="missing" v-model="settings.missingAlert" @change="updateSettings" :style="switchStyle(settings.missingAlert)">
+        </div>
+      </div>
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">조위/물때 알림</span>
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="tide" v-model="settings.tideAlert" @change="updateSettings" :style="switchStyle(settings.tideAlert)">
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 4. 이용 약관 및 로그아웃 -->
     <div class="card shadow-sm border-0 rounded-3 mb-5">
