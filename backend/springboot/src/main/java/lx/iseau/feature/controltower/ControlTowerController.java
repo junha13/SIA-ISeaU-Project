@@ -40,6 +40,7 @@ public class ControlTowerController {
     }
     */
     
+    /*
     @PostMapping("/heart-rate")
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest req) {
         if (req.getOccurredAt() == null || req.getHeartRate() == null) {
