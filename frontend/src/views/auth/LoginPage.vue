@@ -5,7 +5,8 @@
     <h1 class="logo fw-bolder mb-5" :style="{ color: darkColor, fontSize: '2.5rem' }">I Sea U</h1>
 
     <!-- Login Form Container -->
-    <div class="auth-card p-4 rounded-3 shadow-lg w-100" style="max-width: 400px; background-color: white; border: 1px solid #eee;">
+    <div class="auth-card p-4 rounded-3 shadow-lg w-100"
+         style="max-width: 400px; background-color: white; border: 1px solid #eee;">
 
       <h5 class="fw-bold mb-4" :style="{ color: mainColor }">로그인</h5>
 
@@ -25,17 +26,20 @@
             로그인 정보 저장
           </label>
         </div>
-        <button class="btn fw-bold text-white py-2" :style="{ backgroundColor: mainColor, padding: '0.375rem 1.5rem' }" @click="handleLogin">
+        <button class="btn fw-bold text-white py-2" :style="{ backgroundColor: mainColor, padding: '0.375rem 1.5rem' }"
+                @click="handleLogin">
           로그인
         </button>
       </div>
 
       <!-- Links -->
       <div class="d-flex justify-content-end gap-3 small">
-        <a href="#" @click.prevent="$router.push({ name: 'Register' })" class="text-decoration-none" :style="{ color: darkColor }">
+        <a href="#" @click.prevent="$router.push({ name: 'Register' })" class="text-decoration-none"
+           :style="{ color: darkColor }">
           회원가입 >
         </a>
-        <a href="#" @click.prevent="$router.push({ name: 'FindAccount' })" class="text-decoration-none" :style="{ color: darkColor }">
+        <a href="#" @click.prevent="$router.push({ name: 'FindAccount' })" class="text-decoration-none"
+           :style="{ color: darkColor }">
           아이디/비밀번호 찾기 >
         </a>
       </div>
@@ -45,11 +49,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { authApi } from '@/api/auth';
-import { getTokenAndSave} from "@/utils/fcmUtils";
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {useAuthStore} from '@/stores/authStore';
+import {authApi} from '@/api/auth';
+import {getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -127,11 +131,10 @@ const handleLogin = async () => {
     }
 
 
-    console.log('FCM에 전달할 userNumber:', userData.user_number);
-
-    // 3. 🚨 FCM 토큰 저장 로직
-    // 🚨 수정: userData.userNumber -> userData.user_number
-    getTokenAndSave(userData.user_number).catch(fcmError => {
+    console.log('FCM에 전달할 userId (로그인 ID):', userData.id);
+      // 3. 🚨 FCM 토큰 저장 로직
+      // 🚨 수정: userData.userNumber -> userData.user_number
+      getTokenAndSave(userData.id).catch(fcmError => {
       // FCM 실패 시에도 로그인 자체는 성공하도록 처리
       console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
     });
@@ -139,7 +142,7 @@ const handleLogin = async () => {
 
     // 성공 시 알림 표시 후 페이지 이동
     alert(`${userData.user_name}님 환영합니다!`);
-    router.replace({ name: 'Main' });
+    router.replace({name: 'Main'});
 
   } catch (e) {
     // 에러 처리

@@ -27,7 +27,7 @@ const saveTokenToServer = async (token, userId) => {
 // --- 메인 함수: 권한 요청, 토큰 발급 및 저장 ---
 /**
  * 알림 권한을 요청하고, 토큰을 발급받아 서버에 저장합니다.
- * @param {number|string} userId - 로그인한 사용자의 고유 ID (userNumber)
+ * @param {string} userId - 로그인한 사용자의 고유 ID (로그인 ID)
  */
 export const getTokenAndSave = async (userId) => {
     if (!userId) {
