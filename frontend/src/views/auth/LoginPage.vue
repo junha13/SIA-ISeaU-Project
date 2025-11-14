@@ -109,7 +109,7 @@ const handleLogin = async () => {
         // 백엔드가 토큰을 반환하지 않는 경우, 간단한 클라이언트 토큰을 생성하여 사용합니다.
         try {
           const createClientToken = (user) => {
-            const header = { alg: 'none', typ: 'JWT' };
+            const header = {alg: 'none', typ: 'JWT'};
             const payload = {
               user_number: user.user_number || user.userNumber,
               id: user.id,
