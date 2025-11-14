@@ -28,6 +28,15 @@ export const useAuthStore = defineStore('auth', () => {
     // SESSION_KEY: sessionStorage/localStorage에 저장할 때 사용하는 키
     // const SESSION_KEY = 'auth';
 
+    // 토큰 기반 동작만 사용합니다. 세션(localStorage.auth) 관련 로직은 만들지 않습니다.
+    // 기존 호출부와의 호환을 위해 no-op 함수들을 제공합니다.
+    const SESSION_KEY = 'auth';
+
+    // saveAuthLocal: 이전 'saveToSession' 대신 사용하는 이름입니다 (no-op).
+    const saveAuthLocal = () => {
+        // intentionally no-op to avoid creating session-like storage
+    };
+
     /**
      * saveToSession
      * - 현재 Pinia 상태를 직렬화하여 sessionStorage에 저장합니다.
@@ -70,6 +79,38 @@ export const useAuthStore = defineStore('auth', () => {
     //     }
     // };
 
+    // 실제 구현: localStorage의 auth 또는 token으로부터 상태 복원
+    const decodeJwt = (token) => {
+        try {
+            const payload = token.split('.')[1];
+            let b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            const json = decodeURIComponent(atob(b64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(json);
+        } catch (e) {
+            return null;
+        }
+    };
+
+    // restoreFromToken: 오직 token 기반으로만 복원합니다 (localStorage.token).
+    const restoreFromToken = () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const claims = decodeJwt(token);
+            if (!claims) return;
+            isAuthenticated.value = true;
+            userInfo.userNumber = claims.user_number || claims.userNumber || userInfo.userNumber;
+            userInfo.id = claims.id || claims.sub || userInfo.id;
+            userInfo.userName = claims.user_name || claims.name || userInfo.userName;
+            userInfo.mobile = claims.mobile || userInfo.mobile;
+        } catch (e) {
+            console.error('Failed to load auth from token', e);
+        }
+    };
+
     /**
      * clearSession
      * - 로그아웃 시 세션 저장소에서 auth 정보를 제거합니다.
@@ -84,8 +125,20 @@ export const useAuthStore = defineStore('auth', () => {
     //     }
     // };
 
+    // clearAuth: 토큰만 제거합니다.
+    const clearAuth = () => {
+        try {
+            try { localStorage.removeItem('token'); } catch (_) { }
+        } catch (e) {
+            // ignore
+        }
+    };
+
     // 스토어 생성 시 세션에서 가능한 경우 상태 복원
     // loadFromSession();
+
+    // 스토어 생성 시 토큰 기반으로 상태 복원
+    try { restoreFromToken(); } catch (e) { /* ignore */ }
 
     // --- Actions ---
 
@@ -109,6 +162,9 @@ export const useAuthStore = defineStore('auth', () => {
             }
         });
 
+        // 토큰 기반 로그아웃: 로컬 토큰 정리 후 라우팅
+        try { localStorage.removeItem('token'); } catch (_) {}
+
         router.push({ name: 'Login' });
     };
 
@@ -117,27 +173,26 @@ export const useAuthStore = defineStore('auth', () => {
     // - 그 이후 세션 저장소에서 auth 정보를 제거합니다.
     const logoutAndClear = async () => {
         await logout();
-        clearSession();
+        try { clearAuth(); } catch (_) {}
     };
 
     /**
      * 설정 업데이트
      */
     // 사용자 설정 변경 시 Pinia 상태에 병합하고 세션에 저장
-    // const updateSettings = (newSettings) => {
-    //     Object.assign(userInfo.settings, newSettings);
-    //     // 변경된 설정을 sessionStorage에 반영
-    //     saveToSession();
-    // };
+    // updateSettings: 토큰/서버와 관련된 저장은 하지 않습니다. 로컬 상태만 갱신.
+    const updateSettings = (newSettings) => {
+        Object.assign(userInfo.settings, newSettings);
+    };
 
     return {
         isAuthenticated,
         userInfo,
         logout: logoutAndClear,
         updateSettings,
-        // expose session helpers for explicit control if needed
-        saveToSession,
-        loadFromSession,
-        clearSession,
+        // expose token/auth helpers for explicit control if needed
+        saveAuthLocal,
+        restoreFromToken,
+        clearAuth,
     };
 });

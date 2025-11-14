@@ -54,16 +54,7 @@ export function useAuthToken() {
         store.userInfo.mobile = null;
       }
 
-      // localStorage의 'auth' 페이로드도 갱신하여 스토어 복원에 사용되게 합니다.
-      try {
-        const authPayload = {
-          isAuthenticated: !!claims.value,
-          userInfo: store.userInfo
-        };
-        localStorage.setItem('auth', JSON.stringify(authPayload));
-      } catch (e) {
-        /* ignore */
-      }
+      // 토큰 기반으로만 동작하므로 추가적인 'auth' 페이로드는 저장하지 않습니다.
 
       // 다른 탭으로 변경 사항 전파는 localStorage.setItem로 이미 이루어집니다.
     } catch (e) {
@@ -93,9 +84,7 @@ export function useAuthToken() {
         store.userInfo.mobile = null;
       }
 
-      if (typeof store.saveToSession === 'function') {
-        try { store.saveToSession(); } catch (e) { /* ignore */ }
-      }
+      // no-op: store persistence is token-based now
     }
   });
 
