@@ -1,5 +1,6 @@
 package com.lx.iseau
 
+import com.lx.iseau.UserSessionManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -35,7 +36,17 @@ class WearDataListenerService : WearableListenerService() {
 
     // 💡 TODO: 워치를 착용한 실제 사용자 번호(user_number)를 가져오는 로직 구현 필요
     // 이 값은 서버의 tb_user에 존재하는 user_number와 일치해야 합니다.
-    private fun getCurrentUserNumber(): Int = 2 // 일단 2로 고정
+    private fun getCurrentUserNumber(): Int {
+        val userNumber = UserSessionManager.getUserNumber(this)
+
+        if (userNumber <= 0) {
+            Log.e(TAG, "❌ userNumber가 설정되어 있지 않습니다. HR 데이터를 서버로 보내지 않습니다.")
+        } else {
+            Log.d(TAG, "✅ 현재 로그인 사용자 번호: $userNumber")
+        }
+
+        return userNumber
+    }
 
     // Ktor HTTP 클라이언트 초기화 (JSON 직렬화 포함)
     private val httpClient = HttpClient(CIO) {
@@ -74,12 +85,18 @@ class WearDataListenerService : WearableListenerService() {
                     val isEmergency = dataMap.getBoolean("is_emergency", false)
 
                     if (heartRate > 0) {
-                        Log.i(TAG, "Watch Data Received: HR=$heartRate, Emergency=$isEmergency, Path=$path")
+                        val userNumber = getCurrentUserNumber()
+                        if (userNumber <= 0) {
+                            Log.e(TAG, "❌ userNumber 미설정 상태. HR=$heartRate 이지만 서버 전송 스킵.")
+                            return@forEach
+                        }
+
+                        Log.i(TAG, "Watch Data Received: HR=$heartRate, Emergency=$isEmergency, Path=$path, User=$userNumber")
 
                         // Instant.ofEpochMilli(timestamp)는 워치에서 보낸 long 타입의 Unix Time(ms)를
                         // ISO 8601 형식 문자열로 변환하여 서버가 요구하는 occurredAt 필드에 맞춥니다.
                         val hrData = HeartRateRequest(
-                            userNumber = getCurrentUserNumber(),
+                            userNumber = userNumber,
                             heartRate = heartRate,
                             occurredAt = Instant.ofEpochMilli(timestamp).toString(),
                             isEmergency = isEmergency

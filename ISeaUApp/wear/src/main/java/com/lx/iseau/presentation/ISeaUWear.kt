@@ -2,6 +2,7 @@ package com.lx.iseau.presentation
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -43,11 +44,47 @@ class ISeaUWear : ComponentActivity() {
             val grantedActivityRecognition = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
 
             if (grantedBodySensors && grantedActivityRecognition) {
-                Log.d(TAG, "✅ All required permissions granted.")
-                startSafetyMonitoringService()
+                Log.d(TAG, "✅ Foreground permissions granted.")
+                requestBackgroundPermissionIfNecessary()
             } else {
                 Log.w(TAG, "❌ Missing required permissions. Body Sensors: $grantedBodySensors, Activity Recognition: $grantedActivityRecognition")
             }
+        }
+
+    // ✅ BACKGROUND 권한 체크
+    private fun hasBackgroundPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BODY_SENSORS_BACKGROUND
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // 13 미만에서는 별도 BACKGROUND 개념이 없어서 true 취급
+            true
+        }
+    }
+
+    // ✅ BACKGROUND 권한이 없으면 요청, 있으면 바로 서비스 시작
+    private fun requestBackgroundPermissionIfNecessary() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasBackgroundPermission()) {
+            Log.d(TAG, "Requesting BODY_SENSORS_BACKGROUND permission...")
+            bgPermissionLauncher.launch(Manifest.permission.BODY_SENSORS_BACKGROUND)
+        } else {
+            // 이미 허용되어 있으면 바로 서비스 시작
+            startSafetyMonitoringService()
+        }
+    }
+
+    // ✅ BACKGROUND 센서 권한 런처 (BODY_SENSORS_BACKGROUND)
+    private val bgPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                Log.d(TAG, "✅ BODY_SENSORS_BACKGROUND granted.")
+            } else {
+                Log.w(TAG, "⚠️ BODY_SENSORS_BACKGROUND 미허용. 화면 꺼지면 센서가 끊길 수 있음.")
+            }
+            // 허용하든 말든, 일단 현재 상태에서 가능한 범위로 서비스는 시작
+            startSafetyMonitoringService()
         }
 
     private fun startSafetyMonitoringService() {
@@ -72,11 +109,12 @@ class ISeaUWear : ComponentActivity() {
         )
 
         if (!hasAllPermissions()) {
-            Log.d(TAG, "Requesting permissions...")
+            Log.d(TAG, "Requesting FOREGROUND sensor permissions...")
             requestPermissionLauncher.launch(permissions)
         } else {
-            Log.d(TAG, "Permissions already granted, attempting to start service.")
-            startSafetyMonitoringService()
+            Log.d(TAG, "Foreground permissions already granted, checking BACKGROUND...")
+            // ⬇️ 바로 서비스 시작 말고, BACKGROUND 권한 체크/요청을 거쳐서 시작
+            requestBackgroundPermissionIfNecessary()
         }
     }
 

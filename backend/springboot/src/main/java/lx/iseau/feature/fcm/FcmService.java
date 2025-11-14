@@ -19,7 +19,7 @@ public class FcmService {
     public void saveToken(TokenRequest tokenRequest) {
         try {
             fcmDao.upsertToken(tokenRequest);
-            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId());
+            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserNumber());
         } catch (DataAccessException e) {
             // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
             System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
@@ -30,8 +30,8 @@ public class FcmService {
         }
     }
 
-    public String getRegistrationToken(String userId) {
-        return fcmDao.getTokenByUserId(userId);
+    public String getRegistrationToken(String userNumber) {
+        return fcmDao.getTokenByUserNumber(userNumber);
     }
 
     /**
@@ -39,12 +39,12 @@ public class FcmService {
      * @param targetUserId 알림을 받을 사용자의 ID (FCM 토큰을 조회하기 위해 사용)
      * @param alertMessage 알림 내용
      */
-    public void sendAlertNotification(String targetUserId, String alertMessage, long timestamp) {
+    public void sendAlertNotification(String targetUserNumber, String alertMessage, long timestamp) {
         // 1. 알림을 받을 대상자의 FCM 토큰 조회
-        String fcmToken = getRegistrationToken(targetUserId);
+        String fcmToken = getRegistrationToken(targetUserNumber);
 
         if (fcmToken == null || fcmToken.isEmpty()) {
-            System.err.println("❌ FCM Token not found for user: " + targetUserId);
+            System.err.println("❌ FCM Token not found for user: " + targetUserNumber);
             return;
         }
 

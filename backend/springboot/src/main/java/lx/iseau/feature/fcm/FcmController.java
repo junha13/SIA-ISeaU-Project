@@ -25,12 +25,12 @@ public class FcmController {
      */
     @PostMapping("/save-token")
     public ResponseEntity<Void> saveToken(@RequestBody TokenRequest tokenRequest) {
-        if (tokenRequest.getUserId() == null || tokenRequest.getToken() == null) {
+        if (tokenRequest.getUserNumber() == null || tokenRequest.getToken() == null) {
             // 필수 필드가 누락된 경우 Bad Request 반환
             return ResponseEntity.badRequest().build();
         }
         // 🚨 수신된 데이터 로그 추가
-        System.out.println("Received Token for User: " + tokenRequest.getUserId() +
+        System.out.println("Received Token for User: " + tokenRequest.getUserNumber() +
                 ", Token starts with: " + tokenRequest.getToken().substring(0, 10) + "...");
         // FcmService를 통해 DB에 토큰을 저장하거나 업데이트합니다.
         fcmService.saveToken(tokenRequest);
@@ -43,11 +43,11 @@ public class FcmController {
      * 예: POST /api/fcm/send-test?userId=GUEST_USER
      */
     @PostMapping("/send-test")
-    public ResponseEntity<String> sendTestNotification(@RequestParam String userId) {
+    public ResponseEntity<String> sendTestNotification(@RequestParam String UserNumber) {
         try {
             // NotificationService를 호출하여 알림을 발송합니다.
             String response = notificationService.sendNotificationToUser(
-                    userId,
+            		UserNumber,
                     "그룹원1이 위험합니다.",
                     "어서 구조해주세요! " + LocalDateTime.now()
             );

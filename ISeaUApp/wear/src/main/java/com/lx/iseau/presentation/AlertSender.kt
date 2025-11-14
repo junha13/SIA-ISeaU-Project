@@ -23,7 +23,6 @@ object AlertSender {
 
     // 🔧 목업 값 (로그인/연동 전 임시)
     private const val MOCK_USER_NUMBER = 2            // 임시 유저 번호
-    private const val MOCK_EMERGENCY_THRESHOLD = 80   // 이하면 긴급(true)
 
     /**
      * 서버로 심박/발생시각 전송 (비동기)
@@ -31,12 +30,11 @@ object AlertSender {
      * @param heartRateBpm   Int BPM
      * userNumber / isEmergency 는 내부 목업으로 자동 세팅:
      *  - userNumber = MOCK_USER_NUMBER
-     *  - isEmergency = (heartRateBpm <= MOCK_EMERGENCY_THRESHOLD)
      */
 
     fun sendHeartRateAsync(occurredAtIso: String, heartRateBpm: Int) {
         val userNumber = MOCK_USER_NUMBER
-        val isEmergency = false
+        val isEmergency = true
 
         io.execute {
             try {

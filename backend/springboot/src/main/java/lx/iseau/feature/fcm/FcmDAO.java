@@ -10,5 +10,5 @@ public interface FcmDAO {
     void upsertToken(TokenRequest tokenRequest);
 
     // 알림 발송을 위해 특정 사용자의 토큰을 조회
-    String getTokenByUserId(@Param("userId") String userId);
+    String getTokenByUserNumber(@Param("userNumber") String userNumber);
 }

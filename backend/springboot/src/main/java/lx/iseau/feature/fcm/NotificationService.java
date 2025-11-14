@@ -19,11 +19,11 @@ public class NotificationService {
     /**
      * 특정 사용자에게 푸시 알림을 발송합니다.
      */
-    public String sendNotificationToUser(String targetUserId, String title, String body) throws FirebaseMessagingException {
-        String registrationToken = fcmService.getRegistrationToken(targetUserId);
+    public String sendNotificationToUser(String targetUserNumber, String title, String body) throws FirebaseMessagingException {
+        String registrationToken = fcmService.getRegistrationToken(targetUserNumber);
 
         if (registrationToken == null || registrationToken.isEmpty()) {
-            return "Error: User token not found for user " + targetUserId;
+            return "Error: User token not found for user " + targetUserNumber;
         }
 
         // 🚨 FCM 메시지 구성 (Notification payload 사용)
@@ -40,7 +40,7 @@ public class NotificationService {
         // 🚨 메시지 전송
         String response = firebaseMessaging.send(message);
 
-        System.out.println("Successfully sent message to user " + targetUserId + ": " + response);
+        System.out.println("Successfully sent message to user " + targetUserNumber + ": " + response);
         return response;
     }
 }
