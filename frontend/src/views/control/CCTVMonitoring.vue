@@ -1,62 +1,67 @@
 <template>
-  <div class="event-detail-view container-fluid p-4" style="background-color: #F0F2F5; min-height: 100vh;">
-    <div class="top-info-bar d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: #E0E2E6;">
-      <div class="d-flex align-items-center">
-        <h3 class="m-0 fw-bold text-secondary">
-          <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
-          접근 금지 위반 상세 (처리 필요)
-        </h3>
-        <div class="small fw-semibold d-flex gap-4 ms-5" style="color: #333333;">
-          <div class="text-center">
-            <span class="text-muted d-block small">감지 이벤트</span>
-            <span class="fw-bold text-primary">접근 금지 위반</span>
-          </div>
-          <div class="text-center">
-            <span class="text-muted d-block small">정확도</span>
-            <span class="fw-bold" style="color: var(--color-safe);">96%</span>
-          </div>
-          <div class="text-center">
-            <span class="text-muted d-block small">발생 시간</span>
-            <span class="fw-bold">2023-11-29 06:26:27</span>
-          </div>
-          <div class="text-center">
-            <span class="fw-bold">해양 안전 구역 A</span>
-          </div>
-        </div>
+  <div
+    class="event-detail-view container-fluid p-4"
+    style="background-color: #F0F2F5; min-height: 100vh;"
+  >
+    <div
+      class="top-info-bar d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
+      style="border-color: #E0E2E6;"
+    >
+      <!-- 🛎 관제센터 속보 바 -->
+      <div class="alert-bar d-flex align-items-center fs-1">
+        <span class="badge rounded-pill bg-danger fs-1 fw-bold me-4">속보</span>
+
+        <transition name="alert-fade" mode="out-in">
+          <span :key="currentAlert" class="flex-grow-1 text-truncate fw-semibold">
+            {{ currentAlert }}
+          </span>
+        </transition>
       </div>
-      <button class="btn btn-link text-muted p-0" style="font-size: 1.5rem;">
-        <i class="bi bi-x-lg"></i>
-      </button>
     </div>
 
     <div class="row g-4">
-      
+      <!-- =================== 좌측 영역 =================== -->
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
-        
-      <use-streams ws-url="ws://localhost:8000/ws/stream" :cam-ids="[1,2,3,4]" />
+        <!-- CCTV 2x2 스트림 -->
+        <UseStreams ws-url="ws://localhost:8000/ws/stream" :cam-ids="[1, 2, 3, 4]" />
 
-        
-        <div class="card p-3 border-0 shadow-sm flex-shrink-0" style="background-color: #FFFFFF;">
+        <!-- 이벤트 로그 -->
+        <div
+          class="card p-3 border-0 shadow-sm flex-shrink-0"
+          style="background-color: #FFFFFF;"
+        >
           <h6 class="text-muted fw-bold mb-3 small">이벤트 로그 (Timeline)</h6>
 
           <div class="d-flex flex-column gap-2 log-scroll-area">
             <div
               class="log-entry p-2 small rounded fw-semibold"
-              style="background-color: #F8F9FA; border-left: 4px solid var(--iseu-danger); color: #333;"
+              style="
+                background-color: #F8F9FA;
+                border-left: 4px solid var(--iseu-danger);
+                color: #333;
+              "
             >
               <span class="text-muted">[06:26:31]</span>
               <span class="text-danger">위반 행위 최종 확정</span>
             </div>
             <div
               class="log-entry p-2 small rounded fw-semibold"
-              style="background-color: #F8F9FA; border-left: 4px solid var(--iseu-warning); color: #333;"
+              style="
+                background-color: #F8F9FA;
+                border-left: 4px solid var(--iseu-warning);
+                color: #333;
+              "
             >
               <span class="text-muted">[06:26:27]</span>
               <span class="text-warning">접근 금지 감지 시작</span>
             </div>
             <div
               class="log-entry p-2 small rounded fw-semibold"
-              style="background-color: #F8F9FA; border-left: 4px solid var(--color-safe); color: #333;"
+              style="
+                background-color: #F8F9FA;
+                border-left: 4px solid var(--color-safe);
+                color: #333;
+              "
             >
               <span class="text-muted">[06:26:26]</span>
               <span style="color: var(--color-safe);">새로운 객체 영역 진입</span>
@@ -69,26 +74,62 @@
             </div>
           </div>
         </div>
-        
       </div>
 
+      <!-- =================== 우측 패널 =================== -->
       <div class="col-lg-4 d-flex flex-column" style="gap: 1.5rem;">
-        
-        <div class="d-flex justify-content-end align-items-end flex-shrink-0" style="height: 30px;">
-            <button class="btn btn-sm btn-link p-0 fw-bold" style="color: #6c757d; margin-right: 0.5rem;">알림</button>
-            <button class="btn btn-sm btn-link p-0 fw-bold" style="color: var(--iseu-primary);">상세</button>
+        <!-- 진입 / 알림 상세 탭 -->
+        <div
+          class="d-flex justify-content-end align-items-end flex-shrink-0"
+          style="height: 30px;"
+        >
+          <div class="tab-segment-group">
+            <button
+              type="button"
+              class="tab-segment"
+              :class="{ active: rightPanelTab === 'overview' }"
+              @click="rightPanelTab = 'overview'"
+            >
+             위험구역 진입
+            </button>
+
+            <button
+              type="button"
+              class="tab-segment"
+              :class="{ active: rightPanelTab === 'detail' }"
+              @click="rightPanelTab = 'detail'"
+            >
+              알림 상세
+            </button>
+          </div>
         </div>
-        
+
         <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 2;">
-          <h6 class="fw-bold mb-3 small" style="color: #333;">현장 지도 오버뷰</h6>
+          <!-- 탭에 따라 제목 변경 -->
+          <h6 class="fw-bold mb-3 small" style="color: #333;">
+            {{ rightPanelTab === 'overview' ? '위험구역 진입' : '알림 상세' }}
+          </h6>
+
+          <!-- 위험구역 진입: 지도/레이아웃 -->
           <div
+            v-if="rightPanelTab === 'overview'"
             class="map-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted h-100"
             style="background-color: #F0F2F5;"
           >
             [지도/레이아웃 Placeholder]
           </div>
+
+          <!-- 알림 상세 -->
+          <div
+            v-else
+            class="border rounded d-flex align-items-center justify-content-center text-muted h-100"
+            style="background-color: #FFF7F5;"
+          >
+            [알림 상세 Placeholder]
+          </div>
         </div>
 
+        <!-- 감지 정보 통계 -->
         <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 1;">
           <h6 class="fw-bold mb-3 small" style="color: #333;">감지 정보 통계</h6>
           <div
@@ -98,23 +139,42 @@
             [통계 그래프 Placeholder]
           </div>
         </div>
-        
       </div>
     </div>
-    
-    <div class="action-bar fixed-bottom d-flex justify-content-end p-3 border-top" style="background-color: #FFFFFF; border-color: #EAECEF !important;">
+
+    <!-- 하단 액션 바 -->
+    <div
+      class="action-bar fixed-bottom d-flex justify-content-end p-3 border-top"
+      style="background-color: #FFFFFF; border-color: #EAECEF !important;"
+    >
       <div class="me-auto text-dark fw-semibold small d-flex align-items-center">
         <span class="me-3">처리 상태:</span>
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="actionStatus" id="actionPending" checked>
+          <input
+            class="form-check-input"
+            type="radio"
+            name="actionStatus"
+            id="actionPending"
+            checked
+          />
           <label class="form-check-label text-dark" for="actionPending">미처리</label>
         </div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="actionStatus" id="actionProcessing">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="actionStatus"
+            id="actionProcessing"
+          />
           <label class="form-check-label text-dark" for="actionProcessing">처리 중</label>
         </div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="actionStatus" id="actionComplete">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="actionStatus"
+            id="actionComplete"
+          />
           <label class="form-check-label text-dark" for="actionComplete">완료</label>
         </div>
       </div>
@@ -126,51 +186,50 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import useStreams from '@/components/useStreams.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import UseStreams from '@/components/useStreams.vue'
 
-const cams = ref([
-  // 2x2 그리드에 4개만 사용
-  { id: 1, name: 'CAM 1', status: 'ok', detections: [1, 2], isDanger: true }, // 위반 발생
-  { id: 2, name: 'CAM 2', status: 'ok', detections: [1], isDanger: false },
-  { id: 3, name: 'CAM 3', status: 'ok', detections: [1, 2, 3], isDanger: false },
-  { id: 4, name: 'CAM 4', status: 'error', detections: [], isDanger: false }, // 에러 상태
-  { id: 5, name: 'CAM 5 (미사용)', status: 'ok', detections: [0], isDanger: false },
-  { id: 6, name: 'CAM 6 (미사용)', status: 'ok', detections: [1], isDanger: false },
-]);
+const rightPanelTab = ref('overview')
 
-const safeCamCount = computed(() => cams.value.filter(c => c.status === 'ok' && !c.isDanger).length);
-const dangerCamCount = computed(() => cams.value.filter(c => c.isDanger).length);
-const errorCamCount = computed(() => cams.value.filter(c => c.status === 'error').length);
+// 🛎 속보 텍스트 목록
+const alerts = ref([
+  '이호테우 해수욕장 신원 미상 남성 해파리 쏘임',
+  '함덕 해수욕장 완충구역 내 인원 밀집, 관제 요원 주의 필요',
+  '중문 해수욕장 파도 높이 상승, 안전요원 순찰 강화 요망',
+  '협재 해수욕장 해파리 다수 관측, 입수객 주의 안내 방송 필요',
+  '이호테우 해수욕장 20대 여성 구조 요청'
+])
 
-// 기본 선택은 이벤트가 발생한 CAM 1
-const selectedCam = ref(1); 
+const alertIndex = ref(0)
+const currentAlert = computed(() => alerts.value[alertIndex.value])
+
+let alertTimer = null
+
+onMounted(() => {
+  alertTimer = setInterval(() => {
+    alertIndex.value = (alertIndex.value + 1) % alerts.value.length
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (alertTimer !== null) {
+    clearInterval(alertTimer)
+  }
+})
 </script>
 
 <style scoped>
 :root {
-  --iseu-primary: #0092BA;
-  --iseu-secondary: #0B1956; /* 짙은 남색 */
-  --iseu-warning: #FFB354;
-  --iseu-danger: #EB725B;
+  --iseu-primary: #0092ba;
+  --iseu-secondary: #0b1956;
+  --iseu-warning: #ffb354;
+  --iseu-danger: #eb725b;
 
-  --color-safe: #8482FF;
-  --color-light-bg: #F0F2F5;
-  --color-panel-bg: #FFFFFF;
-  --color-separator: #EAECEF;
+  --color-safe: #8482ff;
+  --color-light-bg: #f0f2f5;
+  --color-panel-bg: #ffffff;
+  --color-separator: #eaecef;
   --color-text-dark: #333333;
-}
-
-@keyframes dangerGlow {
-  0% {
-    box-shadow: 0 0 8px 0 rgba(235, 114, 91, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 16px 0 rgba(235, 114, 91, 0.9);
-  }
-  100% {
-    box-shadow: 0 0 8px 0 rgba(235, 114, 91, 0.7);
-  }
 }
 
 .event-detail-view {
@@ -184,68 +243,19 @@ const selectedCam = ref(1);
   background-color: var(--color-panel-bg) !important;
 }
 
-/* --- 2x2 그리드 비디오 컨테이너 --- */
-.video-container-grid {
-  /* 이미지와 같이 둥근 모서리와 그림자 제거 */
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  
-  /* 16:9 비율 유지 */
-  aspect-ratio: 16 / 9;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--color-separator);
-  transition: all 0.2s ease-in-out;
-}
-
-/* 이미지와 같이 짙은 남색 배경 */
-.video-header {
-  background-color: var(--iseu-secondary) !important; 
-  /* 내부 padding을 통해 높이 30px을 유지하도록 조정 */
-  padding: 0.5rem 0.75rem !important;
-}
-
-.video-placeholder-grid {
-  /* 플레이스 홀더가 컨테이너 비율을 채우도록 설정 */
-  width: 100%;
-  height: calc(100% - 30px); /* 헤더 높이(30px) 제외 */
-  background-color: #000000 !important;
-  font-size: 0.9rem;
-}
-/* --- --- */
-
-/* 지도 및 통계 컨테이너 높이 조정 (우측 패널) */
-
-/* Flexbox를 사용하여 내부 요소를 균등하게 채우므로, 개별 height 속성은 제거함 */
-.map-placeholder-base {
-    /* height 속성 제거 */
-    font-size: 1rem;
-}
+/* 지도/통계 placeholder 기본 스타일 */
+.map-placeholder-base,
 .chart-placeholder-base {
-    /* height 속성 제거 */
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
-/* 로그 스크롤 영역 높이 제한 */
+/* 로그 스크롤 영역 */
 .log-scroll-area {
-    /* 로그가 스크롤 되도록 높이 제한 (픽셀 조정) */
-    max-height: 150px; 
-    overflow-y: auto;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-/* 선택 프레임 강조 */
-.selected-frame-light {
-  border: 3px solid var(--iseu-primary) !important;
-  box-shadow: 0 0 0 2px rgba(0, 146, 186, 0.5);
-}
-
-/* 경각심 적용 */
-.is-danger-light {
-  border: 5px solid var(--iseu-danger) !important;
-  animation: dangerGlow 2s infinite ease-in-out;
-}
-
-/* Form element styling */
+/* 라디오 버튼 스타일 */
 .form-check-input {
   background-color: #fff;
   border-color: #ccc;
@@ -260,6 +270,60 @@ const selectedCam = ref(1);
   color: var(--color-text-dark) !important;
 }
 .btn-danger {
-  color: white !important;
+  color: #ffffff !important;
+}
+
+/* 속보 바: 한 줄 + ... 처리 */
+.alert-bar {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* 속보 전환 애니메이션 */
+.alert-fade-enter-active,
+.alert-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.alert-fade-enter-from,
+.alert-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* 우측 탭 (위험구역 진입 / 알림 상세) */
+.tab-segment-group {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid #dee2e6;
+  overflow: hidden;
+  background-color: #ffffff;
+  font-size: 0.8rem;
+}
+
+.tab-segment {
+  padding: 0.3rem 1.1rem;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-weight: 700;
+  min-width: 70px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* 가운데 경계선 */
+.tab-segment + .tab-segment {
+  border-left: 1px solid #dee2e6;
+}
+
+/* 선택된 탭 */
+.tab-segment.active {
+  background-color: var(--iseu-primary);
+  color:#40C4FF
+}
+
+/* hover 시 살짝 강조 */
+.tab-segment:not(.active):hover {
+  background-color: #f1f3f5;
 }
 </style>

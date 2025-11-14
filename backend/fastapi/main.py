@@ -9,9 +9,11 @@ import subprocess
 import shlex 
 import json
 import os
+import torch
 from typing import List, Dict, Any, Tuple, Optional
 from ultralytics import YOLO 
 from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위한 모듈
+
 
 # ====================================================================
 # ★★★ 0. 핵심 설정 및 상수 ★★★
@@ -20,24 +22,45 @@ from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위�
 OUT_W = 1024  # FFmpeg의 출력 프레임 너비 (픽셀). 분석 성능과 화질의 균형을 맞춥니다.
 OUT_H = 768   # FFmpeg의 출력 프레임 높이 (픽셀).
 YOLO_MODEL_PATH = "beach_yolo.pt" # Docker 컨테이너 내부의 YOLO 모델 파일 경로/이름.
-YOLO_CONF_THRESHOLD = 0.5   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
-DET_EVERY_FRAMES = 5 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
+YOLO_CONF_THRESHOLD = 0.44   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
+DET_EVERY_FRAMES = 10 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
 FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 프레임의 총 바이트 크기.
 
-YOUTUBE_URL_TO_FETCH = "https://www.youtube.com/watch?v=E9I4A9aXJUY" # Streamlink가 주소를 가져올 유튜브 라이브 스트림 URL.
-DEFAULT_STREAM_URL = "http://211.114.96.121:1935/jejusi7/11-30T.stream/playlist.m3u8" # Streamlink 실패 시 대체할 기본 CCTV 스트림 주소.
+DEFAULT_STREAM_URL_1 = "http://211.114.96.121:1935/jejusi7/11-30T.stream/playlist.m3u8"         # 이호테우
+DEFAULT_STREAM_URL_2 = "http://59.8.86.94:8080/media/api/v1/hls/vurix/192871/100010/0/1/1.m3u8" # 중문
+DEFAULT_STREAM_URL_3 = "http://211.114.96.121:1935/jejusi6/11-19.stream/playlist.m3u8"          # 함덕해수욕장
+DEFAULT_STREAM_URL_4 = "http://211.114.96.121:1935/jejusi7/11-21.stream/playlist.m3u8"          # 월정리
+
+YOUTUBE_URL_TO_FETCH = ""
+
 MIN_MOTION_AREA = 500 # GMM이 움직임으로 간주할 최소 픽셀 영역 크기.
 MAX_MOTION_AREA = 5000
+
+USE_GMM = False
+
 # 전역 상태 변수 (AIStreamServer 클래스에서 초기화됨)
 VIDEO_SOURCES: List[Tuple[str, str]] = []
 yolo_model = None
 gmm_models = {}
 frame_counters = {}
 
+SEND_TIMEOUT = 0.08  # 80ms
+
 # yolo, gmm 관심 영역 설정 // 전체 해상도 변경 시 이것도 변경해야 함
 ROI_PX = {
     "stream1": [(0, 400), (1024, 400), (1024, 768), (0, 768)],   # 하단 절반 사각형(다각형도 가능)
-    "stream2": [(0, 400), (1024, 400), (1024, 768), (0, 768)],   # 오른쪽 띠
+    "stream2": [(0, 200), (1024, 200), (1024, 768), (0, 768)],   # 오른쪽 띠
+    "stream3": [(0, 200), (1024, 200), (1024, 768), (0, 768)],
+    "stream4": [(0, 200), (1024, 200), (1024, 768), (0, 768)],
+}
+
+# ✳✳ CAM(스트림)별 해안선 설정 ✳✳
+#  - 값은 "((x1, y1), (x2, y2))" 형식의 직선 좌표
+CAM_SHORELINE_LINES = {
+    "stream1": ((0, 550), (OUT_W, 550)),
+    "stream2": ((350, 0), (350, 768)),   # 예시: 조금 더 위쪽에 선
+    "stream3": ((0, 510), (OUT_W, 350)),
+    "stream4": ((0, 290), (OUT_W, 220)),
 }
 
 # ====================================================================
@@ -106,20 +129,26 @@ class AIStreamServer:
         
         print("서버 초기화 로직 실행: Streamlink 및 모델 로드 시작...")
 
-        stream2_youtube_url = get_ytdlp_url(YOUTUBE_URL_TO_FETCH)
+        # stream2_youtube_url = get_ytdlp_url(YOUTUBE_URL_TO_FETCH)
         
         self.video_sources = [
-            ("stream1", DEFAULT_STREAM_URL), 
-            ("stream2", stream2_youtube_url if stream2_youtube_url else DEFAULT_STREAM_URL), 
+            ("stream1", DEFAULT_STREAM_URL_1), 
+            ("stream2", DEFAULT_STREAM_URL_2),
+            ("stream3", DEFAULT_STREAM_URL_3),  
+            ("stream4", DEFAULT_STREAM_URL_4), 
         ]
         
         try:
             self.yolo_model = YOLO(os.path.join("/server/app/yolopt", YOLO_MODEL_PATH))
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.yolo_model.to(device)
+            self.yolo_device = device
+            self.yolo_half = (device == "cuda")
             print(f"YOLO model loaded successfully.")
         except Exception as e:
             self.yolo_model = None
             
-        self.gmm_models = {
+        self.gmm_models = {} if not USE_GMM else {
             name: cv2.createBackgroundSubtractorMOG2(history=1200, varThreshold=25, detectShadows=False)
             for name, _ in self.video_sources
         }
@@ -143,15 +172,26 @@ class AIStreamServer:
         """단일 스트림의 FFmpeg 구동, AI 처리, 웹소켓 전송 파이프라인."""
         
         command = (
-            'ffmpeg -analyzeduration 1000000 -probesize 32 -fflags nobuffer -an ' 
-            # ★수정: -an (No Audio) 추가로 오디오 스트림을 완전히 무시
-            f'-i "{stream_url}" -s {OUT_W}x{OUT_H} -r 15 -map 0:v -f image2pipe -pix_fmt bgr24 -vcodec rawvideo -' 
+            'ffmpeg -hide_banner -loglevel error '
+            # 입력/분석 버퍼 최소화(+ 저지연 플래그)
+            '-fflags nobuffer -flags low_delay -avioflags direct '
+            '-analyzeduration 0 -probesize 32 -fpsprobesize 0 '
+            # 깨진 프레임은 즉시 버림 + 타임스탬프 안정화
+            '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 '
+            '-http_persistent 1 '
+            '-fflags +discardcorrupt '
+            '-use_wallclock_as_timestamps 1 -an '
+            f'-i "{stream_url}" '
+            # 가장 빠른 스케일러 + FPS 재생성 금지(내부 버퍼링 방지)
+            f'-map 0:v:0 -vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" -vsync passthrough '
+            # 파이프로 즉시 밀어내기 (OpenCV가 바로 쓰는 포맷)
+            '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
         )
         
         process = None
         try:
             process = await asyncio.create_subprocess_exec(
-                *shlex.split(command),
+                *shlex.split(command),  # 문자열을 토큰화 함 (command: ['ffmpeg', '-analyzeduratio', '1000000'])
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
@@ -165,8 +205,28 @@ class AIStreamServer:
                 frame_bgr = np.frombuffer(frame_bytes, dtype=np.uint8).reshape(OUT_H, OUT_W, 3)
                 frame = frame_bgr.copy() 
                 vis = frame.copy() # 시각화용 복사본
-                
+
+                # ⭐ CAM별 해안선 좌표 불러오기
+                #    - 딕셔너리에 stream_id가 없으면 기본값(기본 해안선) 사용
+                default_line = ((0, 600), (OUT_W, 600))
+                p1, p2 = CAM_SHORELINE_LINES.get(stream_id, default_line)
+
+                 # 해안선의 y좌표 (박스 색 기준으로 쓸 값)
+                shoreline_y = p1[1]
+
+                # 빨간 해안선 그리기
+                cv2.line(
+                    vis,
+                    p1,             # 시작점
+                    p2,             # 끝점
+                    (0, 0, 255),    # 빨간색 (BGR)
+                    3               # 두께
+                )
+
                 people_count = 0
+                motion_count = 0 
+                fg = None 
+                
                 
                 # -----------------------------------------------------------------------
                 # 3-4. AI 처리 (YOLO + GMM 보완 로직)
@@ -180,19 +240,23 @@ class AIStreamServer:
                     frame_for_ai = frame
 
                 # 1. GMM 전경 마스크 생성 (움직임 포착)
-                gmm = self.gmm_models[stream_id]
-                fg = gmm.apply(frame_for_ai, learningRate=0.005)
-                fg = cv2.morphologyEx(fg, cv2.MORPH_OPEN, np.ones((3,3),np.uint8), iterations=2)
-                fg = cv2.dilate(fg, np.ones((10,10),np.uint8), iterations=2) 
+                gmm = self.gmm_models.get(stream_id)
+                if gmm is not None:
+                    fg = gmm.apply(frame_for_ai, learningRate=0.005)
+                    fg = cv2.morphologyEx(fg, cv2.MORPH_OPEN, np.ones((3,3),np.uint8), iterations=2)
+                    fg = cv2.dilate(fg, np.ones((10,10),np.uint8), iterations=2) 
 
-                motion_count = int(cv2.countNonZero(fg)) 
+                    motion_count = int(cv2.countNonZero(fg)) 
+                else:
+                    motion_count = 0
 
                 # 2. YOLO 추론 (5프레임마다 실행)
                 self.frame_counters[stream_id] += 1
                 if self.yolo_model and self.frame_counters[stream_id] % DET_EVERY_FRAMES == 0:
                     results = self.yolo_model.predict(
                         frame_for_ai, conf=YOLO_CONF_THRESHOLD, 
-                        verbose=False, classes=[0]
+                        verbose=False, classes=[0],
+                        device=self.yolo_device, half=self.yolo_half, imgsz=1024
                     )[0]
                     
                     yolo_detected_boxes = []
@@ -202,8 +266,19 @@ class AIStreamServer:
                             x1,y1,x2,y2 = map(int, b)
                             yolo_detected_boxes.append((x1, y1, x2, y2))
                             people_count += 1
+
+                            # ⭐ 박스 세로 중심 y좌표 계산
+                            y_center = (y1 + y2) // 2
+
+                             # ⭐ 선 위 = 빨강, 선 아래 = 초록
+                            if y_center < shoreline_y:
+                                color = (0, 0, 255)      # 선 위쪽 → 빨간 박스
+                            else:
+                                color = (0, 255, 0)      # 선 아래쪽 → 초록 박스
+
+
                             # YOLO 탐지 박스 (초록색)
-                            cv2.rectangle(vis, (x1,y1), (x2,y2), (0,255,0), 2)
+                            cv2.rectangle(vis, (x1,y1), (x2,y2), color, 2)
                     
                     last_yolo_boxes = yolo_detected_boxes 
 
@@ -233,14 +308,17 @@ class AIStreamServer:
                 # 3-6. 인코딩 및 전송
                 # -----------------------------------------------------------------------
                 
-                ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])  # JPEG 품질
                 if not ok: continue
                 
                 jpg_chunk = buf.tobytes()
                 payload = {"stream_id": stream_id, "timestamp": int(time.time() * 1000), "people": people_count, "motion": motion_count}
                 
-                await websocket.send_bytes(jpg_chunk)
-                await websocket.send_text(json.dumps(payload))
+                try:
+                    await asyncio.wait_for(websocket.send_bytes(jpg_chunk), timeout=SEND_TIMEOUT)
+                    await asyncio.wait_for(websocket.send_text(json.dumps(payload)), timeout=SEND_TIMEOUT)
+                except asyncio.TimeoutError:
+                    pass  # 막히면 이번 프레임 드롭
 
         except Exception as e:
             if process:
@@ -286,28 +364,31 @@ app.add_middleware(
 )
 
 # WebSockets 라우터 (클래스 메서드 호출로 로직 전달)
-@app.websocket("/ws/stream") 
-async def websocket_video_stream(websocket: WebSocket):
+@app.websocket("/ws/stream/{sid}") 
+async def websocket_video_stream(websocket: WebSocket, sid: str):
     
     await websocket.accept()
-    print("메인 웹소켓 연결 수락됨. 스트림 시작 준비.")
+    print(f"단일 스트림 WebSocket 연결 수락: {sid}")
     
-    tasks = []
+    # sid -> URL 매핑
+    url_map = {
+        "1": DEFAULT_STREAM_URL_1,
+        "2": DEFAULT_STREAM_URL_2,
+        "3": DEFAULT_STREAM_URL_3,
+        "4": DEFAULT_STREAM_URL_4,
+    }
+    stream_id = f"stream{sid}"
+    stream_url = url_map.get(sid)
+
+    if not stream_url:
+        await websocket.close()
+        return
+
+    # 기존 함수 재사용: 딱 하나만 실행
     try:
-        for stream_id, stream_url in server.video_sources:
-            if stream_url is None: continue
-
-            task = asyncio.create_task(
-                server.process_single_stream(websocket, stream_id, stream_url)
-            )
-            tasks.append(task)
-            
-        await asyncio.gather(*tasks)
-
+        await server.process_single_stream(websocket, stream_id, stream_url)
     except Exception as e:
-        print(f"메인 핸들러 오류: {e}")
-    finally:
-        pass
+        print(f"단일 스트림 핸들러 오류({sid}): {e}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
