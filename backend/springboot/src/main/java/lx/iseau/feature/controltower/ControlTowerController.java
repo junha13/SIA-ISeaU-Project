@@ -20,7 +20,7 @@ public class ControlTowerController {
     // Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
     // 혹은 @RequestMapping("/api/watch")로 Controller 레벨 경로를 변경해야 함
     // =========================
-    /*
+    
     @PostMapping("/heart-rate")
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
         // 필수 필드 검사
@@ -38,7 +38,6 @@ public class ControlTowerController {
             return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Server processing error."));
         }
     }
-    */
     
     /*
     @PostMapping("/heart-rate")
@@ -51,6 +50,7 @@ public class ControlTowerController {
         service.processHeartRateData(req); // ← 이미 긴급 처리/Task 생성까지 포함
         return ResponseEntity.ok(Map.of("result", "ok"));
     }
+    */
    
     // =========================
     // 매니저 기본정보 조회 
