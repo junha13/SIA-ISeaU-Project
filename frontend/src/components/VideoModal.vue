@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 
 const darkColor = '#0B1956';
 

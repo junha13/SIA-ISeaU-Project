@@ -1,0 +1,65 @@
+# -----------------------------------------------------------------
+# .dockerignore
+# 도커 이미지 빌드 시 제외할 파일 및 폴더 목록
+# -----------------------------------------------------------------
+
+# --- 시스템 및 IDE ---
+# OS 생성 파일
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# IDE 설정
+.idea/
+.vscode/
+
+# --- 언어별 가상환경 및 의존성 ---
+# Python 가상환경 (필수!)
+.venv/
+venv/
+iseau/
+**/iseau/
+**/.venv/
+
+# Node.js 의존성 (Vue 프로젝트용)
+node_modules/
+
+# --- 빌드 산출물 및 캐시 ---
+# Spring Boot 빌드 결과
+springboot/target/
+springboot/.mvn/
+
+# Python 캐시
+__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Vue/Node 빌드 결과
+dist/
+build/
+
+# --- 로그 및 임시 파일 ---
+*.log
+runs/
+
+# --- 미디어 (데이터셋 등) ---
+# (만약 data/ 나 datasets/ 폴더에 학습용 이미지가 있다면 추가)
+# data/
+# datasets/
+# *.mp4
+# *.avi
+# *.jpg
+# *.png
+# (단, 서버 실행에 필요한 이미지/비디오가 있다면 제외해야 함)
+
+# --- 기타 ---
+# 환경변수 파일
+.env
+.env.*
+
+# 마크다운 (문서)
+*.md
