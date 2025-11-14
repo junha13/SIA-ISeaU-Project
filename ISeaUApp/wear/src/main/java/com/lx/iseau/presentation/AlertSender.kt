@@ -40,7 +40,7 @@ object AlertSender {
 
         io.execute {
             try {
-                val json = """{"occurred_at":"$occurredAtIso","heart_rate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""
+                val json = """{"occurredAt":"$occurredAtIso","heartRate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""
                 val url = URL(ENDPOINT)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
