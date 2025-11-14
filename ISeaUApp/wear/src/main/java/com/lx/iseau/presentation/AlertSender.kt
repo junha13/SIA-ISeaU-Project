@@ -23,7 +23,7 @@ object AlertSender {
 
     // 🔧 목업 값 (로그인/연동 전 임시)
     private const val MOCK_USER_NUMBER = 2            // 임시 유저 번호
-    private const val MOCK_EMERGENCY_THRESHOLD = 100   // 이하면 긴급(true)
+    private const val MOCK_EMERGENCY_THRESHOLD = 80   // 이하면 긴급(true)
 
     /**
      * 서버로 심박/발생시각 전송 (비동기)
@@ -40,7 +40,7 @@ object AlertSender {
 
         io.execute {
             try {
-                val json = """{"occurred_at":"$occurredAtIso","heart_rate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""
+                val json = """{"occurredAt":"$occurredAtIso","heartRate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""
                 val url = URL(ENDPOINT)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"

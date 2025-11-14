@@ -5,13 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
-import lx.iseau.feature.fcm.FcmService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.api.client.util.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +53,6 @@ public class ControlTowerService {
         if (processed == null) processed = 0; // 기본값 0(미처리)
         return dao.updateTaskProcessed(taskNumber, processed);
     }
-    
     // ============ 워치 데이터 처리 및 Task 생성 ============
     @Transactional // 두 개 이상의 DAO 호출이 있어 트랜잭션 처리
     public void processHeartRateData(HeartRateRequest request) {
@@ -73,7 +68,6 @@ public class ControlTowerService {
             handleEmergencyAlert(request.getUserNumber());
         }
     }
-	
 
     // 긴급 상황 처리 (Task 생성) - 분리된 비즈니스 로직
     private void handleEmergencyAlert(int userNumber) {
@@ -99,7 +93,4 @@ public class ControlTowerService {
         }
         catch (Exception e) { return null; }
     }
-    
 }
-
-
