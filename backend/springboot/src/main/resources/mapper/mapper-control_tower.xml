@@ -12,7 +12,7 @@
         ) VALUES (
                      #{userNumber},
                      CAST(#{heartRate} AS INTEGER),
-                     CAST(#{occurredAt} AS TIMESTAMP)
+                     CAST(#{occurredAt} AS TIMESTAMP WITH TIME ZONE)
                  )
             ON CONFLICT (user_number) DO UPDATE
                                              SET heart_rate = EXCLUDED.heart_rate,
