@@ -9,6 +9,9 @@ beach/
 ### front build ###
 /backend/springboot/src/main/resources/static/
 
+### learn data ###
+beach_yolo.pt
+
 ### seoljung file ###
 .idea
 .vscode
