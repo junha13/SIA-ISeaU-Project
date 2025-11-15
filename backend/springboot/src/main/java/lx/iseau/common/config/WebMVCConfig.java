@@ -10,21 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebMVCConfig implements WebMvcConfigurer {
-
-    /*
-	@Bean
-	public Interceptor loginInterceptor() {
-		return new Interceptor();
-
-	}
-	
-    @Override
-	public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(loginInterceptor())
-                .addPathPatterns("/**") // 모든 URL에 적용하되,
-                .excludePathPatterns("/login", "/resources/**"); // 로그인 페이지와 리소스 파일은 제외
-	}
-	*/
     // ------------------------------------
     // 1. SPA 포워딩: Vue Router 경로 처리
     // ------------------------------------
