@@ -35,12 +35,12 @@ public class FcmService {
     public void saveToken(TokenRequest tokenRequest) {
         try {
             // 1. userId로 user_number를 조회
-            int userNumber = getUserNumber(tokenRequest.getUserId());
+            int userNumber = getUserNumber(tokenRequest.getUserNumber());
 
             // 2. user_number와 토큰을 DAO에 전달하여 upsert 실행
             fcmDao.upsertToken(userNumber, tokenRequest.getToken());
 
-            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId() +
+            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserNumber() +
                     ", UserNumber: " + userNumber);
         } catch (DataAccessException e) {
             // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
