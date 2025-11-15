@@ -66,14 +66,12 @@
             android:exported="true">
 
             <intent-filter>
-                <!-- Data Layer 변경 알림 -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
 
-                <!-- /USER_INFO 경로만 수신 -->
                 <data
                     android:scheme="wear"
                     android:host="*"
-                    android:pathPrefix="/USER_INFO" />
+                    android:pathPrefix="/" />
             </intent-filter>
         </service>
 

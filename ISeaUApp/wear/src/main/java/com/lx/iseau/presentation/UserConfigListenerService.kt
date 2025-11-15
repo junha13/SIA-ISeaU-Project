@@ -18,6 +18,7 @@ class UserConfigListenerService : WearableListenerService() {
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         super.onDataChanged(dataEvents)
+        Log.i(TAG, "🔔 Data Layer Event Received!") // ✅ 이 로그가 뜨는지 확인
 
         dataEvents.forEach { event ->
             if (event.type != DataEvent.TYPE_CHANGED) return@forEach
