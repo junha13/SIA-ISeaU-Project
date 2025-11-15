@@ -35,5 +35,7 @@ const sortOptions = ref([
     { label: "제주", value: "제주" },
   ]);
 
-  return { header, beach, tabOptions, sortOptions, regionOptions }
+  const controlView = ref('해수욕장')
+
+  return { header, beach, tabOptions, sortOptions, regionOptions, controlView }
 })

@@ -18,13 +18,13 @@
       </div>
 
       <div class="d-flex align-items-center">
-        <select class="form-select form-select-sm me-1
-        " style="width: 120px;">
-          <option>해수욕장 선택</option>
-          <option>이호테우 해수욕장 </option>
-          <option>중문 해수욕장</option>
-          <option>함덕 해수욕장</option>
-          <option>협재 해수욕장</option>
+        <select
+          class="form-select form-select-sm me-1"
+          style="width: 120px;"
+          v-model="controlView"
+        >
+          <option>해수욕장</option>
+          <option>항구 </option>
         </select>
         <span class="badge bg-primary fs-6">{{ currentTime }}</span>
       </div>
@@ -78,6 +78,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { controlView } = storeToRefs(store)
+
 
 /* ==== 시계 ==== */
 const currentTime = ref('')

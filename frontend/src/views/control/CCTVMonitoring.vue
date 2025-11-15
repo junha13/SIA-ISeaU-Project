@@ -23,8 +23,12 @@
       <!-- =================== 좌측 영역 =================== -->
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
-        <UseStreams ws-url="ws://localhost:8000/ws/stream" :cam-ids="[1, 2, 3, 4]" />
-
+          <UseStreams
+            :base-ws="'ws://localhost:8000/ws/stream'"
+            :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
+            :key="controlView"  
+            @danger-update="handleDangerUpdate"
+          />
         <!-- 이벤트 로그 -->
         <div
           class="card p-3 border-0 shadow-sm flex-shrink-0"
@@ -90,7 +94,7 @@
               :class="{ active: rightPanelTab === 'overview' }"
               @click="rightPanelTab = 'overview'"
             >
-             위험구역 진입
+             진입 알림
             </button>
 
             <button
@@ -107,7 +111,7 @@
         <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 2;">
           <!-- 탭에 따라 제목 변경 -->
           <h6 class="fw-bold mb-3 small" style="color: #333;">
-            {{ rightPanelTab === 'overview' ? '위험구역 진입' : '알림 상세' }}
+            {{ rightPanelTab === 'overview' ? '진입 알림' : '알림 상세' }}
           </h6>
 
           <!-- 위험구역 진입: 지도/레이아웃 -->
@@ -129,19 +133,87 @@
           </div>
         </div>
 
-        <!-- 감지 정보 통계 -->
+            <!-- 감지 정보 통계 (탭 2개: 10분 / 금일 누적) -->
         <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 1;">
-          <h6 class="fw-bold mb-3 small" style="color: #333;">감지 정보 통계</h6>
-          <div
-            class="chart-placeholder-base border rounded d-flex align-items-center justify-content-center text-muted h-100"
-            style="background-color: #F0F2F5;"
-          >
-            [통계 그래프 Placeholder]
-          </div>
-        </div>
-      </div>
-    </div>
+          <!-- 제목 + 탭 버튼 줄 -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- 왼쪽 제목: 탭에 따라 문구 변경 -->
+            <h6 class="fw-bold mb-0 small" style="color: #333;">
+              {{ statsTab === '10min' ? '10분 위험구역 통계' : '금일 누적 통계' }}
+            </h6>
 
+            <!-- 오른쪽 탭 버튼 -->
+            <div class="tab-segment-group">
+              <button
+                type="button"
+                class="tab-segment"
+                :class="{ active: statsTab === '10min' }"
+                @click="statsTab = '10min'"
+              >
+                10분 통계
+              </button>
+
+              <button
+                type="button"
+                class="tab-segment"
+                :class="{ active: statsTab === 'today' }"
+                @click="statsTab = 'today'"
+              >
+                금일 누적
+              </button>
+            </div>
+          </div>
+
+    <!-- 10분 통계 표 -->
+  <div
+    v-if="statsTab === '10min'"
+    class="chart-placeholder-base border rounded p-2 h-100"
+    style="background-color: #F0F2F5;"
+  >
+    <table class="table table-sm mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">CAM</th>
+          <th scope="col" class="text-end">최근 10분 위험 진입(명)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="id in camList" :key="`10-${id}`">
+          <td>CAM {{ id }}</td>
+          <td class="text-end fw-bold text-danger">
+            {{ danger10min[id] ?? 0 }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 금일 누적 통계 표 -->
+  <div
+    v-else
+    class="chart-placeholder-base border rounded p-2 h-100"
+    style="background-color: #F0F2F5;"
+  >
+    <table class="table table-sm mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">CAM</th>
+          <th scope="col" class="text-end">금일 누적 위험 진입(명)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="id in camList" :key="`today-${id}`">
+          <td>CAM {{ id }}</td>
+          <td class="text-end fw-bold text-danger">
+            {{ dangerToday[id] ?? 0 }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+    </div>
+</div>
+</div>
     <!-- 하단 액션 바 -->
     <div
       class="action-bar fixed-bottom d-flex justify-content-end p-3 border-top"
@@ -188,8 +260,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import UseStreams from '@/components/useStreams.vue'
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { header, beach, controlView } = storeToRefs(store)
 
 const rightPanelTab = ref('overview')
+
+// 📊 위험구역 통계 탭 상태 (10분 / 금일 누적)
+const statsTab = ref('10min')
 
 // 🛎 속보 텍스트 목록
 const alerts = ref([
@@ -203,20 +282,67 @@ const alerts = ref([
 const alertIndex = ref(0)
 const currentAlert = computed(() => alerts.value[alertIndex.value])
 
+// 🔔 속보 롤링 타이머
 let alertTimer = null
 
+// 📊 감시 대상 CAM 목록 (CAM1 ~ CAM4)
+const camList = [1, 2, 3, 4]
+
+// 📊 10분 단위 위험 진입 카운트 (CAM별)
+const danger10min = ref({
+  1: 0,
+  2: 0,
+  3: 0,
+  4: 0,
+})
+
+// 📊 금일 누적 위험 진입 카운트 (CAM별)
+const dangerToday = ref({
+  1: 0,
+  2: 0,
+  3: 0,
+  4: 0,
+})
+
+// 🔴 UseStreams 에서 올라오는 “위험구역 진입” 이벤트 처리
+//    payload 예시: { streamId: 'stream1', danger: 2, timestamp: 1731576000000 }
+const handleDangerUpdate = ({ streamId, danger, timestamp }) => {
+  if (!danger || danger <= 0) return
+
+  // "stream1" → 1 으로 CAM 번호 추출
+  const camId = Number(String(streamId).replace('stream', ''))
+  if (!camList.includes(camId)) return
+
+  // ✅ 최근 10분 카운트 + 금일 누적 둘 다 증가
+  danger10min.value[camId] += danger
+  dangerToday.value[camId] += danger
+}
+
+// ⏱ 10분마다 10분 통계만 리셋 (금일 누적은 유지)
+let tenMinTimer = null
+
 onMounted(() => {
-  alertTimer = setInterval(() => {
+  // 🔔 속보 문구 롤링
+  alertTimer = window.setInterval(() => {
     alertIndex.value = (alertIndex.value + 1) % alerts.value.length
   }, 5000)
+
+  // ⏱ 10분(600,000ms)마다 danger10min 초기화
+  tenMinTimer = window.setInterval(() => {
+    danger10min.value = { 1: 0, 2: 0, 3: 0, 4: 0 }
+  }, 10 * 60 * 1000)
 })
 
 onUnmounted(() => {
   if (alertTimer !== null) {
     clearInterval(alertTimer)
   }
+  if (tenMinTimer !== null) {
+    clearInterval(tenMinTimer)
+  }
 })
 </script>
+
 
 <style scoped>
 :root {
