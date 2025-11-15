@@ -145,6 +145,21 @@ const handleLogin = async () => {
       console.error('로그인 후 token 처리 중 오류:', e);
     }
 
+
+        // 4. ✅ 안드로이드 WebView 환경에서 워치용 userNumber 동기화
+    // - 일반 PC 브라우저에서는 window.AndroidBridge 가 없으니까 그냥 무시됨
+    // - 안드로이드 WebView 안에서는 Java에서 addJavascriptInterface(...)로 넘긴 객체가 여기에 들어옴
+    if (window.AndroidBridge && typeof window.AndroidBridge.setUserNumber === 'function') {
+      try {
+        // 백엔드에서 받은 user_number를 네이티브로 전달
+        window.AndroidBridge.setUserNumber(userData.user_number);
+        console.log('AndroidBridge.setUserNumber 호출 성공:', userData.user_number);
+      } catch (bridgeError) {
+        console.error('AndroidBridge.setUserNumber 호출 중 오류:', bridgeError);
+      }
+    }
+
+
     // 성공 시 알림 표시 후 페이지 이동
     alert(`${userData.user_name}님 환영합니다!`);
     router.replace({name: 'Main'});

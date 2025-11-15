@@ -14,9 +14,6 @@
                      CAST(#{heartRate} AS INTEGER),
                      CAST(#{occurredAt} AS TIMESTAMP WITH TIME ZONE)
                  )
-            ON CONFLICT (user_number) DO UPDATE
-                                             SET heart_rate = EXCLUDED.heart_rate,
-                                             occurred_at = EXCLUDED.occurred_at
     </insert>
 
     <insert id="insertTaskOnEmergency">

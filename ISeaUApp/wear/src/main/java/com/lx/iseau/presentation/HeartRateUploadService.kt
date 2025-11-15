@@ -38,6 +38,11 @@ class HeartRateUploadService : Service() {
         private const val NOTI_CHANNEL_ID = "hr_upload_channel"
         private const val NOTI_ID = 212
 
+        // 응급상황(이상치) 임계값만 사용
+        private const val EMERGENCY_LOW_HR = 76   // 이 값 이하 → 너무 느림
+        private const val EMERGENCY_HIGH_HR = 78 // 이 값 이상 → 너무 빠름
+
+
         fun start(context: Context) {
             val intent = Intent(context, HeartRateUploadService::class.java)
             if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent)
@@ -69,13 +74,26 @@ class HeartRateUploadService : Service() {
                 val value = (p as? SampleDataPoint<Float>)?.value ?: continue
                 val bpm = value.roundToInt()
                 val occurredAt = isoFormatter.format(Instant.now())
+                val userNumber = UserConfigListenerService.getSavedUserNumber(applicationContext)
+
+                if (userNumber <= 0) {
+                    Log.e(TAG, "❌ 워치에 userNumber가 없음. 서버 전송 스킵.")
+                    return
+                }
 
                 // 워차 화면에도 심박 표시
                 (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(bpm)
 
-                // ✅ 서버 전송
-                AlertSender.sendHeartRateAsync(occurredAt, bpm)
-                Log.i(TAG, "HR=$bpm at $occurredAt → sent")
+                // ✅ 임계치 기준으로만 응급 판단
+                val isEmergency = bpm <= EMERGENCY_LOW_HR || bpm >= EMERGENCY_HIGH_HR
+
+                if (isEmergency) {
+                    Log.i(TAG, "🚨 EMERGENCY HR=$bpm at $occurredAt → send to server")
+                    AlertSender.sendHeartRateAsync(occurredAt, bpm, userNumber, isEmergency)
+                } else {
+                    // 정상 구간이면 서버 전송 안 함
+                    Log.d(TAG, "Normal HR=$bpm at $occurredAt (not sent)")
+                }
             }
         }
     }

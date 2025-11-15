@@ -43,8 +43,11 @@ public class FcmService {
             System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId() +
                     ", UserNumber: " + userNumber);
         } catch (DataAccessException e) {
+            // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
             System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace(); // 스택 트레이스를 콘솔에 출력
+
+            // 오류를 던져서 Spring Boot가 500 응답을 반환하고 로그를 남기도록 유도
             throw new RuntimeException("DB Save Failed due to DataAccessException", e);
         } catch (RuntimeException e) {
             // getUserNumber에서 발생한 사용자 미발견 예외 처리
