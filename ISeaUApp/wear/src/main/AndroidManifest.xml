@@ -61,5 +61,22 @@
                 android:resource="@xml/health_services_config" />
         </service>
 
+        <service
+            android:name="com.lx.iseau.presentation.UserConfigListenerService"
+            android:exported="true">
+
+            <intent-filter>
+                <!-- Data Layer 변경 알림 -->
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+
+                <!-- /USER_INFO 경로만 수신 -->
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/USER_INFO" />
+            </intent-filter>
+        </service>
+
+
     </application>
 </manifest>

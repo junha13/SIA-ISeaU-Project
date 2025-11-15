@@ -1,5 +1,6 @@
 package com.lx.iseau.presentation
 
+import android.telephony.CarrierConfigManager.ImsEmergency
 import android.util.Log
 import java.net.HttpURLConnection
 import java.net.URL
@@ -21,9 +22,6 @@ object AlertSender {
 
     private val io = Executors.newFixedThreadPool(2)
 
-    // 🔧 목업 값 (로그인/연동 전 임시)
-    private const val MOCK_USER_NUMBER = 2            // 임시 유저 번호
-
     /**
      * 서버로 심박/발생시각 전송 (비동기)
      * @param occurredAtIso  ISO-8601(UTC) 문자열, 예: 2025-11-12T13:45:21Z
@@ -32,10 +30,7 @@ object AlertSender {
      *  - userNumber = MOCK_USER_NUMBER
      */
 
-    fun sendHeartRateAsync(occurredAtIso: String, heartRateBpm: Int) {
-        val userNumber = MOCK_USER_NUMBER
-        val isEmergency = true
-
+    fun sendHeartRateAsync(occurredAtIso: String, heartRateBpm: Int, userNumber: Int, isEmergency: Boolean) {
         io.execute {
             try {
                 val json = """{"occurredAt":"$occurredAtIso","heartRate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""

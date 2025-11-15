@@ -35,19 +35,6 @@
         </intent-filter>
     </service>
 
-    <service
-        android:name="com.lx.iseau.WearDataListenerService"
-        android:exported="true"
-        android:permission="com.google.android.gms.permission.BIND_LISTENER">
-        >
-        <intent-filter>
-            <action android:name="com.google.android.gms.wearable.DATA_NODE_SWITCHED" />
-            <data android:scheme="wear" android:host="*" android:pathPrefix="/"
-                android:path="/start-activity" />
-            <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-        </intent-filter>
-    </service>
-
     <meta-data
         android:name="com.google.firebase.messaging.default_notification_icon"
         android:resource="@mipmap/ic_launcher" />
