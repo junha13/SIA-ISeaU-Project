@@ -130,8 +130,6 @@ const handleLogin = async () => {
         }
       }
 
-
-
       // 3. 🔑 FCM 토큰 저장 - userData.id
       const loginId = userData.id;
       console.log('FCM에 전달할 ID (로그인 ID):', loginId);
@@ -140,18 +138,20 @@ const handleLogin = async () => {
         console.error('FCM 토큰 저장 중 오류 발생:', fcmError);
       });
 
-      // 4. ✅ Android WebView 환경에서 ID 동기화 (user_number 대신 'id' 사용)
-      if (window.AndroidBridge && typeof window.AndroidBridge.setUserId === 'function') {
+
+
+      // 4. ✅ Android WebView 환경에서 ID 동기화 (user_number 사용)
+      if (window.AndroidBridge && typeof window.AndroidBridge.setUserNumber === 'function') {
         try {
-          if (loginId) { // 유효한 ID인지 확인
+          if (userNumber.value) { // 유효한 ID인지 확인
             // 백엔드에서 받은 ID를 네이티브 Java 함수로 전달
-            window.AndroidBridge.setUserId(loginId);
-            console.log('AndroidBridge.setUserId 호출 성공:', loginId);
+            window.AndroidBridge.setUserNumber(userNumber.value);
+            console.log('AndroidBridge.setUserNumber 호출 성공:', userNumber.value);
           } else {
-            console.error('⚠️ 사용자 ID 값이 유효하지 않아 setUserId 호출을 건너뜜니다.', userData);
+            console.error('⚠️ 사용자 ID 값이 유효하지 않아 setUserNumber 호출을 건너뜜니다.', userData);
           }
         } catch (bridgeError) {
-          console.error('AndroidBridge.setUserId 호출 중 오류:', bridgeError);
+          console.error('AndroidBridge.setUserNumber 호출 중 오류:', bridgeError);
         }
       }
 

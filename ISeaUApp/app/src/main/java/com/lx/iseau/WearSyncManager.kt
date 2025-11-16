@@ -23,7 +23,7 @@ object WearSyncManager {
 
         // 워치에서 "/USER_INFO" path를 리슨하도록 만들 예정
         val request = PutDataMapRequest.create("/USER_INFO").apply {
-            dataMap.putInt("user_number", userNumber)
+            dataMap.putInt("userNumber", userNumber)
             dataMap.putLong("timestamp", System.currentTimeMillis())
         }.asPutDataRequest().setUrgent()
 

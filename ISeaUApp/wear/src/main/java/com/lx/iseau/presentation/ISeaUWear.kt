@@ -93,11 +93,11 @@ class ISeaUWear : ComponentActivity() {
     private fun startSafetyMonitoringService() {
         if (hasAllPermissions()) {
             // ✅ 서버 업로드 전용 서비스 실행 (여기서는 HeartRateUploadService가 정의되어 있다고 가정)
-            // HeartRateUploadService.start(this)
+            HeartRateUploadService.start(this)
             Log.d(TAG, "✅ HeartRateUploadService started.")
 
             // 💡 서비스 시작 시 연결 상태를 '연결됨'으로 업데이트 (UI 전환 목적)
-            healthViewModel.updatePhoneConnection(true)
+            healthViewModel.updatePhoneConnectionStatus(true)
         } else {
             Log.w(TAG, "❌ Cannot start service: Permissions are missing.")
         }
@@ -138,7 +138,7 @@ class ISeaUWear : ComponentActivity() {
 
         // 💡 테스트를 위해 ViewModel 인스턴스를 여기서 임시 생성
         healthViewModel = ViewModelProvider(this).get(HealthDataViewModel::class.java)
-        healthViewModel.updatePhoneConnection(false) // 초기 상태 미연결
+        healthViewModel.updatePhoneConnectionStatus(false) // 초기 상태 미연결
 
         requestPermissionsIfNecessary()
 
@@ -301,7 +301,7 @@ fun DefaultPreview() {
     val viewModel = HealthDataViewModel()
     // 💡 연결된 상태 Preview
     viewModel.updateHeartRate(75)
-    viewModel.updatePhoneConnection(true)
+    viewModel.updatePhoneConnectionStatus(true)
     WearApp(viewModel = viewModel, onAlertClick = {})
 }
 
@@ -310,6 +310,6 @@ fun DefaultPreview() {
 fun DisconnectedPreview() {
     val viewModel = HealthDataViewModel()
     // 💡 미연결 상태 Preview
-    viewModel.updatePhoneConnection(false)
+    viewModel.updatePhoneConnectionStatus(false)
     PhoneConnectionStatus(viewModel = viewModel, onRetryClick = {})
 }

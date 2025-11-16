@@ -9,7 +9,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.lx.iseau.wear"
+        applicationId = "com.lx.iseau"
         minSdk = 30
         targetSdk = 34
         versionCode = 1

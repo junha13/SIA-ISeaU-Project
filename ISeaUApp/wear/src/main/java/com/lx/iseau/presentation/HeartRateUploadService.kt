@@ -72,16 +72,16 @@ class HeartRateUploadService : Service() {
             val points = data.getData(DataType.HEART_RATE_BPM)
             for (p in points) {
                 val value = (p as? SampleDataPoint<Float>)?.value ?: continue
+                val userNumber = UserConfigListenerService.getSavedUserNumber(applicationContext)
                 val bpm = value.roundToInt()
                 val occurredAt = isoFormatter.format(Instant.now())
-                val userNumber = UserConfigListenerService.getSavedUserNumber(applicationContext)
 
                 if (userNumber <= 0) {
                     Log.e(TAG, "❌ 워치에 userNumber가 없음. 서버 전송 스킵.")
                     return
                 }
 
-                // 워차 화면에도 심박 표시
+                // 워치 화면에도 심박 표시
                 (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(bpm)
 
                 // ✅ 임계치 기준으로만 응급 판단
@@ -89,7 +89,7 @@ class HeartRateUploadService : Service() {
 
                 if (isEmergency) {
                     Log.i(TAG, "🚨 EMERGENCY HR=$bpm at $occurredAt → send to server")
-                    AlertSender.sendHeartRateAsync(occurredAt, bpm, userNumber, isEmergency)
+                    AlertSender.sendHeartRateAsync(userNumber, bpm,occurredAt)
                 } else {
                     // 정상 구간이면 서버 전송 안 함
                     Log.d(TAG, "Normal HR=$bpm at $occurredAt (not sent)")
