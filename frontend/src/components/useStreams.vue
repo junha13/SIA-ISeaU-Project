@@ -1,20 +1,25 @@
 <template>
   <div class="row g-3">
+    <!-- camIds 예: [1,2,3,4] → 2x2 카드 렌더 -->
     <div v-for="id in camIds" :key="id" class="col-6">
+      <!-- 16:9 고정 비율 컨테이너 -->
       <div
         class="position-relative bg-dark stream-tile"
-        style="aspect-ratio:16/9;"
-        @click="openModal(id)"
+        style="aspect-ratio:4/3;"
+        @click="setCctvName(state[`s${id}`]?.label)"
       >
+        <!-- 최신 JPEG Blob URL 표시 (없으면 플레이스홀더) -->
         <img
           :src="state[`s${id}`]?.src || placeholder(id)"
           class="w-100 h-100"
           style="object-fit:contain"
           alt="video"
         />
+        <!-- 좌상단: CAM 라벨 -->
         <span class="badge text-bg-secondary position-absolute top-0 start-0 m-2">
-          CAM {{ id }}
+          {{ state[`s${id}`]?.label }}
         </span>
+        <!-- 우하단: 연결 상태 배지 (ok / reconnect) -->
         <span
           class="badge bg-opacity-75 position-absolute bottom-0 end-0 m-2"
           :class="state[`s${id}`]?.ok ? 'text-bg-success' : 'text-bg-warning'"
@@ -25,14 +30,18 @@
     </div>
   </div>
 
-  <!-- 모달 -->
+  <!-- ✅ 클릭 시 띄울 전체 화면 모달    // @click="openModal(id)"
   <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
     <div class="modal-body-box">
+      모달 헤더 : CAM 번호 + 닫기 버튼
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="mb-0">CAM {{ selectedCamId }}</h5>
-        <button type="button" class="btn btn-sm btn-light" @click="closeModal">닫기</button>
+        <button type="button" class="btn btn-sm btn-light" @click="closeModal">
+          닫기
+        </button>
       </div>
 
+      모달 안에 크게 보이는 영상
       <div class="modal-video-wrapper">
         <img
           v-if="selectedState"
@@ -43,71 +52,56 @@
         />
       </div>
 
+       선택된 스트림의 부가 정보(people/motion 등을 나중에 추가할 수 있음)
       <div v-if="selectedState && selectedState.people != null" class="mt-2 small text-muted">
         사람 수: {{ selectedState.people }} /
-        움직임 픽셀: {{ selectedState.motion }}
+        위험구역 인원: {{ selectedState.danger ?? 0 }}
       </div>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script setup>
 import { reactive, onMounted, onUnmounted, ref, computed } from 'vue';
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { controlView, cctvName } = storeToRefs(store)
+
 const emit = defineEmits(['danger-update'])
+
 const props = defineProps({
-  // 필요하면 외부에서 주입 가능. 주입이 없으면 아래 buildBaseWs()로 자동 생성.
-  baseWs: { type: String, default: '' },
-  camIds: { type: Array, default: () => [1, 2, 3, 4] },
+  // WebSocket 베이스 URL(슬래시 없이 끝남) 예: ws://IP:8000/ws/stream
+ wsUrl: { type: String, default: 'ws://localhost:8000/ws/stream' },
+ // 렌더할 카메라 번호 목록 (CAM n ↔ 서버 sid n 매핑)
+ camIds: { type: Array, default: () => [1, 2, 3, 4] },
 });
 
-/** ✅ 현재 페이지 기준으로 안전한 WS URL 자동 생성 */
-const buildBaseWs = () => {
-  const isHttps = window.location.protocol === 'https:';
-  const proto = isHttps ? 'wss' : 'ws';
-  const host = import.meta.env.VITE_WS_HOST || window.location.hostname;
-  const port = import.meta.env.VITE_WS_PORT || '8000';
-  return `${proto}://${host}:${port}/ws/stream`;
-};
-
-const wsBase = computed(() => props.baseWs || buildBaseWs());
-
-/** 상태 저장소: s1, s2 ... */
+// 스트림별 런타임 상태 저장소
+// 키: s1, s2 ... 값: { ws, ok, src, tmp, live, t, people?, motion? }
 const state = reactive({});
 
-const wsUrl = (id) => `${wsBase.value}/${id}`;
+// URL 조합: /ws/stream/{sid}
+const buildWsUrl = (id) => `${props.wsUrl}/${id}`;
 
+// 아직 프레임이 없을 때 보여줄 더미 이미지
 const placeholder = (id) =>
   `https://placehold.co/640x360/000/FFF?text=stream${id}`;
 
+// Blob URL 메모리 해제 유틸 (매 프레임 교체 시 누수 방지)
 const revoke = (u) => u && URL.revokeObjectURL(u);
 
-/** 프레임 승격 타이머 (바이너리 먼저 와도 화면이 바로 뜨게) */
-let promoteTimer = null;
-const startPromoter = () => {
-  if (promoteTimer) return;
-  promoteTimer = setInterval(() => {
-    for (const k in state) {
-      const s = state[k];
-      if (!s) continue;
-      if (s.tmp && s.src !== s.tmp) {
-        revoke(s.live);
-        s.src = s.tmp;
-        s.live = s.tmp;
-        s.tmp = null;
-      }
-    }
-  }, 150);
-};
-const stopPromoter = () => {
-  if (promoteTimer) clearInterval(promoteTimer);
-  promoteTimer = null;
-};
-
+/**
+ * 특정 CAM(id) 소켓 오픈
+ * - 바이너리는 임시(tmp)로, 텍스트 오면 화면(src)으로 승격
+ * - onclose 시 3초 후 자동 재접속
+ */
 function openOne(id) {
   const k = `s${id}`;
-  closeOne(id);
+  closeOne(id); // 기존 연결/Blob 정리
 
+  // 초기 상태 생성
   state[k] = {
     ws: null,
     ok: false,
@@ -115,100 +109,181 @@ function openOne(id) {
     tmp: null,
     live: null,
     t: null,
-    people: null,
-    motion: null,
-    danger: null,
+    people: 0,
+    danger: 0,
+    label: ''
   };
   const s = state[k];
 
-  s.ws = new WebSocket(wsUrl(id));
-  s.ws.binaryType = 'arraybuffer';
+  // WebSocket 연결
+  s.ws = new WebSocket(buildWsUrl(id));
+  s.ws.binaryType = 'arraybuffer'; // 바이너리를 ArrayBuffer로 받기
 
   s.ws.onopen = () => {
-    s.ok = true;
+    s.ok = true; // 상태 배지: ok
   };
 
-  s.ws.onmessage = (e) => {
+    s.ws.onmessage = (e) => {
+    // 1) 바이너리: JPEG 프레임 → 임시 Blob URL로 교체
     if (e.data instanceof ArrayBuffer) {
-      // 최신 프레임 임시 저장 (즉시 화면 반영은 타이머가 승격)
-      revoke(s.tmp);
+      revoke(s.tmp); // 이전 임시 URL 해제
       s.tmp = URL.createObjectURL(new Blob([e.data], { type: 'image/jpeg' }));
       return;
     }
-    // 텍스트 메타(있으면 반영)
+
+      // 2) 텍스트: 메타데이터(JSON) 도착
     try {
       const meta = JSON.parse(e.data);
-      if (meta.people != null) s.people = meta.people;
-      if (meta.motion != null) s.motion = meta.motion;
-      if (meta.danger != null) s.danger = meta.danger;
+      // meta 예시:
+      // {
+      //   stream_id: "CAM1",
+      //   label: "이호테우",
+      //   people: 3,
+      //   danger: 2,
+      //   timestamp: 1731580000000
+      // }
 
-      // ★ 위험 인원이 있으면 부모로 이벤트 emit (통계용)
+      if (meta.people != null) s.people = meta.people;
+
+      // 🔴 위험 인원 수 저장
+      if (meta.danger != null) {
+        s.danger = meta.danger;
+      }
+
+      if (meta.label) {
+        s.label = meta.label;
+      }
+
+      // 🔴 부모에게 이벤트로 알려주기 (통계/알림용)
       if (meta.danger != null && meta.danger > 0 && meta.stream_id) {
-        emit('danger-update', {
-          streamId: meta.stream_id, // e.g. "stream1"
-          danger: meta.danger,
-          timestamp: meta.timestamp ?? Date.now(),
-        })
+        // "CAM1" → 1
+        const camId = Number(String(meta.stream_id).replace('CAM', ''));
+
+        if (!Number.isNaN(camId)) {
+          emit('danger-update', {
+            camId,                            // 1~8 숫자
+            streamId: meta.stream_id,         // "CAM1"
+            label: meta.label,                // "이호테우" 같은 이름
+            danger: meta.danger,              // 이번 프레임에서 위험 인원
+            timestamp: meta.timestamp ?? Date.now(),
+          });
+        }
       }
     } catch {
-      /* ignore */
+      // 그냥 문자열일 수도 있으니 파싱 실패는 무시
+    }
+
+    // 3) 직전에 받은 프레임(tmp)을 실제 화면(src)으로 승격
+    if (s.tmp) {
+      revoke(s.live); // 이전 화면용 URL 해제
+      s.src = s.tmp;  // <img> 교체
+      s.live = s.tmp; // 현재 화면용으로 보관
+      s.tmp = null;   // 임시 슬롯 비우기
     }
   };
 
   s.ws.onclose = () => {
-    s.ok = false;
+    s.ok = false; // 상태 배지: reconnect
+    // 3초 후 재접속 (네트워크/서버 순간 장애 대응)
     s.t = setTimeout(() => openOne(id), 3000);
   };
 
+  // 오류 시 즉시 닫아서 onclose 재접속 루틴 태우기
   s.ws.onerror = () => {
-    try { s.ws.close(); } catch {}
+    try {
+      s.ws.close();
+    } catch {}
   };
 }
 
+/**
+ * 특정 CAM(id) 소켓/리소스 정리
+ * - WebSocket 종료
+ * - 재접속 타이머 제거
+ * - Blob URL 해제
+ */
 function closeOne(id) {
   const k = `s${id}`;
   const s = state[k];
   if (!s) return;
-  try { s.ws && s.ws.close(); } catch {}
+  try {
+    s.ws && s.ws.close();
+  } catch {}
   clearTimeout(s.t);
   revoke(s.tmp);
   revoke(s.live);
   delete state[k];
 }
 
-/** 모달 상태 */
+// ✅ 모달 상태
 const showModal = ref(false);
 const selectedCamId = ref(null);
-const selectedState = computed(() => (selectedCamId.value ? state[`s${selectedCamId.value}`] : null));
 
-const openModal = (id) => {
-  selectedCamId.value = id;
-  showModal.value = true;
-};
-const closeModal = () => { showModal.value = false; };
+// 선택된 CAM의 상태를 computed로 가져오기
+const selectedState = computed(() => {
+  if (!selectedCamId.value) return null;
+  return state[`s${selectedCamId.value}`] || null;
+});
 
-/** 마운트/언마운트 */
-onMounted(() => {
-  startPromoter();
-  props.camIds.forEach(openOne);
-});
-onUnmounted(() => {
-  stopPromoter();
-  props.camIds.forEach(closeOne);
-});
+function setCctvName(label) {
+  cctvName.value = label
+}
+
+
+// 모달 열기
+// const openModal = (id) => {
+//   selectedCamId.value = id;
+//   showModal.value = true;
+// };
+
+// 모달 닫기
+// const closeModal = () => {
+//   showModal.value = false;
+// };
+
+// 마운트 시 모든 CAM 연결, 언마운트 시 정리
+onMounted(() => props.camIds.forEach(openOne));
+onUnmounted(() => props.camIds.forEach(closeOne));
 </script>
 
 <style scoped>
-.badge { user-select: none; }
-.stream-tile { cursor: pointer; }
+/* 배지 텍스트 드래그 방지 (UX) */
+.badge {
+  user-select: none;
+}
 
+/* 카드 클릭 가능한 느낌 */
+.stream-tile {
+  cursor: pointer;
+}
+
+/* 모달 전체 배경 (어두운 반투명 레이어) */
 .modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 1050; display: flex; justify-content: center; align-items: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+/* 모달 컨텐츠 박스 (흰색 카드) */
 .modal-body-box {
-  background: #fff; border-radius: .75rem; padding: 1rem 1.25rem;
-  width: min(90vw, 960px); max-height: 90vh; display: flex; flex-direction: column;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  width: min(90vw, 960px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
-.modal-video-wrapper { position: relative; background: #000; width: 100%; aspect-ratio: 16 / 9; }
+
+/* 모달 안 영상 영역 : 16:9 비율 유지 */
+.modal-video-wrapper {
+  position: relative;
+  background: #000;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
 </style>

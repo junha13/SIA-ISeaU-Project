@@ -19,14 +19,14 @@
 
       <div class="d-flex align-items-center">
         <select
-          class="form-select form-select-sm me-1"
+          class="form-select form-select-sm me-1 py-1"
           style="width: 120px;"
           v-model="controlView"
         >
           <option>해수욕장</option>
           <option>항구 </option>
         </select>
-        <span class="badge bg-primary fs-6">{{ currentTime }}</span>
+        <span class="badge fs-3">{{ currentTime }}</span>
       </div>
     </header>
 
