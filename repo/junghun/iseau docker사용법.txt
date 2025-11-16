@@ -1,0 +1,10 @@
+docker run --rm -p 8000:8000 --gpus all --name iseau-api iseau-fastapi:latest
+
+docker rm -f iseau-api
+
+
+
+
+            ON CONFLICT (user_number) DO UPDATE
+                                             SET heart_rate = EXCLUDED.heart_rate,
+                                             occurred_at = EXCLUDED.occurred_at

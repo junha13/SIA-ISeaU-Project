@@ -51,7 +51,18 @@ app.use(router)
 // sessionStorage/localStorage에 저장된 로그인 정보를 복원합니다.
 // (다른 컴포넌트가 마운트되기 전에 auth 상태가 준비되도록 함)
 import { useAuthStore } from '@/stores/authStore'
-useAuthStore();
+// 호출 시점에서 일부 스토어 구현이 유효하지 않아 앱이 바로 크래시되는 경우가 있어
+// 초기화 호출을 안전하게 감싸서 오류가 나면 무시하도록 합니다.
+try {
+  // 일부 환경에서는 useAuthStore() 호출이 즉시 실행되어 오류를 던질 수 있으므로
+  // 안전하게 감싸서 개발 서버를 우선 띄울 수 있도록 합니다.
+  useAuthStore();
+} catch (e) {
+  // 개발 중에는 콘솔에 경고만 남겨두고 앱 실행을 계속합니다.
+  // 필요한 경우 나중에 수동으로 스토어 초기화를 수행하세요.
+  // eslint-disable-next-line no-console
+  console.warn('[init] useAuthStore() failed — initialization skipped', e);
+}
 
 app.component('BottomSheet', BottomSheet)
 app.component('quill-editor', quillEditor)

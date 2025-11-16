@@ -75,15 +75,16 @@ public class MainActivity extends AppCompatActivity {
             this.appContext = context.getApplicationContext();
         }
 
+        // MainActivity.java (AndroidBridge.setUserNumber)
         @JavascriptInterface
         public void setUserNumber(int userNumber) {
-            Log.d(TAG, "📲 JS에서 전달받은 userNumber: " + userNumber);
+            Log.d(TAG, "📲 JS에서 전달받은 userNumber: " + userNumber); // <- 폰 로그에 찍혀야 함
 
-            // 1) 폰 내부 세션 저장 (Kotlin object UserSessionManager)
+            // 1) 폰 내부 세션 저장
             UserSessionManager.INSTANCE.saveUserNumber(appContext, userNumber);
             Log.d(TAG, "✅ UserSessionManager에 userNumber 저장 완료: " + userNumber);
 
-            // 2) 워치로도 동기화 (폰 → 워치 Data Layer)
+            // 2) 워치로도 동기화
             WearSyncManager.INSTANCE.sendUserNumberToWatch(appContext, userNumber);
             Log.d(TAG, "✅ WearSyncManager로 워치 전송 요청 완료: " + userNumber);
         }

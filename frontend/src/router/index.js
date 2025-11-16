@@ -70,38 +70,13 @@ const routes = [
         name: 'ResetPassword',
         component: ResetPasswordPage
     },
-    // ----------------------------------------------------
-    // 1-1. ✅ 관제 시스템 레이아웃 적용 (신규 추가)
-    // ----------------------------------------------------
-    {
-        path: '/control', // 관제 시스템의 기본 경로
-        component: ControlLayout, // 관제 전용 레이아웃 적용
-        children: [
-            // 기본 경로 진입 시 CCTV 관제 페이지로 리다이렉트
-            { path: '', redirect: 'cctv' },
-
-            // CCTV 관제 페이지
-            {
-                path: 'cctv',
-                name: 'CCTVControl', // 이름 충돌을 피하기 위해 'Control' 접미사 추가
-                component: CCTVMonitoring
-            },
-
-            // 신고 상세 페이지
-            {
-                path: 'report',
-                name: 'ReportControl', // 이름 충돌을 피하기 위해 'Control' 접미사 추가
-                component: ReportDetail
-            },
-        ],
-    },
 
     // ----------------------------------------------------
     // 2. 레이아웃 적용 (메인 페이지)
     // ----------------------------------------------------
     {
         path: '/',
-        component: AppLayout, // 레이아웃 적용
+        component: AppLayout, // AppLayout 적용
         children: [
             // 메인 및 기본 기능
             { path: '', name: 'Main', component: MainPage},
@@ -123,10 +98,38 @@ const routes = [
             { path: 'my-info', name: 'MyInfo', component: MyPage },
             { path: 'my-info/comments', name: 'MyComment', component: MyCommentPage },
 
-            // post 
+            // post
             { path: 'post/:postNumber', name: 'PostDetail', component: PostDetail },
             { path: 'post/list', name: 'PostList', component: PostList },
             { path: 'post/write', name: 'PostWrite', component: PostWrite },
+
+            // ----------------------------------------------------
+            // ✅ ControlLayout을 AppLayout의 자식으로 배치 (숨김 처리)
+            // ----------------------------------------------------
+            {
+                path: 'control', // 관제 시스템의 기본 경로: /control
+                component: ControlLayout, // ControlLayout이 AppLayout 내부에 로드됨
+                // AppLayout의 UI를 숨기도록 설정
+                meta: { hideAppLayout: true },
+                children: [
+                    // 기본 경로 진입 시 CCTV 관제 페이지로 리다이렉트
+                    { path: '', redirect: 'cctv' },
+
+                    // CCTV 관제 페이지
+                    {
+                        path: 'cctv',
+                        name: 'CCTVControl',
+                        component: CCTVMonitoring
+                    },
+
+                    // 신고 상세 페이지
+                    {
+                        path: 'report',
+                        name: 'ReportControl',
+                        component: ReportDetail
+                    },
+                ],
+            },
         ],
     },
 ]

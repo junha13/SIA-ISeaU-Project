@@ -1,8 +1,16 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,vue,eclipse,java,intellij,vuejs,node,python,cmake,visualstudio,cuda,c++,maven, android,androidstudio,gradle,kotlin, tomcat, metronic, env
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,vue,eclipse,java,intellij,vuejs,node,python,cmake,visualstudio,cuda,c++,maven
 
+beach/
+
+### yolo ###
+*.pt
+
 ### front build ###
 /backend/springboot/src/main/resources/static/
+
+### learn data ###
+beach_yolo.pt
 
 ### seoljung file ###
 .idea

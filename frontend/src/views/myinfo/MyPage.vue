@@ -2,7 +2,7 @@
   <div class="my-page container-fluid p-3">
 
     <!-- 로그인 되어있지 않을 경우 로그인 제안, 로그인 했을 경우 사용자 정보 표시 -->
-    <div v-if="!authStore.isAuthenticated" class="col-12">
+    <div v-if="!isAuth" class="col-12">
       <div class="card mb-3 border-info">
           <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start">
             <div>
@@ -23,22 +23,22 @@
           <h6 class="fw-bold mb-3" :style="{ color: mainColor }">정보</h6>
           <div class="d-flex justify-content-between py-2 border-bottom">
             <span class="text-muted">이름</span>
-            <span 
+              <span 
               class="fw-bold" 
-              :class="{ 'text-primary': !authStore.userInfo.userName, 'cursor-pointer': !authStore.userInfo.userName }"
-              :style="!authStore.userInfo.userName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-              @click="!authStore.userInfo.userName && goToLogin()">
-              {{ authStore.userInfo.userName || '알 수 없음' }}
+              :class="{ 'text-primary': !displayName, 'cursor-pointer': !displayName }"
+              :style="!displayName ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!displayName && goToLogin()">
+              {{ displayName || '알 수 없음' }}
             </span>
           </div>
           <div class="d-flex justify-content-between py-2">
             <span class="text-muted">전화번호</span>
             <span 
               class="fw-bold"
-              :class="{ 'text-primary': !authStore.userInfo.mobile, 'cursor-pointer': !authStore.userInfo.mobile }"
-              :style="!authStore.userInfo.mobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
-              @click="!authStore.userInfo.mobile && goToLogin()">
-              {{ authStore.userInfo.mobile || '알 수 없음' }}
+              :class="{ 'text-primary': !displayMobile, 'cursor-pointer': !displayMobile }"
+              :style="!displayMobile ? { cursor: 'pointer', textDecoration: 'underline' } : {}"
+              @click="!displayMobile && goToLogin()">
+              {{ displayMobile || '알 수 없음' }}
             </span>
           </div>
         </div>
@@ -65,11 +65,11 @@
     </div>
 
     <!-- 3. 설정 섹션 -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
-      <h6 class="fw-bold mb-3" :style="{ color: mainColor }">설정</h6>
+    <!-- <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
+      <h6 class="fw-bold mb-3" :style="{ color: mainColor }">설정</h6> -->
 
       <!-- 그룹 이탈 알림 설정 -->
-      <h6 class="fw-bold text-muted mt-3 mb-3">그룹 이탈 알림</h6>
+      <!-- <h6 class="fw-bold text-muted mt-3 mb-3">그룹 이탈 알림</h6>
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">1단계 (현재 200M)</span>
         <div class="form-check form-switch">
@@ -87,10 +87,10 @@
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="level3" v-model="settings.alertLevel3" @change="updateSettings" :style="switchStyle(settings.alertLevel3)">
         </div>
-      </div>
+      </div> -->
 
       <!-- 기타 알림 설정 -->
-      <h6 class="fw-bold text-muted mt-4 mb-3">그룹 위치 미갱신 알림</h6>
+      <!-- <h6 class="fw-bold text-muted mt-4 mb-3">그룹 위치 미갱신 알림</h6>
       <div class="d-flex justify-content-between align-items-center py-2">
         <span class="text-muted small">그룹 위치 미갱신 알림</span>
         <div class="form-check form-switch">
@@ -103,7 +103,7 @@
           <input class="form-check-input" type="checkbox" id="tide" v-model="settings.tideAlert" @change="updateSettings" :style="switchStyle(settings.tideAlert)">
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 4. 이용 약관 및 로그아웃 -->
     <div class="card shadow-sm border-0 rounded-3 mb-5">
@@ -123,24 +123,57 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore'; // Auth Store 사용
 import { useConfirmModal } from '@/utils/modalUtils';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
+import { useAuthToken } from '@/composables/useAuthToken';
 
 const store = useStore();
 
 const { header } = storeToRefs(store)
 
-onMounted(() => {
-  header.value = '내 정보'
-})
-
 const router = useRouter();
 const { showConfirmModal } = useConfirmModal();
 const authStore = useAuthStore(); // Auth Store 인스턴스
+// 추출된 refs로 사용: storeToRefs로 isAuthenticated와 userInfo를 refs로 가져옵니다.
+const { isAuthenticated: storeIsAuthenticated, userInfo } = storeToRefs(authStore);
+
+const { token: tokenRef, isAuthenticated: tokenIsAuthenticated, userName: tokenUserName, userNumber: tokenUserNumber, userMobile: tokenUserMobile, clear: clearToken } = useAuthToken();
+
+onMounted(() => {
+  header.value = '내 정보'
+  // 초기 상태 로그
+  try {
+    console.log('[MyPage] mounted debug:', {
+      token: tokenRef?.value,
+      tokenIsAuthenticated: tokenIsAuthenticated?.value,
+      tokenUserName: tokenUserName?.value,
+      tokenUserNumber: tokenUserNumber?.value,
+      tokenUserMobile: tokenUserMobile?.value,
+      storeIsAuthenticated: storeIsAuthenticated?.value,
+      storeUserInfo: userInfo?.value,
+    });
+  } catch (e) {
+    console.error('[MyPage] mounted debug error', e);
+  }
+});
+
+// composable 우선의 인증/표시값
+const isAuth = computed(() => !!tokenIsAuthenticated.value);
+const displayName = computed(() => tokenUserName.value);
+const displayMobile = computed(() => tokenUserMobile.value);
+
+// 디버그: 상태 변경 시 로그
+watch([
+  () => tokenRef?.value,
+  () => tokenIsAuthenticated?.value,
+  () => storeIsAuthenticated?.value
+], ([t, tkAuth, stAuth]) => {
+  console.log('[MyPage] watch update:', { token: t, tokenAuth: tkAuth, storeAuth: stAuth, storeUserInfo: userInfo?.value });
+});
 
 // --- Color Definitions ---
 const mainColor = '#0092BA';
@@ -149,7 +182,7 @@ const dangerColor = '#EB725B';
 
 // --- State ---
 // 설정 상태를 Store의 userInfo.settings에서 가져오기
-const settings = authStore.userInfo.settings;
+// const settings = authStore.userInfo.settings;
 
 
 // --- Computed & Methods ---
@@ -167,11 +200,11 @@ const switchStyle = (isActive) => {
 /**
  * 설정 변경 시 Store Action 호출
  */
-const updateSettings = () => {
-  // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
-  // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
-  authStore.updateSettings(settings);
-};
+// const updateSettings = () => {
+//   // settings 객체가 Pinia Store의 reactive 객체이므로 변경 시 자동으로 Pinia state가 업데이트됨.
+//   // 추가적인 API 호출은 AuthStore의 updateSettings Action에서 처리됨.
+//   authStore.updateSettings(settings);
+// };
 
 /**
  * 로그인 페이지로 이동
@@ -196,6 +229,8 @@ const handleLogout = async () => {
     try {
       // Auth Store의 logout Action 호출 (성공 시 Store 내에서 모달 알림 및 페이지 이동 처리)
       await authStore.logout();
+        // 토큰도 제거하여 완전한 로그아웃 상태로 만듭니다.
+        try { clearToken(); } catch (e) { /* ignore */ }
     } catch (e) {
       // API 호출 실패 등의 에러 처리
       showConfirmModal({

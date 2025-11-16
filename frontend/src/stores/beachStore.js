@@ -4,7 +4,8 @@ import axios from 'axios';
 import { beachApi } from '@/api/beach';
 import { useConfirmModal } from '@/utils/modalUtils';
 
-const FAVORITES_API_URL = 'http://localhost:8080/api/beach/favorites';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const FAVORITES_API_URL = `${API_BASE_URL}/api/beach/favorites`;
 
 export const useBeachStore = defineStore('beach', () => {
     const beaches = ref([]);

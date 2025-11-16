@@ -12,7 +12,8 @@ public interface AuthDAO {
      * @param registerDTO
      * @return int(성공하면 1)
      */
-    int register(@Param("registerDTO") RegisterDTO dto);
+    // @Param 애너테이션을 제거합니다.
+    int register(RegisterDTO dto);
 
     /**
      * 아이디 중복확인

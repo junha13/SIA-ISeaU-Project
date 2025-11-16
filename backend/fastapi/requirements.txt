@@ -1,0 +1,17 @@
+# requirements.txt (WebRTC 관련 및 shlex 제거)
+
+fastapi==0.115.5
+uvicorn==0.30.0
+pydantic==2.9.2
+pydantic-settings==2.5.2
+websockets==12.0
+python-multipart
+# shlex는 표준 라이브러리이므로 제거합니다.
+numpy==2.1.2
+
+# YOLO 및 비디오 처리
+ultralytics==8.3.34
+opencv-python-headless==4.10.0.84
+
+# 스트림 주소 추출 (Streamlink)
+yt-dlp

@@ -1,8 +1,11 @@
 <template>
-  <div id="app" class="d-flex flex-column min-vh-100"
-       :style="{ '--main-color': mainColor, '--dark-color': darkColor }">
+  <div
+      id="app"
+      class="d-flex flex-column min-vh-100"
+      :class="{ 'control-view-mode-app': route.meta.hideAppLayout }"
+      :style="{ '--main-color': mainColor, '--dark-color': darkColor }"
+  >
 
-    <!-- ✅ Confirm Modal (기존 알림/확인 모달) -->
     <ConfirmModal
         v-model:isVisible="modalState.isVisible"
         :title="modalState.title"
@@ -16,7 +19,6 @@
         @cancel="handleModalCancel"
     />
 
-    <!-- ✅ Group Invite Confirm Modal (Group 3982) -->
     <GroupInviteConfirmModal
         v-if="groupStore.receivedInvitation"
         :isVisible="true"
@@ -30,11 +32,14 @@
     />
 
 
-    <!-- ✅ Header -->
-    <header class="app-header shadow-sm sticky-top" :style="{ backgroundColor: 'white', color: darkColor }">
+    <header
+        v-if="!route.meta.hideAppLayout"
+        class="app-header shadow-sm sticky-top"
+        :style="{ backgroundColor: 'white', color: darkColor }"
+    >
       <div class="container-fluid d-flex align-items-center justify-content-between p-3">
         <div class="d-flex align-items-center">
-          
+
           <h1 v-if="header === mainHeaderName" class="fw-bolder mt-3" :style="{ color: darkColor, fontSize: '1.6rem'}">
             <img class="mt-n2" src="/iseau.png" style="max-width: 35px; max-width: 40px;">
             {{ header }}
@@ -50,12 +55,12 @@
         <div class="d-flex align-items-center">
           <i class="fas fa-bell fs-1 me-5" :style="{ color: dangerColor }" @click="clickAlert"></i>
           <button
-            class="bg-transparent border-0 p-2 burger-btn"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#sideMenu"
-            aria-controls="sideMenu"
-            aria-label="menu"
+              class="bg-transparent border-0 p-2 burger-btn"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#sideMenu"
+              aria-controls="sideMenu"
+              aria-label="menu"
           >
             <i class="fas fa-bars mt-3 fs-1 me-4 navbar-toggler-icon"></i>
           </button>
@@ -75,13 +80,15 @@
       </div>
     </header>
 
-        <!-- ✅ Main Content -->
-    <main class="flex-grow-1 container-fluid p-0 main-scroll">
+    <main
+        class="flex-grow-1 container-fluid p-0 main-scroll"
+        :class="{ 'control-view-mode': route.meta.hideAppLayout }"
+    >
       <router-view v-slot="{ Component, route }" >
         <transition
-          enter-active-class="animate__animated animate__fadeIn fast-route"
-          leave-active-class="animate__animated animate__fadeOut fast-route"
-          mode="out-in"
+            enter-active-class="animate__animated animate__fadeIn fast-route"
+            leave-active-class="animate__animated animate__fadeOut fast-route"
+            mode="out-in"
         >
           <div class="route-shell" :key="route.fullPath">
             <component :is="Component" />
@@ -90,8 +97,11 @@
       </router-view>
     </main>
 
-    <!-- ✅ Footer -->
-    <footer class="app-footer fixed-bottom" :style="{ backgroundColor: darkColor }">
+    <footer
+        v-if="!route.meta.hideAppLayout"
+        class="app-footer fixed-bottom"
+        :style="{ backgroundColor: darkColor }"
+    >
       <div class="container-fluid d-flex justify-content-around py-2">
 
         <div class="nav-item-custom" @click="goTo('/')">
@@ -99,7 +109,6 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/')">홈</span>
         </div>
 
-        <!-- 경로를 '/group'으로 변경 (GroupList 페이지로 연결) -->
         <div class="nav-item-custom" @click="goTo('/group')">
           <i class="fas fa-users fs-4 mb-1" :style="navIconStyle('/group')"></i>
           <span class="fs-7 fw-bold" :style="navTextStyle('/group')">위치공유</span>
@@ -110,7 +119,6 @@
           <span class="fs-7 fw-bold" :style="navTextStyle('/beach')">해수욕장</span>
         </div>
 
-        <!-- 내정보 탭 (MyInfo 라우트 연결) -->
         <div class="nav-item-custom" @click="goTo('/my-info')">
           <i class="fas fa-user-circle fs-4 mb-1" :style="navIconStyle('/my-info')"></i>
           <span class="fs-7 fw-bold" :style="navTextStyle('/my-info')">내정보</span>
@@ -141,7 +149,7 @@ function goBack() {
 }
 
 const router = useRouter()
-const route = useRoute()
+const route = useRoute() // ✅ route 객체를 사용해 meta 정보에 접근합니다.
 
 // 🎨 색상
 const mainColor = '#0092BA'
@@ -301,16 +309,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* (이전 스타일 유지) */
+/* AppLayout의 root div에서 padding-bottom을 조건부로 제어하기 위한 클래스 */
+.control-view-mode-app {
+  padding-bottom: 0px !important;
+}
+
 .main-scroll {
+  /* 기본 높이: 헤더(55px)와 푸터(60px)가 있을 때 */
   height: calc(100vh - 55px - 60px);
-  overflow-y: scroll;               
+  overflow-y: scroll;
   scrollbar-gutter: stable;           /* ✅ 크롬/엣지에서 덜 흔들리게 */
   -webkit-overflow-scrolling: touch;  /* 모바일 부드럽게 */
 }
+
+/* Control 화면일 경우 높이 재설정 (헤더/푸터가 없을 때) */
+.main-scroll.control-view-mode {
+  height: 100vh;
+  overflow-y: hidden; /* ControlLayout이 100vh를 차지하므로 AppLayout에서는 스크롤을 막습니다. */
+}
+
 #app {
   font-family: Arial, sans-serif;
-  padding-bottom: 60px;
+  padding-bottom: 60px; /* 기본값 */
 }
 
 .app-header {

@@ -26,8 +26,22 @@ const api = axios.create({
    // }
    // return config;
 //}, (error) => {
-  //  return Promise.reject(error);
+//    return Promise.reject(error);
 //});
+
+// 요청 인터셉터: localStorage의 'token'이 있으면 Authorization 헤더에 추가
+api.interceptors.request.use((config) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (e) {
+        // 무시
+    }
+    return config;
+}, (error) => Promise.reject(error));
 
 
 /**
