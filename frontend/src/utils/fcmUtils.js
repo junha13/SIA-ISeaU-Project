@@ -1,23 +1,23 @@
 import { getToken } from 'firebase/messaging';
 import { Workbox } from 'workbox-window';
-import { messaging } from '@/firebase.js'; 
+import { messaging } from '@/firebase.js';
 import axios from 'axios';
 
 // --- 헬퍼 함수: 서버에 토큰 저장 ---
-const saveTokenToServer = async (token, userNumber) => {
-    const SERVER_URL = '/api/fcm/save-token'; // 토큰 저장 엔드포인트
-    
+const saveTokenToServer = async (token, loginId) => {
+    const SERVER_URL = import.meta.env.VITE_API_BASE_URL+'/api/fcm/save-token'; // 토큰 저장 엔드포인트
+
     try {
-        console.log(`[FCM UTIL] 서버 저장 시도: userNumber=${userNumber}, Token=${token.substring(0, 10)}...`);
+        console.log(`[FCM UTIL] 서버 저장 시도: loginId=${loginId}, Token=${token.substring(0, 10)}...`);
         await axios.post(SERVER_URL, {
             token: token,
-            userNumber: userNumber
+            userId: loginId
         });
-        console.log(`[FCM UTIL] 토큰 서버 저장 성공. (User: ${userNumber})`);
+        console.log(`[FCM UTIL] 토큰 서버 저장 성공. (User: ${loginId})`);
     } catch (error) {
         // 토큰 저장이 실패해도 로그인 흐름은 막지 않습니다.
-        console.error(`[FCM UTIL] 토큰 서버 저장 실패 (User: ${userNumber}). DB 또는 네트워크 문제 확인 필요.`, error);
-        throw new Error('FCM 토큰 서버 저장 실패'); 
+        console.error(`[FCM UTIL] 토큰 서버 저장 실패 (User: ${loginId}). DB 또는 네트워크 문제 확인 필요.`, error);
+        throw new Error('FCM 토큰 서버 저장 실패');
     }
 };
 
@@ -43,10 +43,26 @@ export const getTokenAndSave = async (loginId) => {
 
         // 2. Service Worker 등록 확인 및 등록
         let registration = await navigator.serviceWorker.getRegistration('/');
+        const SW_URL = '/firebase-messaging-sw.js'; // Service Worker 파일 경로
+
         if (!registration) {
-            const wb = new Workbox('/firebase-messaging-sw.js'); // Service Worker 파일 경로
+            const wb = new Workbox(SW_URL);
+
+            // 🚨 [수정된 부분] 등록 및 활성화 보장 로직
             registration = await wb.register();
             console.log('[FCM UTIL] Service Worker 등록 완료.');
+
+            // Service Worker가 'activated' 상태가 될 때까지 기다립니다.
+            if (wb.active) {
+                await wb.active;
+            } else {
+                await new Promise((resolve) => {
+                    wb.addEventListener('activated', () => {
+                        console.log('[FCM UTIL] Service Worker 활성화 완료.');
+                        resolve();
+                    });
+                });
+            }
         }
 
         if (!registration) {

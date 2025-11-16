@@ -25,6 +25,7 @@ public class FcmController {
      */
     @PostMapping("/save-token")
     public ResponseEntity<Void> saveToken(@RequestBody TokenRequest tokenRequest) {
+        System.out.println(tokenRequest.getToken());
         if (tokenRequest.getUserId() == null || tokenRequest.getToken() == null) {
             // 필수 필드가 누락된 경우 Bad Request 반환
             return ResponseEntity.badRequest().build();
@@ -40,14 +41,16 @@ public class FcmController {
     /**
      * 테스트용으로 특정 사용자에게 푸시 알림을 발송합니다. (개발/테스트용)
      * 엔드포인트: POST /api/fcm/send-test?userId={사용자ID}
-     * 예: POST /api/fcm/send-test?userId=GUEST_USER
+     * 예: POST /api/fcm/send-test?userId=1
      */
     @PostMapping("/send-test")
-    public ResponseEntity<String> sendTestNotification(@RequestParam String UserNumber) {
+    // 🚨 @RequestParam String UserNumber -> @RequestParam String userId로 변경
+    public ResponseEntity<String> sendTestNotification(@RequestParam String userId) {
         try {
             // NotificationService를 호출하여 알림을 발송합니다.
+            // 🚨 UserNumber -> userId로 변경
             String response = notificationService.sendNotificationToUser(
-            		UserNumber,
+                    userId,
                     "그룹원1이 위험합니다.",
                     "어서 구조해주세요! " + LocalDateTime.now()
             );
