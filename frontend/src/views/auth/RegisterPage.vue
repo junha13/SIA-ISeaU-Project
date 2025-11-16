@@ -25,6 +25,22 @@
         <input type="date" class="form-control" placeholder="생년월일" v-model="birthDate">
       </div>
 
+      <div class="form-group mb-3">
+        <input type="date" class="form-control" placeholder="생년월일" v-model="birthDate">
+      </div>
+
+      <div class="form-group mb-3 d-flex gap-4 align-items-center">
+        <span class="small text-muted">성별:</span>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="genderM" value="M" v-model="gender">
+          <label class="form-check-label" for="genderM">남성</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="genderF" value="F" v-model="gender">
+          <label class="form-check-label" for="genderF">여성</label>
+        </div>
+      </div>
+
       <!-- 아이디 중복 확인 -->
       <div class="form-group mb-3 d-flex gap-2">
         <input type="text" class="form-control" placeholder="아이디 (영어 or 숫자, 4자 이상)" v-model="id">
@@ -88,6 +104,8 @@ const passwordConfirm = ref('');
 const isIdChecked = ref(false);
 const isCheckingId = ref(false);
 const isRegistering = ref(false);
+const gender = ref('');
+
 
 // 라이브 비밀번호 일치 상태 (형식 검사는 하지 않음)
 const passwordsMatch = computed(() => {
@@ -152,6 +170,11 @@ const checkId = async () => {
 
 
 const handleRegister = async () => {
+  // ✅ 성별 유효성 검증 추가
+  if (!name.value || !email.value || !phone1.value || !phone2.value || !phone3.value || !birthDate.value || !gender.value) {
+    alert('모든 정보를 입력해주세요.');
+    return;
+  }
   // 필수 입력값 검증 추가
   if (!name.value || !email.value || !phone1.value || !phone2.value || !phone3.value || !birthDate.value) {
     alert('모든 정보를 입력해주세요.');
@@ -197,6 +220,7 @@ const handleRegister = async () => {
     id: id.value,
     password: password.value,
     checkPassword: passwordConfirm.value,
+    gender: gender.value
   };
 
   isRegistering.value = true;

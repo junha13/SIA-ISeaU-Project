@@ -1,25 +1,22 @@
-// src/utils/fcmUtils.js
-
 import { getToken } from 'firebase/messaging';
 import { Workbox } from 'workbox-window';
 import { messaging } from '@/firebase.js'; 
 import axios from 'axios';
 
 // --- 헬퍼 함수: 서버에 토큰 저장 ---
-const saveTokenToServer = async (token, userId) => {
-    // 🚨 실제 백엔드 URL과 엔드포인트에 맞게 수정
+const saveTokenToServer = async (token, userNumber) => {
     const SERVER_URL = '/api/fcm/save-token'; // 토큰 저장 엔드포인트
     
     try {
-        console.log(`[FCM UTIL] 서버 저장 시도: ID=${userId}, Token=${token.substring(0, 10)}...`);
+        console.log(`[FCM UTIL] 서버 저장 시도: userNumber=${userNumber}, Token=${token.substring(0, 10)}...`);
         await axios.post(SERVER_URL, {
             token: token,
-            userId: userId // 동적 userId 사용
+            userNumber: userNumber
         });
-        console.log(`[FCM UTIL] 토큰 서버 저장 성공. (User: ${userId})`);
+        console.log(`[FCM UTIL] 토큰 서버 저장 성공. (User: ${userNumber})`);
     } catch (error) {
         // 토큰 저장이 실패해도 로그인 흐름은 막지 않습니다.
-        console.error(`[FCM UTIL] 토큰 서버 저장 실패 (User: ${userId}). DB 또는 네트워크 문제 확인 필요.`, error);
+        console.error(`[FCM UTIL] 토큰 서버 저장 실패 (User: ${userNumber}). DB 또는 네트워크 문제 확인 필요.`, error);
         throw new Error('FCM 토큰 서버 저장 실패'); 
     }
 };
@@ -27,11 +24,11 @@ const saveTokenToServer = async (token, userId) => {
 // --- 메인 함수: 권한 요청, 토큰 발급 및 저장 ---
 /**
  * 알림 권한을 요청하고, 토큰을 발급받아 서버에 저장합니다.
- * @param {string} userId - 로그인한 사용자의 고유 ID (로그인 ID)
+ * @param {string} loginId - 로그인한 사용자의 고유 loginId (로그인 loginId)
  */
-export const getTokenAndSave = async (userId) => {
-    if (!userId) {
-        console.error('[FCM UTIL] 오류: FCM 토큰 저장을 위해 유효한 userId가 필요합니다.');
+export const getTokenAndSave = async (loginId) => {
+    if (!loginId) {
+        console.error('[FCM UTIL] 오류: FCM 토큰 저장을 위해 유효한 loginId가 필요합니다.');
         return;
     }
 
@@ -66,7 +63,7 @@ export const getTokenAndSave = async (userId) => {
 
         if (currentToken) {
             // 4. 서버에 토큰 저장
-            await saveTokenToServer(currentToken, userId);
+            await saveTokenToServer(currentToken, loginId);
         } else {
             console.error('[FCM UTIL] 토큰 발급 실패. VAPID Key 또는 Firebase 설정을 확인하세요.');
         }

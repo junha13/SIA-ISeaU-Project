@@ -15,33 +15,14 @@ public class FcmService {
 
     private final FcmDAO fcmDao;
 
-    // ************* 새롭게 추가된 private helper method *************
-    /**
-     * 사용자 ID(로그인 ID)로 DB의 user_number(PK)를 조회합니다.
-     * @param userId 사용자 ID (ex: imperson1)
-     * @return user_number (DB PK)
-     */
-    private int getUserNumber(String userId) {
-        Integer userNumber = fcmDao.getUserNumberByUserId(userId);
-        if (userNumber == null) {
-            // 사용자를 찾지 못한 경우 예외 발생
-            throw new RuntimeException("User not found for userId: " + userId);
-        }
-        return userNumber.intValue();
-    }
-    // *************************************************************
-
     @Transactional
     public void saveToken(TokenRequest tokenRequest) {
         try {
-            // 1. userId로 user_number를 조회
-            int userNumber = getUserNumber(tokenRequest.getUserId());
 
-            // 2. user_number와 토큰을 DAO에 전달하여 upsert 실행
-            fcmDao.upsertToken(userNumber, tokenRequest.getToken());
+            // user_id와 토큰을 DAO에 전달하여 upsert 실행
+            fcmDao.upsertToken(tokenRequest.getUserId(), tokenRequest.getToken());
 
-            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId() +
-                    ", UserNumber: " + userNumber);
+            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId());
         } catch (DataAccessException e) {
             // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
             System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
@@ -64,8 +45,7 @@ public class FcmService {
      */
     public String getRegistrationToken(String userId) {
         try {
-            int userNumber = getUserNumber(userId);
-            return fcmDao.getTokenByUserNumber(userNumber);
+            return fcmDao.getTokenByUserId(userId);
         } catch (RuntimeException e) {
             // 토큰이 없거나, 사용자 자체가 없는 경우 (getUserNumber에서 예외 발생)
             System.err.println("❌ Could not get token: " + e.getMessage());

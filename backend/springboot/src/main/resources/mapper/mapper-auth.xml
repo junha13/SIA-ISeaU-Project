@@ -7,16 +7,8 @@
 
     <!-- 회원가입 -->
     <insert id="register" parameterType="lx.iseau.feature.auth.RegisterDTO">
-        INSERT INTO tb_user (user_name, email, mobile, birth_date, id, password, role_number)
-        VALUES (
-            #{registerDTO.userName},
-            #{registerDTO.email},
-            #{registerDTO.mobile},
-            to_date(#{registerDTO.birthDate}, 'YYYY-MM-DD'),
-            #{registerDTO.id},
-            #{registerDTO.password},
-            2
-        )
+        INSERT INTO tb_user ( user_name, email, mobile, birth_date, id, password, role_number, gender )
+        VALUES ( #{userName}, #{email}, #{mobile}, to_date(#{birthDate}, 'YYYY-MM-DD'), #{id}, #{password}, 2, #{gender} )
     </insert>
 
     <!-- 아이디 중복확인 -->

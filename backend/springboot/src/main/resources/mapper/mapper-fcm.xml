@@ -3,16 +3,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="lx.iseau.feature.fcm.FcmDAO">
 
-    <select id="getUserNumberByUserId" resultType="int">
-        SELECT user_number
-        FROM tb_user
-        WHERE id = #{userId}
-    </select>
-
     <insert id="upsertToken">
-        INSERT INTO tb_fcm_token (user_number, fcm_token, updated_at)
-        VALUES (#{userNumber}, #{token}, now())
-            ON CONFLICT (user_number) DO UPDATE
+        INSERT INTO tb_fcm_token (user_id, fcm_token, updated_at)
+        VALUES (#{userId}, #{token}, now())
+            ON CONFLICT (user_id) DO UPDATE
                                              SET
                                                  fcm_token = #{token},
                                              updated_at = now();
@@ -21,6 +15,6 @@
     <select id="getTokenByUserNumber" resultType="string">
         SELECT fcm_token
         FROM tb_fcm_token
-        WHERE user_number = #{userNumber}
+        WHERE user_id = #{userId}
     </select>
 </mapper>

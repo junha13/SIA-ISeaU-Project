@@ -25,12 +25,12 @@ public class FcmController {
      */
     @PostMapping("/save-token")
     public ResponseEntity<Void> saveToken(@RequestBody TokenRequest tokenRequest) {
-        if (tokenRequest.getUserNumber() == null || tokenRequest.getToken() == null) {
+        if (tokenRequest.getUserId() == null || tokenRequest.getToken() == null) {
             // 필수 필드가 누락된 경우 Bad Request 반환
             return ResponseEntity.badRequest().build();
         }
         // 🚨 수신된 데이터 로그 추가
-        System.out.println("Received Token for User: " + tokenRequest.getUserNumber() +
+        System.out.println("Received Token for User: " + tokenRequest.getUserId() +
                 ", Token starts with: " + tokenRequest.getToken().substring(0, 10) + "...");
         // FcmService를 통해 DB에 토큰을 저장하거나 업데이트합니다.
         fcmService.saveToken(tokenRequest);

@@ -22,6 +22,7 @@ public class RegisterDTO {
 	private String id;
 	private String password;
 	private String checkPassword;
+    private String gender;
 
 	/**
 	 * getMobile
