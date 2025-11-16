@@ -142,8 +142,8 @@ import { ref } from 'vue';
 // activeReports에 상태 필드(status)와 processed 플래그를 추가합니다.
 // status: 'initial' -> 'received' -> 'completed'
 const activeReports = ref([
-  { id: 1, type: '자동', level: 'danger', date: '2025-11-10', time: '11:24:32', age: 23, gender: '남성', hr: 160, spo2: 92, zChange: '정상', location: '제1구역 인근', status: 'initial', processed: false },
-  { id: 2, type: '자동', level: 'emergency', date: '2025-11-10', time: '10:05:10', age: 10, gender: '여성', hr: 95, spo2: 98, zChange: '정상', location: '백사장 중앙', status: 'initial', processed: false },
+  { id: 1, type: '자동(낙상)', level: 'danger', date: '2025-11-10', time: '11:24:32', age: 23, gender: '남성', hr: 160, spo2: 92, zChange: '정상', location: '제1구역 인근', status: 'initial', processed: false },
+  { id: 2, type: '자동(익수)', level: 'emergency', date: '2025-11-10', time: '10:05:10', age: 10, gender: '여성', hr: 95, spo2: 98, zChange: '정상', location: '백사장 중앙', status: 'initial', processed: false },
   { id: 3, type: '수동(119)', level: 'warning', date: '2025-11-10', time: '09:40:00', age: 40, gender: '여성', hr: 70, spo2: 99, zChange: '정상', location: '부모님 신고', status: 'initial', processed: false },
   { id: 4, type: '수동(라이프가드)', level: 'emergency', date: '2025-11-10', time: '12:15:00', age: 72, gender: '남성', hr: 130, spo2: 91, zChange: '급격', location: '제2구역 벤치', status: 'initial', processed: false },
   { id: 5, type: '수동(112)', level: 'danger', date: '2025-11-10', time: '13:30:45', age: 35, gender: '여성', hr: 185, spo2: 98, zChange: '정상', location: '해변 산책로', status: 'initial', processed: false },
