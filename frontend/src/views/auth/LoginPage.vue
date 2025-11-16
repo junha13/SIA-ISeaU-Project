@@ -42,6 +42,17 @@
       </div>
 
     </div>
+
+    <!-- Welcome Modal (shown after successful login) -->
+    <div v-if="showWelcomeModal" class="modal-backdrop d-flex align-items-center justify-content-center">
+      <div class="modal-card p-4 shadow-lg rounded">
+        <h5 class="fw-bold mb-2">{{ welcomeName }}님 환영합니다!</h5>
+        <p class="small text-muted mb-3">정상적으로 로그인되었습니다.</p>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary btn-sm" :style="{ backgroundColor: mainColor, borderColor: mainColor }" @click="confirmWelcome">확인</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -63,6 +74,17 @@ const darkColor = '#0B1956';
 const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
+
+// Welcome modal state
+const showWelcomeModal = ref(false);
+const welcomeName = ref('');
+let modalAutoTimer = null;
+
+const confirmWelcome = () => {
+  if (modalAutoTimer) { clearTimeout(modalAutoTimer); modalAutoTimer = null; }
+  showWelcomeModal.value = false;
+  router.replace({ name: 'Main' });
+};
 
 const handleLogin = async () => {
   if (!id.value || !password.value) {
@@ -145,9 +167,16 @@ const handleLogin = async () => {
       console.error('로그인 후 token 처리 중 오류:', e);
     }
 
-    // 성공 시 알림 표시 후 페이지 이동
-    alert(`${userData.user_name}님 환영합니다!`);
-    router.replace({name: 'Main'});
+    // 성공 시 모달로 환영 메시지 표시 (확인 시 페이지 이동)
+    welcomeName.value = userData.user_name || userData.userName || '';
+    showWelcomeModal.value = true;
+    // 자동 이동 안전장치: 4초 후에도 사용자가 확인하지 않으면 자동으로 닫고 이동
+    modalAutoTimer = setTimeout(() => {
+      if (showWelcomeModal.value) {
+        showWelcomeModal.value = false;
+        router.replace({ name: 'Main' });
+      }
+    }, 4000);
 
   } catch (e) {
     // 에러 처리
@@ -174,4 +203,20 @@ const handleLogin = async () => {
   border: 1px solid #ced4da;
   height: 48px;
 }
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1050;
+}
+.modal-card {
+  background: #fff;
+  max-width: 380px;
+  width: 92%;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(11,22,38,0.12);
+}
+.modal-card .btn { min-width: 72px; }
 </style>
