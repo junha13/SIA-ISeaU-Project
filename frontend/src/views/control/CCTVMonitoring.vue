@@ -41,11 +41,11 @@
           <div>
             <button type="button" class="alert-send-btn me-2"
             @click="cctvAlert = true">
-              알림발송
+              안내방송
             </button>
             <button type="button" class="safe-send-btn"
-            @click="cctvAlert = true">
-              안전요원
+            @click="rescueModal = true">
+              구조요청
             </button>
           </div>
         </div>
@@ -268,7 +268,7 @@
       <h6
         style="margin:0; font-weight:700; font-size:14px;"
       >
-       알림 발송 _ {{ cctvName }} 
+       안내 방송 _ {{ cctvName }} 
       </h6>
     </div>
 
@@ -279,13 +279,13 @@
       <label
         style="display:block; font-size:12px; color:#6c757d; margin-bottom:4px;"
       >
-        알림 내용
+        변환할 텍스트
       </label>
       <textarea
         v-model="alertMessage"
         rows="4"
         class="form-control"
-        placeholder="관제센터에서 송출할 안내 문구를 입력하세요. "
+        placeholder="관제센터에서 송출할 방송 문구를 입력하세요. "
         style="height: 120px; resize: none;"
       ></textarea>
     </div>
@@ -296,17 +296,65 @@
     >
       <button
         type="button"
+        class="btn btn-danger btn-sm fw-bold"
+        @click="sendAlertMessage"
+      >
+        발송
+      </button>
+      <button
+        type="button"
         class="btn btn-secondary btn-sm"
         @click="cctvAlert = false"
       >
         취소
       </button>
+    </div>
+  </div>
+</div>
+<div
+  v-if="rescueModal"
+  @click.self="rescueModal = false"
+  style="position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 2100;"
+>
+  <div
+    style="background: #ffffff; width: 520px; max-width: 95%; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); padding: 16px 18px;"
+  >
+    <div
+      style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"
+    >
+    <div>
+      <h6 style="margin:0; font-weight:700; font-size:14px;">
+        구조 요청 위치 확인 _ {{ cctvName }}
+      </h6>
+      
+      <h6 style="margin-top:5px; margin-bottom: 0px; font-weight:600; font-size:11px; color:#e53935;">
+        - 위험구역 진입 예상위치
+      </h6>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div
+        ref="rescueMap"
+        class="naver-map-box"
+        style="height: 260px; margin-bottom: 6px;"
+      ></div>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
       <button
         type="button"
-        class="btn btn-danger btn-sm fw-bold"
-        @click="sendAlertMessage"
+        class="btn btn-danger btn-sm fw-bold py-2"
+        @click="sendRescueRequest"
       >
-        발송
+        구조 요청
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm py-2"
+        @click="rescueModal = false"
+      >
+        취소
       </button>
     </div>
   </div>
@@ -326,7 +374,7 @@ const rightPanelTab = ref('overview')
 
 const rightTabs = [
   { key: 'overview', label: '진입 알림' },
-  { key: 'detail', label: '알림 상세' },
+  { key: 'detail', label: '기상 정보' },
   { key: 'cctv', label: 'CCTV 정보' },
 ]
 
@@ -716,7 +764,134 @@ const sendAlertMessage = () => {
   alertMessage.value = ''
   cctvAlert.value = false
 }
+
+/**
+ *  rescue
+ */
+
+// 모달 열림 상태
+const rescueModal = ref(false)
+
+// 네이버맵 DOM ref
+const rescueMap = ref(null)
+
+// 지도 / 시야각 폴리곤 인스턴스
+let rescueMapInstance = null
+let rescueFovPolygon = null
+
+const sendRescueRequest = () => {
+  // TODO: 백엔드 연동 시 여기서 API 호출
+  // 예시 payload
+  const currentType = controlView.value === '해수욕장' ? '해수욕장' : '항구'
+
+  const target = cctvLocation.find(
+    (loc) => loc.type === currentType && loc.label === cctvName.value
+  )
+
+  const payload = {
+    cctv: cctvName.value,
+    type: currentType,
+    latitude: target?.latitude ?? null,
+    longitude: target?.longitude ?? null,
+    direction: target?.direction ?? null,
+    fov: target?.fov ?? null,
+    range: target?.range ?? null,
+    requestedAt: new Date().toISOString(),
+  }
+
+  console.log('🆘 구조 요청 payload:', payload)
+
+  // 모달 닫기
+  rescueModal.value = false
+}
+
+watch(
+  () => rescueModal.value,
+  (visible) => {
+    if (!visible) return
+
+    nextTick(() => {
+      if (!rescueMap.value || !window.naver?.maps) return
+
+      const currentType = controlView.value === '해수욕장' ? '해수욕장' : '항구'
+
+      // 현재 선택된 CCTV 찾기
+      const target = cctvLocation.find(
+        (loc) => loc.type === currentType && loc.label === cctvName.value
+      )
+
+      if (!target) {
+        console.warn('구조요청 모달: CCTV 정보를 찾을 수 없습니다.', cctvName.value)
+        return
+      }
+
+      const {
+        latitude: lat,
+        longitude: lng,
+        direction,
+        fov,
+        range,
+      } = target
+
+      const center = new window.naver.maps.LatLng(lat, lng)
+
+      // 기존 지도 있으면 제거 (필요시)
+      if (rescueMapInstance) {
+        rescueMapInstance.destroy?.()
+        rescueMapInstance = null
+      }
+
+      // 지도 생성
+      rescueMapInstance = new window.naver.maps.Map(rescueMap.value, {
+        center,
+        zoom: 17,
+      })
+
+      // 카메라 위치 마커
+      new window.naver.maps.Marker({
+        map: rescueMapInstance,
+        position: center,
+        title: cctvName.value,
+      })
+
+      // ======== 시야각 폴리곤 (삼각형) ========
+      if (rescueFovPolygon) {
+        rescueFovPolygon.setMap(null)
+        rescueFovPolygon = null
+      }
+
+      const toRad = (deg) => (deg * Math.PI) / 180
+      const dist = range / 111000 // 단순 위도 기준 (1도 ≒ 111km)
+
+      const makePoint = (baseLat, baseLng, angleDeg) => {
+        const rad = toRad(angleDeg)
+        const dLat = Math.cos(rad) * dist
+        const dLng = Math.sin(rad) * dist
+        return new window.naver.maps.LatLng(baseLat + dLat, baseLng + dLng)
+      }
+
+      const startAngle = direction - fov / 2
+      const endAngle   = direction + fov / 2
+
+      const p1 = makePoint(lat, lng, startAngle)
+      const p2 = makePoint(lat, lng, endAngle)
+
+      const path = [center, p1, p2, center]
+
+      rescueFovPolygon = new window.naver.maps.Polygon({
+        map: rescueMapInstance,
+        paths: path,
+        fillColor: 'rgba(51, 51, 51, 1)',
+        fillOpacity: 0.2,
+        strokeColor: '#4f4f4f',
+        strokeOpacity: 0.9,
+        strokeWeight: 1,
+      })
+    })
+  }
+)
 </script>
+
 
 
 <style scoped>
