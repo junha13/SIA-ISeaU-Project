@@ -58,6 +58,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // gms - google moblie service
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
+
     // 기존 의존성
     implementation(libs.appcompat)
     implementation(libs.material)

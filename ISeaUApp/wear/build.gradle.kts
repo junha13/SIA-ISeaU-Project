@@ -58,6 +58,8 @@ dependencies {
     implementation("androidx.concurrent:concurrent-futures:1.1.0")
     implementation("androidx.concurrent:concurrent-futures-ktx:1.1.0")
 
+    // gms - google moblie service
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0")
     // 기존 Compose Dependencies

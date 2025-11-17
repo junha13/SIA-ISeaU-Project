@@ -1,4 +1,4 @@
-// app 모듈에 새 파일 하나 만들기: WearSyncManager.kt
+// app 모듈의 WearSyncManager.kt
 package com.lx.iseau
 
 import android.content.Context
@@ -21,10 +21,10 @@ object WearSyncManager {
 
         val dataClient = Wearable.getDataClient(context)
 
-        // 워치에서 "/USER_INFO" path를 리슨하도록 만들 예정
+        // 워치에서 "/USER_INFO" path를 리슨
         val request = PutDataMapRequest.create("/USER_INFO").apply {
             dataMap.putInt("userNumber", userNumber)
-            dataMap.putLong("timestamp", System.currentTimeMillis())
+            dataMap.putLong("timestamp", System.currentTimeMillis()) // 데이터 변경 보장
         }.asPutDataRequest().setUrgent()
 
         Log.d(TAG, "📡 워치로 userNumber 전송 시도: $userNumber")
