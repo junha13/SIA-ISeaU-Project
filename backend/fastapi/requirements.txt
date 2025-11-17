@@ -15,3 +15,5 @@ opencv-python-headless==4.10.0.84
 
 # 스트림 주소 추출 (Streamlink)
 yt-dlp
+lapx
+filterpy

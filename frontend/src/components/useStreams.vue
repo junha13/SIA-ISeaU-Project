@@ -5,8 +5,8 @@
       <!-- 16:9 고정 비율 컨테이너 -->
       <div
         class="position-relative bg-dark stream-tile"
-        style="aspect-ratio:16/9;"
-        @click="openModal(id)"
+        style="aspect-ratio:4/3;"
+        @click="setCctvName(state[`s${id}`]?.label)"
       >
         <!-- 최신 JPEG Blob URL 표시 (없으면 플레이스홀더) -->
         <img
@@ -17,7 +17,7 @@
         />
         <!-- 좌상단: CAM 라벨 -->
         <span class="badge text-bg-secondary position-absolute top-0 start-0 m-2">
-          CAM {{ id }}
+          {{ state[`s${id}`]?.label }}
         </span>
         <!-- 우하단: 연결 상태 배지 (ok / reconnect) -->
         <span
@@ -30,10 +30,10 @@
     </div>
   </div>
 
-  <!-- ✅ 클릭 시 띄울 전체 화면 모달 -->
+  <!-- ✅ 클릭 시 띄울 전체 화면 모달    // @click="openModal(id)"
   <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
     <div class="modal-body-box">
-      <!-- 모달 헤더 : CAM 번호 + 닫기 버튼 -->
+      모달 헤더 : CAM 번호 + 닫기 버튼
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="mb-0">CAM {{ selectedCamId }}</h5>
         <button type="button" class="btn btn-sm btn-light" @click="closeModal">
@@ -41,7 +41,7 @@
         </button>
       </div>
 
-      <!-- 모달 안에 크게 보이는 영상 -->
+      모달 안에 크게 보이는 영상
       <div class="modal-video-wrapper">
         <img
           v-if="selectedState"
@@ -52,23 +52,30 @@
         />
       </div>
 
-      <!-- 선택된 스트림의 부가 정보(people/motion 등을 나중에 추가할 수 있음) -->
+       선택된 스트림의 부가 정보(people/motion 등을 나중에 추가할 수 있음)
       <div v-if="selectedState && selectedState.people != null" class="mt-2 small text-muted">
         사람 수: {{ selectedState.people }} /
-        움직임 픽셀: {{ selectedState.motion }}
+        위험구역 인원: {{ selectedState.danger ?? 0 }}
       </div>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script setup>
 import { reactive, onMounted, onUnmounted, ref, computed } from 'vue';
 
+import { useStore } from '@/stores/store.js';
+import { storeToRefs } from 'pinia'
+const store = useStore();
+const { controlView, cctvName } = storeToRefs(store)
+
+const emit = defineEmits(['danger-update'])
+
 const props = defineProps({
   // WebSocket 베이스 URL(슬래시 없이 끝남) 예: ws://IP:8000/ws/stream
-  baseWs: { type: String, default: 'ws://localhost:8000/ws/stream' },
-  // 렌더할 카메라 번호 목록 (CAM n ↔ 서버 sid n 매핑)
-  camIds: { type: Array, default: () => [1, 2, 3, 4] },
+ wsUrl: { type: String, default: 'ws://localhost:8000/ws/stream' },
+ // 렌더할 카메라 번호 목록 (CAM n ↔ 서버 sid n 매핑)
+ camIds: { type: Array, default: () => [1, 2, 3, 4] },
 });
 
 // 스트림별 런타임 상태 저장소
@@ -76,7 +83,7 @@ const props = defineProps({
 const state = reactive({});
 
 // URL 조합: /ws/stream/{sid}
-const wsUrl = (id) => `${props.baseWs}/${id}`;
+const buildWsUrl = (id) => `${props.wsUrl}/${id}`;
 
 // 아직 프레임이 없을 때 보여줄 더미 이미지
 const placeholder = (id) =>
@@ -102,20 +109,21 @@ function openOne(id) {
     tmp: null,
     live: null,
     t: null,
-    // people: 0,
-    // motion: 0,
+    people: 0,
+    danger: 0,
+    label: ''
   };
   const s = state[k];
 
   // WebSocket 연결
-  s.ws = new WebSocket(wsUrl(id));
+  s.ws = new WebSocket(buildWsUrl(id));
   s.ws.binaryType = 'arraybuffer'; // 바이너리를 ArrayBuffer로 받기
 
   s.ws.onopen = () => {
     s.ok = true; // 상태 배지: ok
   };
 
-  s.ws.onmessage = (e) => {
+    s.ws.onmessage = (e) => {
     // 1) 바이너리: JPEG 프레임 → 임시 Blob URL로 교체
     if (e.data instanceof ArrayBuffer) {
       revoke(s.tmp); // 이전 임시 URL 해제
@@ -123,16 +131,49 @@ function openOne(id) {
       return;
     }
 
-    // 2) 텍스트: 메타데이터(JSON) 도착 → 직전에 받은 임시 프레임을 실 화면으로 승격
+      // 2) 텍스트: 메타데이터(JSON) 도착
     try {
       const meta = JSON.parse(e.data);
-      // 예: { people: 3, motion: 12345 } 라고 온다고 가정
+      // meta 예시:
+      // {
+      //   stream_id: "CAM1",
+      //   label: "이호테우",
+      //   people: 3,
+      //   danger: 2,
+      //   timestamp: 1731580000000
+      // }
+
       if (meta.people != null) s.people = meta.people;
-      if (meta.motion != null) s.motion = meta.motion;
+
+      // 🔴 위험 인원 수 저장
+      if (meta.danger != null) {
+        s.danger = meta.danger;
+      }
+
+      if (meta.label) {
+        s.label = meta.label;
+      }
+
+      // 🔴 부모에게 이벤트로 알려주기 (통계/알림용)
+      if (meta.danger != null && meta.danger > 0 && meta.stream_id) {
+        // "CAM1" → 1
+        const camId = Number(String(meta.stream_id).replace('CAM', ''));
+
+        if (!Number.isNaN(camId)) {
+          emit('danger-update', {
+            camId,                            // 1~8 숫자
+            streamId: meta.stream_id,         // "CAM1"
+            label: meta.label,                // "이호테우" 같은 이름
+            danger: meta.danger,              // 이번 프레임에서 위험 인원
+            timestamp: meta.timestamp ?? Date.now(),
+          });
+        }
+      }
     } catch {
       // 그냥 문자열일 수도 있으니 파싱 실패는 무시
     }
 
+    // 3) 직전에 받은 프레임(tmp)을 실제 화면(src)으로 승격
     if (s.tmp) {
       revoke(s.live); // 이전 화면용 URL 해제
       s.src = s.tmp;  // <img> 교체
@@ -184,16 +225,21 @@ const selectedState = computed(() => {
   return state[`s${selectedCamId.value}`] || null;
 });
 
+function setCctvName(label) {
+  cctvName.value = label
+}
+
+
 // 모달 열기
-const openModal = (id) => {
-  selectedCamId.value = id;
-  showModal.value = true;
-};
+// const openModal = (id) => {
+//   selectedCamId.value = id;
+//   showModal.value = true;
+// };
 
 // 모달 닫기
-const closeModal = () => {
-  showModal.value = false;
-};
+// const closeModal = () => {
+//   showModal.value = false;
+// };
 
 // 마운트 시 모든 CAM 연결, 언마운트 시 정리
 onMounted(() => props.camIds.forEach(openOne));
