@@ -42,6 +42,17 @@
       </div>
 
     </div>
+
+    <!-- Welcome Modal (shown after successful login) -->
+    <div v-if="showWelcomeModal" class="modal-backdrop d-flex align-items-center justify-content-center">
+      <div class="modal-card p-4 shadow-lg rounded">
+        <h5 class="fw-bold mb-2">{{ welcomeName }}님 환영합니다!</h5>
+        <p class="small text-muted mb-3">정상적으로 로그인되었습니다.</p>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary btn-sm" :style="{ backgroundColor: mainColor, borderColor: mainColor }" @click="confirmWelcome">확인</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -54,7 +65,6 @@ import { authApi } from '@/api/auth';
 import { getTokenAndSave} from "@/utils/fcmUtils";
 
 const router = useRouter();
-// 💡 미사용 상수 경고 해제: useAuthStore(), useAuthToken() 사용
 const authStore = useAuthStore();
 const { token: authToken, userNumber, userName, setToken, isAuthenticated } = useAuthToken();
 
@@ -65,13 +75,31 @@ const id = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 
+// Welcome modal state
+const showWelcomeModal = ref(false);
+const welcomeName = ref('');
+let modalAutoTimer = null;
+
+const confirmWelcome = () => {
+  if (modalAutoTimer) { clearTimeout(modalAutoTimer); modalAutoTimer = null; }
+  showWelcomeModal.value = false;
+  router.replace({ name: 'Main' });
+};
+
 const handleLogin = async () => {
   if (!id.value || !password.value) {
     alert('아이디와 비밀번호를 모두 입력해주세요.');
     return;
   }
 
-  // 👇 [외부 try] 로그인 API 호출 및 초기 응답(userData) 검증을 담당합니다.
+  /**
+   * 로그인 처리
+   * POST /api/auth/login
+   * @param {string} id - 로그인 아이디
+   * @param {string} password - 비밀번호
+   * @returns {Object} userData - { userNumber, id, userName, mobile }
+   * @throws {Error} 로그인 실패 시
+   */
   try {
     // 공통 API 컴포저블 사용 (VITE_API_BASE_URL 적용)
     const result = await authApi.login({
@@ -93,8 +121,7 @@ const handleLogin = async () => {
       throw new Error('로그인 API 응답이 비어있습니다.');
     }
 
-    // 토큰 처리 및 워치 동기화 등 후속 작업은 별도의 try-catch로 감싸서 예외 분리
-    // 👇 [내부 try] 로그인 성공 후 토큰 저장, FCM, Android Bridge 등의 후속 작업을 담당합니다.
+    // 토큰을 composable에 등록하면 composable에서 store 동기화까지 처리합니다.
     try {
       if (token) {
         setToken(token);
@@ -155,9 +182,16 @@ const handleLogin = async () => {
         }
       }
 
-      // 5. 성공 시 페이지 이동
-      alert(`${userData.user_name}님 환영합니다!`);
-      router.replace({name: 'Main'});
+    // 성공 시 모달로 환영 메시지 표시 (확인 시 페이지 이동)
+    welcomeName.value = userData.user_name || userData.userName || '';
+    showWelcomeModal.value = true;
+    // 자동 이동 안전장치: 4초 후에도 사용자가 확인하지 않으면 자동으로 닫고 이동
+    modalAutoTimer = setTimeout(() => {
+      if (showWelcomeModal.value) {
+        showWelcomeModal.value = false;
+        router.replace({ name: 'Main' });
+      }
+    }, 4000);
 
     } catch (e) {
       // 👆 [내부 catch] 토큰 저장, FCM, Bridge 등의 후속 작업 중 발생한 오류 처리
@@ -171,7 +205,7 @@ const handleLogin = async () => {
     // 👆 [외부 catch] API 통신 오류, 네트워크 오류, 인증 실패 등 주요 로그인 실패를 처리합니다.
     let errorMessage = '알 수 없는 오류가 발생했습니다.';
 
-    // 백엔드에서 보낸 에러 메시지
+    // 백엔드에서 보낸 에러 메시지 (401 등)
     if (e.response?.data?.message) {
       errorMessage = e.response.data.message;
     }
@@ -181,7 +215,7 @@ const handleLogin = async () => {
     }
 
     alert(`로그인 실패: ${errorMessage}`);
-  } // <--- 누락되었던 외부 catch 블록이 여기서 닫힙니다.
+  }
 };
 </script>
 
@@ -192,4 +226,20 @@ const handleLogin = async () => {
   border: 1px solid #ced4da;
   height: 48px;
 }
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1050;
+}
+.modal-card {
+  background: #fff;
+  max-width: 380px;
+  width: 92%;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(11,22,38,0.12);
+}
+.modal-card .btn { min-width: 72px; }
 </style>
