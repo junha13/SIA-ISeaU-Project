@@ -27,7 +27,6 @@ object AlertSender {
      * @param occurredAtIso  ISO-8601(UTC) 문자열, 예: 2025-11-12T13:45:21Z
      * @param heartRateBpm   Int BPM
      */
-
     fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String) {
         io.execute {
             try {

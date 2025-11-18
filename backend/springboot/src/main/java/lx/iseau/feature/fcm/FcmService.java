@@ -19,10 +19,10 @@ public class FcmService {
     public void saveToken(TokenRequest tokenRequest) {
         try {
 
-            // user_id와 토큰을 DAO에 전달하여 upsert 실행
-            fcmDao.upsertToken(tokenRequest.getUserId(), tokenRequest.getToken());
+            // user_number와 토큰을 DAO에 전달하여 upsert 실행
+            fcmDao.upsertToken(tokenRequest.getUserNumber(), tokenRequest.getToken());
 
-            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserId());
+            System.out.println("FCM Token saved/updated for user: " + tokenRequest.getUserNumber());
         } catch (DataAccessException e) {
             // 🚨 DB 저장 실패 시 예외를 강제로 출력하여 오류를 확인합니다.
             System.err.println("🚨🚨🚨 DB 저장 실패 (DataAccessException): " + e.getMessage());
@@ -39,13 +39,13 @@ public class FcmService {
 
     /**
      * 알림 발송을 위해 특정 사용자의 토큰을 조회합니다.
-     * Service 레이어에서 userId -> user_number 변환을 담당합니다.
-     * @param userId 사용자 ID
+     * Service 레이어에서 user_number 변환을 담당합니다.
+     * @param user_number 사용자 ID
      * @return FCM 등록 토큰
      */
-    public String getRegistrationToken(String userId) {
+    public String getRegistrationToken(String user_number) {
         try {
-            return fcmDao.getTokenByUserId(userId);
+            return fcmDao.getTokenByUserNumber(user_number);
         } catch (RuntimeException e) {
             // 토큰이 없거나, 사용자 자체가 없는 경우 (getUserNumber에서 예외 발생)
             System.err.println("❌ Could not get token: " + e.getMessage());
@@ -55,15 +55,15 @@ public class FcmService {
 
     /**
      * 특정 사용자에게 FCM 알림을 발송합니다.
-     * @param targetUserId 알림을 받을 사용자의 ID (FCM 토큰을 조회하기 위해 사용)
+     * @param targetUserNumber 알림을 받을 사용자의 ID (FCM 토큰을 조회하기 위해 사용)
      * @param alertMessage 알림 내용
      */
-    public void sendAlertNotification(String targetUserId, String alertMessage, long timestamp) {
+    public void sendAlertNotification(String targetUserNumber, String alertMessage, long timestamp) {
         // 1. 알림을 받을 대상자의 FCM 토큰 조회
-        String fcmToken = getRegistrationToken(targetUserId);
+        String fcmToken = getRegistrationToken(targetUserNumber);
 
         if (fcmToken == null || fcmToken.isEmpty()) {
-            System.err.println("❌ FCM Token not found for user: " + targetUserId);
+            System.err.println("❌ FCM Token not found for user: " + targetUserNumber);
             return;
         }
 

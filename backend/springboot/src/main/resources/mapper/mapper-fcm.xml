@@ -4,9 +4,9 @@
 <mapper namespace="lx.iseau.feature.fcm.FcmDAO">
 
     <insert id="upsertToken">
-        INSERT INTO tb_fcm_token (login_id, fcm_token, updated_at)
-        VALUES (#{userId}, #{token}, now())
-            ON CONFLICT (login_id) DO UPDATE
+        INSERT INTO tb_fcm_token (user_number, fcm_token, updated_at)
+        VALUES (#{userNumber}, #{token}, now())
+            ON CONFLICT (user_number) DO UPDATE
                                              SET
                                                  fcm_token = #{token},
                                              updated_at = now();
