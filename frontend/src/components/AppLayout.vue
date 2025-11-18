@@ -116,7 +116,7 @@
 
         <div class="nav-item-custom" @click="goToSelectedBeach">
           <i class="fas fa-swimmer fs-4 mb-1" :style="navIconStyle('/beach')"></i>
-          <span class="fs-7 fw-bold" :style="navTextStyle('/beach')">해수욕장</span>
+          <span class="fs-7 fw-bold" :style="navTextStyle('/beach')">해안가</span>
         </div>
 
         <div class="nav-item-custom" @click="goTo('/my-info')">
