@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 페이지 띄우기
         //webview.loadUrl("https://iseau.kr");
-        webview.loadUrl("https://hellokiyo.ngrok.io");
+        webview.loadUrl("https://subterete-reedy-dillon.ngrok-free.dev");
         //webview.loadUrl("http://m.naver.com");
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

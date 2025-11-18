@@ -53,7 +53,7 @@
           </h1>
         </div>
         <div class="d-flex align-items-center">
-          <i class="fas fa-bell fs-1 me-5" :style="{ color: dangerColor }" @click="clickAlert"></i>
+          <i class="fas fa-triangle-exclamation fs-1 me-5" :style="{ color: dangerColor }" @click="goToSOS()"></i>
           <button
               class="bg-transparent border-0 p-2 burger-btn"
               type="button"
@@ -192,6 +192,10 @@ const handleGroupInviteConfirm = (isAccepted) => {
 // 사용자가 선택한 해수욕장 번호
 const { selectedBeachId } = storeToRefs(beachStore) // 숫자 또는 null
 
+function goToSOS() {
+  router.push(`/sos`)
+}
+
 function goToSelectedBeach() {
   const id = Number(selectedBeachId.value || 0); // 0/null ⇒ 미선택
   if (id > 0) {
@@ -270,11 +274,6 @@ const navTextStyle = (path) => {
     isActive = route.path === path
   }
   return { color: isActive ? mainColor : 'white' }
-}
-
-
-function clickAlert() {
-  alert('알림떠야할듯')
 }
 
 const isBack = ref(false)

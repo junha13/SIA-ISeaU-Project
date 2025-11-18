@@ -256,7 +256,7 @@ const sortMap = {
 onMounted(() => {
   loadData();
   fetchFavoriteIds();
-  header.value = "해수욕장 리스트"
+  header.value = "해안가 리스트"
   getLocation();
 });
 

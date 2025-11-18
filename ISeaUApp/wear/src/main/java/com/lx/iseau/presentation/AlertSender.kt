@@ -18,7 +18,7 @@ import java.util.concurrent.Executors
 object AlertSender {
     private const val TAG = "HrAlertSender"
 
-    private const val ENDPOINT = "https://hellokiyo.ngrok.io/api/controltower/heart-rate"
+    private const val ENDPOINT = "https://subterete-reedy-dillon.ngrok-free.dev/api/controltower/heart-rate"
 
     private val io = Executors.newFixedThreadPool(2)
 

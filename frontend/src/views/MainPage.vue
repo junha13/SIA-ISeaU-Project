@@ -49,7 +49,7 @@
       <!-- 카드 1: 해수욕장 리스트 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.BeachList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('BeachList')">
-          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">해수욕장 리스트</p>
+          <p class="card-top-right fw-bolder fs-1 mt-2 me-2">바다 찾기</p>
         </div>
       </div>
 
@@ -67,18 +67,21 @@
       </div>
     </div>
 
-      <!-- 카드 4: 신고 (SOSMain 라우트 연결) -->
+      <!-- 카드 4: 신고 (SOSMain 라우트 연결) 
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: dangerColor, backgroundImage: `url(${cardImages.SOSMain})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('SOSMain')">
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">신고</p>
         </div>
       </div>
-      <!-- 카드 5: 게시글 리스트 -->
+      -->
+      
+      <!-- 카드 5: 게시글 리스트 
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.PostList})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('PostList')">
           <p class="card-top-right fw-bolder fs-1 mt-2 me-2">커뮤니티</p>
         </div>
       </div>
+      -->
       <!-- 카드 6: 응급대처법 -->
       <div class="col-6">
         <div class="feature-card" :style="{ borderColor: mainColor, color: darkColor, backgroundImage: `url(${cardImages.firstAid})`, backgroundSize: 'cover', backgroundPosition: 'center' }" @click="goToPage('FirstAid')">
