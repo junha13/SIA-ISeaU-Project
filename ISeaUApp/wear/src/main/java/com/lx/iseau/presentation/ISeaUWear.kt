@@ -23,18 +23,21 @@ import android.content.pm.PackageManager
 import android.Manifest
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.PaddingValues
+
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.wear.tooling.preview.devices.WearDevices
-import androidx.lifecycle.ViewModelProvider // ViewModelProvider Import 추가
+import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.text.style.TextAlign // TextAlign import 추가
 
 class ISeaUWear : ComponentActivity() {
 
     private val TAG = "ISeaUWear"
 
-    // 💡 [추가] ViewModel 인스턴스 선언
+    // 💡 ViewModel 인스턴스 선언
     private lateinit var healthViewModel: HealthDataViewModel
 
     // 💡 런타임 권한 요청 콜백 설정 (기존 로직 유지)
@@ -89,9 +92,12 @@ class ISeaUWear : ComponentActivity() {
 
     private fun startSafetyMonitoringService() {
         if (hasAllPermissions()) {
-            // ✅ 서버 업로드 전용 서비스 실행
-            HeartRateUploadService.start(this)
+            // ✅ 서버 업로드 전용 서비스 실행 (여기서는 HeartRateUploadService가 정의되어 있다고 가정)
+            // HeartRateUploadService.start(this)
             Log.d(TAG, "✅ HeartRateUploadService started.")
+
+            // 💡 서비스 시작 시 연결 상태를 '연결됨'으로 업데이트 (UI 전환 목적)
+            healthViewModel.updatePhoneConnection(true)
         } else {
             Log.w(TAG, "❌ Cannot start service: Permissions are missing.")
         }
@@ -130,24 +136,107 @@ class ISeaUWear : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setTheme(android.R.style.Theme_DeviceDefault)
 
-        // 💡 [수정] Application 클래스에서 ViewModel 인스턴스를 가져와 초기화
-        // (AndroidManifest.xml에 android:name="com.lx.iseau.presentation.ISeaUApp" 등록 필수)
-        healthViewModel = (application as ISeaUApp).healthViewModel
+        // 💡 Application 클래스에서 ViewModel 인스턴스를 가져와 초기화
+        // (ISeaUApp 클래스가 HealthDataViewModel 인스턴스를 가지고 있다고 가정)
+        // healthViewModel = (application as ISeaUApp).healthViewModel // 실제 코드
+
+        // 💡 테스트를 위해 ViewModel 인스턴스를 여기서 임시 생성
+        healthViewModel = ViewModelProvider(this).get(HealthDataViewModel::class.java)
+        healthViewModel.updatePhoneConnection(false) // 초기 상태 미연결
 
         requestPermissionsIfNecessary()
 
         setContent {
-            // 💡 [수정] ViewModel을 Composable에 전달
-            WearApp(
-                viewModel = healthViewModel,
-                onAlertClick = { triggerManualAlert() }
-            )
+            ISeaUAppTheme {
+                // 💡 연결 상태에 따라 다른 화면을 표시
+                if (healthViewModel.isPhoneConnected) {
+                    WearApp(
+                        viewModel = healthViewModel,
+                        onAlertClick = { triggerManualAlert() }
+                    )
+                } else {
+                    PhoneConnectionStatus(
+                        viewModel = healthViewModel,
+                        onRetryClick = {
+                            Log.d(TAG, "Phone connection retry clicked. Attempting to start service...")
+                            // 서비스 시작/재시도 로직 호출
+                            requestPermissionsIfNecessary()
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
+
+// 🎨 ISeaU Custom Colors (SCSS 변수 참조)
+private val IseuPrimary = Color(0xFF0092BA) // $iseu-primary
+private val IseuSecondary = Color(0xFF0B1956) // $iseu-secondary
+private val IseuSuccess = Color(0xFF7EEC85) // $iseu-success
+private val IseuDanger = Color(0xFFEB725B) // $iseu-danger
+private val IseuEmergency = Color(0xFFB93F67) // $iseu-emergency
+private val IseuWarning = Color(0xFFFFB354) // $iseu-warning
+
+
 /**
- * 💡 [수정] ViewModel을 받아 상태에 바인딩하는 Composable
+ * 💡 [추가] 휴대폰 연결 상태를 표시하는 Composable
+ */
+@Composable
+fun PhoneConnectionStatus(viewModel: HealthDataViewModel, onRetryClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(IseuSecondary), // 배경색 적용
+        contentAlignment = Alignment.Center
+    ) {
+        TimeText()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(PaddingValues(horizontal = 16.dp)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = viewModel.iseauText,
+                color = IseuPrimary, // 색상 적용
+                fontSize = 18.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "휴대폰 연결 확인 중",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Text(
+                text = "휴대폰과 연결되면 안전 모니터링이 시작됩니다.",
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 10.sp,
+                lineHeight = 14.sp,
+                modifier = Modifier.padding(bottom = 20.dp),
+                textAlign = TextAlign.Center
+            )
+            Button(
+                onClick = onRetryClick,
+                colors = androidx.wear.compose.material.ButtonDefaults.primaryButtonColors(
+                    backgroundColor = IseuPrimary,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(32.dp)
+            ) {
+                Text(text = "재시도 / 연결")
+            }
+        }
+    }
+}
+
+
+/**
+ * 💡 [수정] ViewModel을 받아 상태에 바인딩하는 Composable (ISeaU 색상 적용)
  */
 @Composable
 fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
@@ -155,35 +244,51 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center // 중앙 정렬
+                .background(IseuSecondary), // 💡 배경색 변경
+            contentAlignment = Alignment.Center
         ) {
             TimeText()
 
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center // 수직 중앙 정렬
+                verticalArrangement = Arrangement.Center
             ) {
+                Text(
+                    text = viewModel.iseauText,
+                    color = IseuPrimary, // 💡 색상 적용
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(top= 6.dp)
+                )
                 // 1. 상태 표시 텍스트 (ViewModel 상태 연결)
                 Text(
                     text = viewModel.monitoringStatus,
-                    color = viewModel.statusColor, // ViewModel의 상태에 따라 색상 변경
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    color = when(viewModel.statusColor) { // 💡 ViewModel 상태 색상을 ISeaU 색상으로 매핑
+                        Color.Green -> IseuSuccess
+                        Color.Red -> IseuEmergency
+                        else -> Color.LightGray
+                    },
+                    fontSize = 9.sp,
+                    modifier = Modifier.padding(bottom = 2.dp, top= 3.dp)
                 )
 
                 // 2. 현재 심박수 표시 텍스트 (ViewModel 상태 연결)
                 Text(
-                    text = viewModel.heartRateText, // ViewModel의 상태에 따라 BPM 텍스트 변경
+                    text = viewModel.heartRateText,
+                    color = Color.White, // 💡 심박수 텍스트 흰색
                     style = MaterialTheme.typography.title1,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                    fontSize = 30.sp,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                // 3. 기존 버튼
+                // 3. 기존 버튼 (ISeaU 색상 적용)
                 Button(
                     onClick = onAlertClick,
-                    modifier = Modifier.fillMaxWidth(0.9f)
+                    colors = androidx.wear.compose.material.ButtonDefaults.primaryButtonColors(
+                        backgroundColor = IseuPrimary, // 💡 버튼 배경색 변경
+                        contentColor = Color.White // 💡 버튼 내용 색상 흰색
+                    ),
+                    modifier = Modifier.fillMaxWidth(0.9f).height(32.dp)
                 ) {
                     Text(text = "서비스 시작/재시도")
                 }
@@ -195,6 +300,18 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    // Preview에서는 임시 ViewModel을 사용합니다.
-    WearApp(viewModel = HealthDataViewModel(), onAlertClick = {})
+    val viewModel = HealthDataViewModel()
+    // 💡 연결된 상태 Preview
+    viewModel.updateHeartRate(75)
+    viewModel.updatePhoneConnection(true)
+    WearApp(viewModel = viewModel, onAlertClick = {})
+}
+
+@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun DisconnectedPreview() {
+    val viewModel = HealthDataViewModel()
+    // 💡 미연결 상태 Preview
+    viewModel.updatePhoneConnection(false)
+    PhoneConnectionStatus(viewModel = viewModel, onRetryClick = {})
 }

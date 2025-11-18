@@ -11,6 +11,14 @@ import androidx.lifecycle.ViewModel
  */
 class HealthDataViewModel : ViewModel() {
 
+    // ISEAU
+    var iseauText by mutableStateOf("I SEA U")
+        private set
+
+    // 💡 [추가] 휴대폰 연결 상태
+    var isPhoneConnected by mutableStateOf(false)
+        private set
+
     // 실시간 심박수 표시 텍스트 (UI에 바인딩됨)
     var heartRateText by mutableStateOf("-- BPM")
         private set
@@ -36,5 +44,12 @@ class HealthDataViewModel : ViewModel() {
             monitoringStatus = "⚠️ 센서 데이터 미수신"
             statusColor = Color.Red
         }
+    }
+
+    /**
+     * 💡 [추가] 휴대폰 연결 상태를 업데이트합니다.
+     */
+    fun updatePhoneConnection(isConnected: Boolean) {
+        isPhoneConnected = isConnected
     }
 }
