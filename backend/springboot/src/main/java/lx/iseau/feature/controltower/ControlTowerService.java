@@ -55,18 +55,19 @@ public class ControlTowerService {
     }
     // ============ 워치 데이터 처리 및 Task 생성 ============
     @Transactional // 두 개 이상의 DAO 호출이 있어 트랜잭션 처리
-    public void processHeartRateData(HeartRateRequest request) {
+    public void insertWatchEvent(HeartRateRequest request) {
 
         // 1. DB 저장 (tb_watch에 Upsert)
-        int updatedWatch = dao.insertWatchEvent(request);
+        int inserted = dao.insertWatchEvent(request);
 
         System.out.println("✅ Watch Event DB 저장 완료. userNumber: " + request.getUserNumber() + ", HR: " + request.getHeartRate());
 
-        // 2. 긴급 알림 처리 (Task 생성)
+        /*2. 긴급 알림 처리 (Task 생성)
         if (Boolean.TRUE.equals(request.getIsEmergency())) {
             // TODO: handleEmergencyAlert (FCM 발송 및 Task 생성) 로직 필요
             handleEmergencyAlert(request.getUserNumber());
         }
+        */
     }
 
     // 긴급 상황 처리 (Task 생성) - 분리된 비즈니스 로직

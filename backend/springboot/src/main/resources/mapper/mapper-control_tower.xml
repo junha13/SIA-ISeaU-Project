@@ -6,15 +6,17 @@
 
     <insert id="insertWatchEvent">
         INSERT INTO tb_watch (
-            user_number,
-            heart_rate,
-            occurred_at
-        ) VALUES (
-                     #{userNumber},
-                     CAST(#{heartRate} AS INTEGER),
-                     CAST(#{occurredAt} AS TIMESTAMP WITH TIME ZONE)
-                 )
+        user_number,
+        heart_rate,
+        occurred_at
+    )
+    VALUES (
+        #{userNumber, jdbcType=INTEGER},
+        #{heartRate, jdbcType=INTEGER},
+        CAST(#{occurredAt} AS TIMESTAMP)  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+    )
     </insert>
+   
 
     <insert id="insertTaskOnEmergency">
         INSERT INTO tb_task (manager_number, user_number, task_processed)
