@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 페이지 띄우기
         //webview.loadUrl("https://iseau.kr");
-        webview.loadUrl("https://hellokiyo.ngrok.io/");
+        webview.loadUrl("https://subterete-reedy-dillon.ngrok-free.dev");
         //webview.loadUrl("http://m.naver.com");
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     }
     /**
      * ✅ WebView(JS) → 안드로이드 네이티브로 값 전달하는 브리지
-     * - Vue(LoginPage.vue)에서 window.AndroidBridge.setUserNumber(user_number) 호출 시 실행됨
+     * - Vue(LoginPage.vue)에서 window.AndroidBridge.setUserNumber(userNumber) 호출 시 실행됨
      */
     public static class AndroidBridge {
 

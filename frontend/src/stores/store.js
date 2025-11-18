@@ -35,5 +35,10 @@ const sortOptions = ref([
     { label: "제주", value: "제주" },
   ]);
 
-  return { header, beach, tabOptions, sortOptions, regionOptions }
+  // 웹 관제
+  const controlView = ref('해수욕장')
+
+  const cctvName = ref('')
+
+  return { header, beach, tabOptions, sortOptions, regionOptions, controlView, cctvName }
 })

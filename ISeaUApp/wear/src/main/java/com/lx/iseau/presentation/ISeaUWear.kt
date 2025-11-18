@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.wear.tooling.preview.devices.WearDevices
 import androidx.lifecycle.ViewModelProvider
-import androidx.compose.ui.text.style.TextAlign // TextAlign import 추가
+import androidx.compose.ui.text.style.TextAlign
 
 class ISeaUWear : ComponentActivity() {
 
@@ -93,11 +93,11 @@ class ISeaUWear : ComponentActivity() {
     private fun startSafetyMonitoringService() {
         if (hasAllPermissions()) {
             // ✅ 서버 업로드 전용 서비스 실행 (여기서는 HeartRateUploadService가 정의되어 있다고 가정)
-            // HeartRateUploadService.start(this)
+            HeartRateUploadService.start(this)
             Log.d(TAG, "✅ HeartRateUploadService started.")
 
             // 💡 서비스 시작 시 연결 상태를 '연결됨'으로 업데이트 (UI 전환 목적)
-            healthViewModel.updatePhoneConnection(true)
+            healthViewModel.updatePhoneConnectionStatus(true)
         } else {
             Log.w(TAG, "❌ Cannot start service: Permissions are missing.")
         }
@@ -136,13 +136,9 @@ class ISeaUWear : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setTheme(android.R.style.Theme_DeviceDefault)
 
-        // 💡 Application 클래스에서 ViewModel 인스턴스를 가져와 초기화
-        // (ISeaUApp 클래스가 HealthDataViewModel 인스턴스를 가지고 있다고 가정)
-        // healthViewModel = (application as ISeaUApp).healthViewModel // 실제 코드
-
         // 💡 테스트를 위해 ViewModel 인스턴스를 여기서 임시 생성
         healthViewModel = ViewModelProvider(this).get(HealthDataViewModel::class.java)
-        healthViewModel.updatePhoneConnection(false) // 초기 상태 미연결
+        healthViewModel.updatePhoneConnectionStatus(false) // 초기 상태 미연결
 
         requestPermissionsIfNecessary()
 
@@ -180,7 +176,7 @@ private val IseuWarning = Color(0xFFFFB354) // $iseu-warning
 
 
 /**
- * 💡 [추가] 휴대폰 연결 상태를 표시하는 Composable
+ * 💡 휴대폰 연결 상태를 표시하는 Composable
  */
 @Composable
 fun PhoneConnectionStatus(viewModel: HealthDataViewModel, onRetryClick: () -> Unit) {
@@ -201,7 +197,7 @@ fun PhoneConnectionStatus(viewModel: HealthDataViewModel, onRetryClick: () -> Un
             Text(
                 text = viewModel.iseauText,
                 color = IseuPrimary, // 색상 적용
-                fontSize = 18.sp,
+                fontSize = 30.sp, // 💡 I SEA U 글씨 크기 키움
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
@@ -225,10 +221,10 @@ fun PhoneConnectionStatus(viewModel: HealthDataViewModel, onRetryClick: () -> Un
                     contentColor = Color.White
                 ),
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
+                    .fillMaxWidth(0.6f) // 💡 크기 조정
                     .height(32.dp)
             ) {
-                Text(text = "재시도 / 연결")
+                Text(text = "연결 재시도") // 💡 텍스트 변경
             }
         }
     }
@@ -236,7 +232,7 @@ fun PhoneConnectionStatus(viewModel: HealthDataViewModel, onRetryClick: () -> Un
 
 
 /**
- * 💡 [수정] ViewModel을 받아 상태에 바인딩하는 Composable (ISeaU 색상 적용)
+ * 💡 ViewModel을 받아 상태에 바인딩하는 Composable (ISeaU 색상 및 크기 적용)
  */
 @Composable
 fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
@@ -257,7 +253,7 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
                 Text(
                     text = viewModel.iseauText,
                     color = IseuPrimary, // 💡 색상 적용
-                    fontSize = 18.sp,
+                    fontSize = 30.sp, // 💡 I SEA U 글씨 크기 키움 (BPM과 비슷하게)
                     modifier = Modifier.padding(top= 6.dp)
                 )
                 // 1. 상태 표시 텍스트 (ViewModel 상태 연결)
@@ -268,7 +264,7 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
                         Color.Red -> IseuEmergency
                         else -> Color.LightGray
                     },
-                    fontSize = 9.sp,
+                    fontSize = 12.sp, // 💡 심박수 모니터링 중 크기는 12sp로 유지
                     modifier = Modifier.padding(bottom = 2.dp, top= 3.dp)
                 )
 
@@ -277,7 +273,7 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
                     text = viewModel.heartRateText,
                     color = Color.White, // 💡 심박수 텍스트 흰색
                     style = MaterialTheme.typography.title1,
-                    fontSize = 30.sp,
+                    fontSize = 30.sp, // 💡 BPM 글씨 크기 유지
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -288,9 +284,11 @@ fun WearApp(viewModel: HealthDataViewModel, onAlertClick: () -> Unit) {
                         backgroundColor = IseuPrimary, // 💡 버튼 배경색 변경
                         contentColor = Color.White // 💡 버튼 내용 색상 흰색
                     ),
-                    modifier = Modifier.fillMaxWidth(0.9f).height(32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f) // 💡 크기 조정
+                        .height(32.dp)
                 ) {
-                    Text(text = "서비스 시작/재시도")
+                    Text(text = "측정") // 💡 텍스트 변경
                 }
             }
         }
@@ -303,7 +301,7 @@ fun DefaultPreview() {
     val viewModel = HealthDataViewModel()
     // 💡 연결된 상태 Preview
     viewModel.updateHeartRate(75)
-    viewModel.updatePhoneConnection(true)
+    viewModel.updatePhoneConnectionStatus(true)
     WearApp(viewModel = viewModel, onAlertClick = {})
 }
 
@@ -312,6 +310,6 @@ fun DefaultPreview() {
 fun DisconnectedPreview() {
     val viewModel = HealthDataViewModel()
     // 💡 미연결 상태 Preview
-    viewModel.updatePhoneConnection(false)
+    viewModel.updatePhoneConnectionStatus(false)
     PhoneConnectionStatus(viewModel = viewModel, onRetryClick = {})
 }

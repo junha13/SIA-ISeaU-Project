@@ -131,7 +131,7 @@ const dial = async (displayTitle, number) => {
         await navigator.clipboard.writeText(number);
         await showConfirmModal({
           title: '전화 연결 안내',
-          message: `신고는 모바일 전용입니다.`,
+          message: `전화가 연결되고 있습니다.`,
           type: 'info',
         });
       } catch {

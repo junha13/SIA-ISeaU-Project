@@ -18,7 +18,7 @@ import java.util.concurrent.Executors
 object AlertSender {
     private const val TAG = "HrAlertSender"
 
-    private const val ENDPOINT = "https://hellokiyo.ngrok.io/api/controltower/heart-rate"
+    private const val ENDPOINT = "https://subterete-reedy-dillon.ngrok-free.dev/api/controltower/heart-rate"
 
     private val io = Executors.newFixedThreadPool(2)
 
@@ -26,14 +26,12 @@ object AlertSender {
      * 서버로 심박/발생시각 전송 (비동기)
      * @param occurredAtIso  ISO-8601(UTC) 문자열, 예: 2025-11-12T13:45:21Z
      * @param heartRateBpm   Int BPM
-     * userNumber / isEmergency 는 내부 목업으로 자동 세팅:
-     *  - userNumber = MOCK_USER_NUMBER
      */
 
-    fun sendHeartRateAsync(occurredAtIso: String, heartRateBpm: Int, userNumber: Int, isEmergency: Boolean) {
+    fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String) {
         io.execute {
             try {
-                val json = """{"occurredAt":"$occurredAtIso","heartRate":$heartRateBpm,"userNumber":$userNumber,"isEmergency":$isEmergency}"""
+                val json = """{"userNumber":$userNumber,"heartRate":$heartRateBpm,"occurredAt":"$occurredAtIso"}"""
                 val url = URL(ENDPOINT)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"

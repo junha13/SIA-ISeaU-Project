@@ -41,6 +41,9 @@
     <meta-data
         android:name="com.google.firebase.messaging.default_notification_color"
         android:resource="@color/teal_200" />
+        <meta-data
+            android:name="com.google.android.wearable.capability.mobile_app_capability"
+            android:value="mobile_app_capability" />
 
 </application>
 </manifest>
