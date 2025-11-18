@@ -39,8 +39,8 @@ class HeartRateUploadService : Service() {
         private const val NOTI_ID = 212
 
         // 응급상황(이상치) 임계값만 사용
-        private const val EMERGENCY_LOW_HR = 60   // 이 값 이하 → 너무 느림
-        private const val EMERGENCY_HIGH_HR = 100 // 이 값 이상 → 너무 빠름
+        private const val EMERGENCY_LOW_HR = 75   // 이 값 이하 → 너무 느림
+        private const val EMERGENCY_HIGH_HR = 80 // 이 값 이상 → 너무 빠름
 
 
         fun start(context: Context) {
@@ -89,7 +89,7 @@ class HeartRateUploadService : Service() {
 
                 if (isEmergency) {
                     Log.i(TAG, "🚨 EMERGENCY HR=$bpm at $occurredAt → send to server")
-                    AlertSender.sendHeartRateAsync(userNumber, bpm,occurredAt)
+                    AlertSender.sendHeartRateAsync(userNumber, bpm, occurredAt)
                 } else {
                     // 정상 구간이면 서버 전송 안 함
                     Log.d(TAG, "Normal HR=$bpm at $occurredAt (not sent)")

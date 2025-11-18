@@ -13,9 +13,23 @@
     VALUES (
         #{userNumber, jdbcType=INTEGER},
         #{heartRate, jdbcType=INTEGER},
-        CAST(#{occurredAt} AS TIMESTAMP)  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+        CAST(#{occurredAt} AS TIMESTAMP with time zone)  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
     )
     </insert>
+    
+    <!-- 추후에 워치 최신순 조회
+    <select id="selectLatestWatchByUser" parameterType="int" resultType="map">
+	    SELECT
+	        watch_nubmer,
+	        user_number,
+	        heart_rate,
+	        occurred_at
+	    FROM tb_watch
+	    WHERE user_number = #{userNumber}
+	    ORDER BY occurred_at DESC
+	    LIMIT 1
+	</select>
+ 	-->
    
 
     <insert id="insertTaskOnEmergency">

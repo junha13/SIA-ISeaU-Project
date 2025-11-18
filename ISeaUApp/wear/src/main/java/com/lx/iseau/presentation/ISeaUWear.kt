@@ -137,7 +137,9 @@ class ISeaUWear : ComponentActivity() {
         setTheme(android.R.style.Theme_DeviceDefault)
 
         // 💡 테스트를 위해 ViewModel 인스턴스를 여기서 임시 생성
-        healthViewModel = ViewModelProvider(this).get(HealthDataViewModel::class.java)
+        val app = application as ISeaUApp
+        healthViewModel = app.healthViewModel
+
         healthViewModel.updatePhoneConnectionStatus(false) // 초기 상태 미연결
 
         requestPermissionsIfNecessary()
