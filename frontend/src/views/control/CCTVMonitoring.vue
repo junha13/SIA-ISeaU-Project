@@ -200,7 +200,8 @@
           :key="`10-${id}`"
           :class="cctvName === `CAM ${id}` ? 'cam-row-active' : ''"
         >
-          <td class="fw-semibold">CAM {{ id }}</td>
+          <td class="fw-semibold"> {{ getCamLabel(id) }} (CAM {{ id }}) </td>
+
           <td class="text-end">
             <span
               class="badge"
@@ -235,7 +236,7 @@
           :key="`today-${id}`"
           :class="cctvName === `CAM ${id}` ? 'cam-row-active' : ''"
         >
-          <td class="fw-semibold">CAM {{ id }}</td>
+         <td class="fw-semibold">{{ getCamLabel(id) }} (CAM {{ id }}) </td>
           <td class="text-end">
             <span
               class="badge"
@@ -400,6 +401,19 @@ let alertTimer = null
 const camList = computed(() =>
   controlView.value === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]
 )
+
+const camLabelMap = {
+  1: '이호테우',
+  2: '중문',
+  3: '함덕',
+  4: '월정리',
+  5: '애월 하귀 가문동 포구',
+  6: 'CAM 6',
+  7: 'CAM 7',
+  8: 'CAM 8',
+}
+
+const getCamLabel = (id) => camLabelMap[id] ?? `CAM ${id}`
 
 // 📊 10분 단위 위험 진입 카운트 (CAM별)
 const danger10min = ref({
@@ -890,6 +904,7 @@ watch(
     })
   }
 )
+
 </script>
 
 
