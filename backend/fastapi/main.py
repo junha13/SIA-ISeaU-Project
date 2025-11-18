@@ -94,7 +94,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM8": 
     {
         "label": "애월 하귀 가문동 포구",
-        "url": "",
+        "url": "/server/test/KakaoTalk_20251118_184824700.mp4",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
         "safe_zone_px": [(0, 290), (1024, 400), (1024, 768), (1024, 767),],                        
     },
@@ -207,20 +207,34 @@ class AIStreamServer:
     async def process_single_stream(self, websocket: WebSocket, stream_id: str, stream_url: str):
         """단일 스트림의 FFmpeg 구동, AI 처리, 웹소켓 전송 파이프라인."""
         
-        command = (
+        is_network = stream_url.startswith(("http://", "https://", "rtmp://"))
+
+        if is_network:
+            command = (
+                'ffmpeg -hide_banner -loglevel error '
+                # 입력/분석 버퍼 최소화(+ 저지연 플래그)
+                '-fflags nobuffer -flags low_delay -avioflags direct '
+                '-analyzeduration 0 -probesize 32 -fpsprobesize 0 '
+                # 깨진 프레임은 즉시 버림 + 타임스탬프 안정화
+                '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 '
+                '-http_persistent 1 '
+                '-fflags +discardcorrupt '
+                '-use_wallclock_as_timestamps 1 -an '
+                f'-i "{stream_url}" '
+                # 가장 빠른 스케일러 + FPS 재생성 금지(내부 버퍼링 방지)
+                f'-map 0:v:0 -vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" -vsync passthrough '
+                # 파이프로 즉시 밀어내기 (OpenCV가 바로 쓰는 포맷)
+                '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
+            )
+        else:
+            command = (
             'ffmpeg -hide_banner -loglevel error '
-            # 입력/분석 버퍼 최소화(+ 저지연 플래그)
-            '-fflags nobuffer -flags low_delay -avioflags direct '
-            '-analyzeduration 0 -probesize 32 -fpsprobesize 0 '
-            # 깨진 프레임은 즉시 버림 + 타임스탬프 안정화
-            '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 '
-            '-http_persistent 1 '
-            '-fflags +discardcorrupt '
-            '-use_wallclock_as_timestamps 1 -an '
+            '-re '  # 실시간 속도로 처리 (너무 빨리 안 넘어가게)
+            # '-stream_loop -1 '  # 🔁 무한반복하려면 이 줄 주석 해제
             f'-i "{stream_url}" '
-            # 가장 빠른 스케일러 + FPS 재생성 금지(내부 버퍼링 방지)
-            f'-map 0:v:0 -vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" -vsync passthrough '
-            # 파이프로 즉시 밀어내기 (OpenCV가 바로 쓰는 포맷)
+            f'-vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" '
+            '-vsync passthrough '
+            '-an '
             '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
         )
         
