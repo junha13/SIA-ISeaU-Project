@@ -64,20 +64,12 @@
         <service
             android:name="com.lx.iseau.presentation.UserConfigListenerService"
             android:exported="true"
-            android:permission="com.google.android.wearable.BIND_LISTENER">
+            >
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <data android:scheme="wear" android:host="*" android:pathPrefix="/" />
+                <data android:scheme="wear" android:host="*" android:path="/USER_INFO" />
             </intent-filter>
-
-            <meta-data
-                android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
-                android:value="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
-            <meta-data
-                android:name="com.google.android.wearable.watchface.companionBuiltinConfigurationEnabled"
-                android:value="true" />
         </service>
-
 
     </application>
 </manifest>
