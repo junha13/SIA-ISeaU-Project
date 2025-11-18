@@ -3,7 +3,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 // ✅ Layout
 import AppLayout from '@/components/AppLayout.vue'
 
+// ----------------------------------------------------
 // ✅ Views (Root)
+// ----------------------------------------------------
 import MainPage from '@/views/MainPage.vue'
 
 // ✅ Views (beach)
@@ -38,10 +40,9 @@ import PostList from '@/views/post/PostList.vue'
 import PostWrite from '@/views/post/PostWrite.vue'
 
 // ----------------------------------------------------
-// ✅ Views (Control) - 새로운 관제 시스템 컴포넌트 추가
+// ✅ Views (Control) - 독립된 관제 시스템 컴포넌트
 // ----------------------------------------------------
-// 관제 시스템 컴포넌트는 src/views/control 폴더에 있다고 가정합니다.
-import ControlLayout from '@/views/control/ControlLayout.vue' // 저희가 만든 MainLayout
+import ControlLayout from '@/views/control/ControlLayout.vue'
 import CCTVMonitoring from '@/views/control/CCTVMonitoring.vue'
 import ReportDetail from '@/views/control/ReportDetail.vue'
 
@@ -72,7 +73,34 @@ const routes = [
     },
 
     // ----------------------------------------------------
-    // 2. 레이아웃 적용 (메인 페이지)
+    // ✅ 2. Control Layout 적용 (관제 시스템) - 최상위 분리
+    // ----------------------------------------------------
+    {
+        path: '/control', // /control로 진입 시 ControlLayout만 사용
+        component: ControlLayout,
+        name: 'ControlRoot',
+        children: [
+            // 기본 경로 진입 시 CCTV 관제 페이지로 리다이렉트
+            { path: '', redirect: { name: 'CCTVControl' } }, 
+
+            // CCTV 관제 페이지
+            {
+                path: 'cctv',
+                name: 'CCTVControl',
+                component: CCTVMonitoring
+            },
+
+            // 신고 상세 페이지
+            {
+                path: 'report',
+                name: 'ReportControl',
+                component: ReportDetail
+            },
+        ],
+    },
+
+    // ----------------------------------------------------
+    // 3. AppLayout 적용 (메인/모바일 웹 서비스)
     // ----------------------------------------------------
     {
         path: '/',
@@ -103,35 +131,10 @@ const routes = [
             { path: 'post/list', name: 'PostList', component: PostList },
             { path: 'post/write', name: 'PostWrite', component: PostWrite },
 
-            // ----------------------------------------------------
-            // ✅ ControlLayout을 AppLayout의 자식으로 배치 (숨김 처리)
-            // ----------------------------------------------------
-            {
-                path: 'control', // 관제 시스템의 기본 경로: /control
-                component: ControlLayout, // ControlLayout이 AppLayout 내부에 로드됨
-                // AppLayout의 UI를 숨기도록 설정
-                meta: { hideAppLayout: true },
-                children: [
-                    // 기본 경로 진입 시 CCTV 관제 페이지로 리다이렉트
-                    { path: '', redirect: 'cctv' },
-
-                    // CCTV 관제 페이지
-                    {
-                        path: 'cctv',
-                        name: 'CCTVControl',
-                        component: CCTVMonitoring
-                    },
-
-                    // 신고 상세 페이지
-                    {
-                        path: 'report',
-                        name: 'ReportControl',
-                        component: ReportDetail
-                    },
-                ],
-            },
         ],
     },
+    
+    
 ]
 
 export default createRouter({
