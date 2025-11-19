@@ -8,12 +8,23 @@
         INSERT INTO tb_watch (
         user_number,
         heart_rate,
-        occurred_at
+        occurred_at,
+        watch_location,
+        watch_altitude
     )
     VALUES (
         #{userNumber, jdbcType=INTEGER},
         #{heartRate, jdbcType=INTEGER},
-        CAST(#{occurredAt} AS TIMESTAMP with time zone)  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+        CAST(#{occurredAt} AS TIMESTAMP with time zone),  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+        CASE
+	        WHEN #{watchLatitude} IS NOT NULL AND #{watchLongitude} IS NOT NULL
+	        THEN ST_SetSRID(
+	                 ST_MakePoint(#{watchLongitude}, #{watchLatitude}),
+	                 4326
+	             )::geography
+	        ELSE NULL
+	      END,
+	    #{watchAltitude, jdbcType=DOUBLE}
     )
     </insert>
     
@@ -23,11 +34,12 @@
 	        watch_nubmer,
 	        user_number,
 	        heart_rate,
-	        occurred_at
+	        occurred_at,
+	        ST_Y(w.watch_location::geometry) AS latitude,
+    		ST_X(w.watch_location::geometry) AS longitude
 	    FROM tb_watch
 	    WHERE user_number = #{userNumber}
 	    ORDER BY occurred_at DESC
-	    LIMIT 1
 	</select>
  	-->
    

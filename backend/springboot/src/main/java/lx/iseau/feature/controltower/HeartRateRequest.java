@@ -14,4 +14,7 @@ public class HeartRateRequest {
     private Integer heartRate;   // 심박수 (BPM)
     private String occurredAt;   // ISO 8601 시간 문자열 (예: "2025-11-11T22:15:00Z")
     private Boolean isEmergency; // 긴급 알림 여부 (true/false)
+    private Double watchLatitude;// 위도
+    private Double watchLongitude;// 경도
+    private Double watchAltitude; // 고도
 }

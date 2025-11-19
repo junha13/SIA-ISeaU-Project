@@ -48,7 +48,7 @@ public class ControlTowerController {
             return ResponseEntity.ok(Map.of("success", true));
 
         } catch (Exception e) {
-            log.error("❌ 심박 데이터 처리 중 에러 발생", e);
+            log.error("❌ 심박 데이터 처리 or 위치(고도 포함) 처리 중 에러 발생", e);
             return ResponseEntity
                     .status(500)
                     .body(Map.of(

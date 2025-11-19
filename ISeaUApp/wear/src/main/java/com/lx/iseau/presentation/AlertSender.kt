@@ -23,15 +23,30 @@ object AlertSender {
     private val io = Executors.newFixedThreadPool(2)
 
     /**
-     * 서버로 심박/발생시각 전송 (비동기)
+     * @param userNumber   워치 주인 유저 번호
      * @param occurredAtIso  ISO-8601(UTC) 문자열, 예: 2025-11-12T13:45:21Z
      * @param heartRateBpm   Int BPM
+     * @param latitude     위도 (nullable)
+     * @param longitude    경도 (nullable)
+     * @param altitude     고도(Z, meter 단위, nullable)
      */
 
-    fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String) {
+    fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String, latitude: Double?, longitude: Double?, altitude: Double?) {
         io.execute {
             try {
-                val json = """{"userNumber":$userNumber,"heartRate":$heartRateBpm,"occurredAt":"$occurredAtIso"}"""
+                // 위치/고도 값은 있을 때만 JSON에 추가
+                val locationPart =
+                    if (latitude != null && longitude != null)
+                        ""","latitude":$latitude,"longitude":$longitude"""
+                    else
+                        ""
+                val altitudePart =
+                    if (altitude != null)
+                        ""","altitude":$altitude"""
+                    else
+                        ""
+
+                val json = """{"userNumber":$userNumber,"heartRate":$heartRateBpm,"occurredAt":$occurredAtIso,"location":$locationPart"$locationPart$altitudePart}"""
                 val url = URL(ENDPOINT)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
