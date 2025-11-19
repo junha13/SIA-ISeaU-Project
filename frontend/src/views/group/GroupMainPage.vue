@@ -771,43 +771,84 @@ align-items: center;
 justify-content: center;
 z-index: 3000;
 }
+/* 1. 배경 (Backdrop) - 더 어둡게 하여 모달 집중 */
+.ga-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7); /* 기존 0.4에서 0.7로 진하게 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
 
+/* 2. 모달 본체 (Modal) - 경고색 테두리 및 그림자 강조 */
 .ga-modal {
-width: 280px;
-background: #fff;
-border-radius: 12px;
-overflow: hidden;
-box-shadow: 0 14px 35px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  background: #ffffff; /* 내부 배경은 흰색 유지 */
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #0b3356; 
 }
 
+/* 3. 헤더 (Header) - 긴급 경고 톤 */
 .ga-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 12px 14px 6px;
+  background-color: #0B1956; 
+  color: white;
+  padding: 12px 14px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ga-header h5 {
+  margin: 0;
+  font-weight: 1200;
+  font-size: 16px;
+  color: white; /* 텍스트 흰색 */
+}
+.ga-close {
+  color: white; /* 닫기 버튼 흰색 */
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1; /* x 버튼 중앙 정렬 */
 }
 
+
+/* 4. 내용 (Body) - 메시지 텍스트 강조 */
 .ga-body {
- padding: 12px 14px 4px;
- font-size: 14px;
+  padding: 20px 18px; /* 패딩을 늘려 메시지 공간 확보 */
+  font-size: 16px;
+  font-weight: 1600;
+  color: #333333;
+  line-height: 1.4;
+  text-align: center; /* 메시지 중앙 정렬 */
 }
 
+/* 5. 푸터 (Footer) */
 .ga-footer {
- padding: 10px 14px 14px;
- display: flex;
- justify-content: flex-end;
+  padding: 10px 14px 14px;
+  display: flex;
+  justify-content: center; /* 버튼을 중앙에 배치 */
 }
 
+/* 6. 버튼 (Button) - 확인 버튼을 눈에 띄게 */
 .ga-btn {
- background: #0092ba;
- border: none;
- color: #fff;
- padding: 5px 12px;
- border-radius: 6px;
- font-size: 13px;
- cursor: pointer;
+  background: #0B1956; /* 헤더와 동일한 경고색 */
+  border: none;
+  color: #fff;
+  padding: 8px 24px;
+  border-radius: 20px; /* 둥근 버튼 */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 6px rgba(255, 69, 0, 0.3); /* 버튼 그림자 */
 }
-
+.ga-btn:hover {
+    background: #0092BA; /* 호버 시 색상 진하게 */
+}
 .ga-close {
  background: transparent;
  border: none;

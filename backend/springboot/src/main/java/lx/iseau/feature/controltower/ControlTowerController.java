@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequestMapping("/api/controltower")
 @RestController
 @RequiredArgsConstructor
@@ -22,21 +25,37 @@ public class ControlTowerController {
     // =========================
     @PostMapping("/heart-rate")
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
-        // 필수 필드 검사
-        if (request.getUserNumber() == null || request.getHeartRate() == null || request.getOccurredAt() == null) {
-            System.err.println("❌ Watch API: 필수 필드 누락." + request);
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("success", false, "message", "Required fields missing."));
-        }
+        log.info("📥 /api/controltower/heart-rate 요청 수신: {}", request);
 
         try {
-            service.processHeartRateData(request);
-            return ResponseEntity.ok().body(Map.of("success", true));
+            // 1) 기본 유효성 검사
+            if (request.getUserNumber() == null || request.getUserNumber() <= 0) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("success", false, "message", "userNumber is required")
+                );
+            }
+            if (request.getHeartRate() == null) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("success", false, "message", "heartRate is required")
+                );
+            }
+
+            // 2) (문제 원인 찾으려고) 일단 DB 저장은 잠깐 막고, 로그만 찍게 해도 됨
+            service.insertWatchEvent(request);
+
+            log.info("✅ 심박 데이터 처리 완료: {}", request);
+
+            return ResponseEntity.ok(Map.of("success", true));
+
         } catch (Exception e) {
-            System.err.println("❌ Watch API: 데이터 처리 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Server processing error."));
+            log.error("❌ 심박 데이터 처리 or 위치(고도 포함) 처리 중 에러 발생", e);
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of(
+                            "success", false,
+                            "message", "Server processing error.",
+                            "detail", e.getClass().getSimpleName() + ": " + e.getMessage()
+                    ));
         }
     }
 

@@ -75,28 +75,28 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
         "label": "애월 하귀 가문동 포구",
         "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],      
-        "safe_zone_px": [(0, 290), (1024, 220), (0, 768), (1024, 768),],                        
+        "safe_zone_px": [(600, 768), (500, 200), (600, 190), (1024, 700),],                        
     },
     "CAM6": 
     {
-        "label": "애월 하귀 가문동 포구",
-        "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
+        "label": "김녕리 포구",
+        "url": "http://211.114.96.121:1935/jejusi6/11-20.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
-        "safe_zone_px": [(0, 290), (1024, 220), (0, 768), (1024, 768),],                    
+        "safe_zone_px": [(100, 0), (1024, 600), (1024, 768), (0, 768),],                    
     },
     "CAM7": 
     {
-        "label": "애월 하귀 가문동 포구",
-        "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
+        "label": "수마 포구",
+        "url": "http://211.34.191.215:1935/live/1-76.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],           
-        "safe_zone_px": [(0, 290), (1024, 220), (0, 768), (1024, 768),],                   
+        "safe_zone_px": [(350, 768), (1024, 450), (1024, 768), (0, 768),],                   
     },
     "CAM8": 
     {
         "label": "애월 하귀 가문동 포구",
-        "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
+        "url": "",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
-        "safe_zone_px": [(0, 290), (1024, 220), (0, 768), (1024, 768),],                        
+        "safe_zone_px": [(0, 290), (1024, 400), (1024, 768), (1024, 767),],                        
     },
 
 }
@@ -155,14 +155,14 @@ def build_roi_mask_px(w:int, h:int, pts_px):
 # ====================================================================
 
 class AIStreamServer:
-    def __init__(self):
+    def __init__(self):  # 객체 만들 때 기본 변수 준비 
         self.yolo_model = None
         self.gmm_models = {}
         self.frame_counters = {}
         self.video_sources: List[Tuple[str, str]] = []
         self.roi_masks = {}  # ★추가: ROI 마스크 캐시
 
-    async def initialize(self):
+    async def initialize(self): # 기본 정보 세팅
         """서버 시작 시 Streamlink 호출 및 모든 모델을 안전하게 로드합니다."""
         global yolo_model, gmm_models, frame_counters, VIDEO_SOURCES
         

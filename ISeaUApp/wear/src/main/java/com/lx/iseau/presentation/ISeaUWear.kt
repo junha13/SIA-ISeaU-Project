@@ -45,12 +45,13 @@ class ISeaUWear : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val grantedBodySensors = permissions[Manifest.permission.BODY_SENSORS] ?: false
             val grantedActivityRecognition = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
+            val grantedLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
 
-            if (grantedBodySensors && grantedActivityRecognition) {
-                Log.d(TAG, "✅ Foreground permissions granted.")
+            if (grantedBodySensors && grantedActivityRecognition && grantedLocation) {
+                Log.d(TAG, "✅ Foreground permissions granted (sensors + location).")
                 requestBackgroundPermissionIfNecessary()
             } else {
-                Log.w(TAG, "❌ Missing required permissions. Body Sensors: $grantedBodySensors, Activity Recognition: $grantedActivityRecognition")
+                Log.w(TAG, "❌ Missing required permissions. Body Sensors: $grantedBodySensors, Activity Recognition: $grantedActivityRecognition, , LOC=$grantedLocation")
             }
         }
 
@@ -106,12 +107,14 @@ class ISeaUWear : ComponentActivity() {
     private fun hasAllPermissions(): Boolean {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS) == PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermissionsIfNecessary() {
         val permissions = arrayOf(
             Manifest.permission.BODY_SENSORS,
-            Manifest.permission.ACTIVITY_RECOGNITION
+            Manifest.permission.ACTIVITY_RECOGNITION,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
 
         if (!hasAllPermissions()) {
@@ -137,7 +140,9 @@ class ISeaUWear : ComponentActivity() {
         setTheme(android.R.style.Theme_DeviceDefault)
 
         // 💡 테스트를 위해 ViewModel 인스턴스를 여기서 임시 생성
-        healthViewModel = ViewModelProvider(this).get(HealthDataViewModel::class.java)
+        val app = application as ISeaUApp
+        healthViewModel = app.healthViewModel
+
         healthViewModel.updatePhoneConnectionStatus(false) // 초기 상태 미연결
 
         requestPermissionsIfNecessary()
