@@ -100,21 +100,22 @@
         resultType="ControlTowerTaskListDTO"
         parameterType="int">
 
-      SELECT
-        t.task_number    AS id,
-        t.task_processed AS taskProcessed,
-        w.occurred_at    AS dateAndTime,
-        u.birth_date     AS birthDateForAge,
-        u.gender         AS gender,
-        -- user 테이블 위치
-        ST_X(u.location::geometry)        AS userLon,
-        ST_Y(u.location::geometry)        AS userLat,
-        -- watch 위치
-        ST_X(w.watch_location::geometry)  AS watchLon,
-        ST_Y(w.watch_location::geometry)  AS watchLat,
-        w.heart_rate     AS hr,
-        w.watch_count    AS count,
-        m.manager_number AS managerNumber
+        SELECT
+          t.task_number    AS id,
+          t.task_processed AS taskProcessed,
+          w.occurred_at    AS dateAndTime,
+          u.birth_date     AS birthDateForAge,
+          u.gender         AS gender,
+          -- user 테이블 위치
+          ST_X(u.location::geometry)        AS userLon,
+          ST_Y(u.location::geometry)        AS userLat,
+          -- watch 위치
+          ST_X(w.watch_location::geometry)  AS watchLon,
+          ST_Y(w.watch_location::geometry)  AS watchLat,
+          w.heart_rate     AS hr,
+          w.watch_count    AS count,
+          m.manager_number AS managerNumber,
+          b.beach_name     AS beachName
       FROM tb_task t
       JOIN tb_manager m
         ON m.manager_number = t.manager_number
@@ -122,6 +123,8 @@
         ON c.control_tower_number = m.control_tower_number
       JOIN tb_user u
         ON u.user_number = t.user_number
+      LEFT JOIN tb_beach b
+        ON b.beach_number = u.beach_number
       JOIN (
         SELECT user_number,
               occurred_at,
@@ -143,7 +146,9 @@
       ) w
         ON w.user_number = t.user_number
       WHERE c.control_tower_number = #{controlTowerNumber}
-      ORDER BY w.occurred_at DESC
+      ORDER BY w.occurred_at DESC,
+        w.watch_count DESC;
+
     </select>
 
     <!-- =========================

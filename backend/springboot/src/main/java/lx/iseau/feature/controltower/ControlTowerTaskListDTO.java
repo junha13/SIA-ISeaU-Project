@@ -40,4 +40,7 @@ public class ControlTowerTaskListDTO {
 
     // m.manager_number AS managerNumber
     private Integer managerNumber;
+
+    // b.beach_name AS beachName
+    private String beachName;
 }
