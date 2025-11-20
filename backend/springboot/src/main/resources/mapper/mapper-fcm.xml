@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="lx.iseau.feature.fcm.FcmDAO">
 
+    <!-- 
+        🚨 [DDL 기반 완벽 수정]
+        1. 테이블명: tb_fcm_token
+        2. 컬럼명: login_id (user_id 아님)
+        3. 충돌 기준: login_id (UNIQUE 제약조건)
+    -->
     <insert id="upsertToken">
         INSERT INTO tb_fcm_token (login_id, fcm_token, updated_at)
-        VALUES (#{userId}, #{token}, now())
-            ON CONFLICT (login_id) DO UPDATE
-                                             SET
-                                                 fcm_token = #{token},
-                                             updated_at = now();
+        VALUES (#{userId}, #{token}, NOW())
+        ON CONFLICT (login_id) 
+        DO UPDATE SET
+            fcm_token = EXCLUDED.fcm_token,
+            updated_at = NOW();
     </insert>
 
-    <select id="getTokenByUserNumber" resultType="string">
+    <!-- 조회 쿼리도 login_id 기준으로 수정 -->
+    <select id="getTokenByUserId" resultType="string">
         SELECT fcm_token
         FROM tb_fcm_token
-        WHERE user_id = #{userId}
+        WHERE login_id = #{userId}
     </select>
+
 </mapper>
