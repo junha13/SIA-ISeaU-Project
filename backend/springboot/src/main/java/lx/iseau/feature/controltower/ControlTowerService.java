@@ -16,6 +16,11 @@ public class ControlTowerService {
     private final ControlTowerDAO dao;
     private final int DEFAULT_MANAGER_NUMBER = 1; // 임시 매니저 번호
 
+    // ============ 관제센터의 처리 리스트(지서) ============
+    public List<TaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
+        return dao.getTaskListByControlTowerNumber(controlTowerNumber);
+    }
+
     // ============ 매니저 기본정보 조회 ============
     public Map<String, Object> selectManagerInfoByManagerNumber(int managerNumber) {
     	Map<String, Object> map = new HashMap<String, Object>();
