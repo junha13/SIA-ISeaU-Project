@@ -68,89 +68,83 @@
             </button>
           </div>
 
-          <!-- 카드 본문 영역 -->
-          <div class="p-3 h-300px " style="overflow-y: auto;">
-            <!-- 진입 알림 탭 내용 -->
-            <div
-              v-if="rightPanelTab === 'overview'"
-              class="map-placeholder-base border rounded d-flex flex-column h-100"
-              style="background-color: #F0F2F5;"
-            >
-              <!-- 상단: 제목 + 모두 읽음 버튼 -->
-              <div class="d-flex justify-content-between align-items-center" style="height: 10%;">
-                    <span
-                  class="badge bg-light text-muted small"
-                >
-                  전체 {{ filteredAlerts.length }}건
-                </span>
-                
-                <button
-                  v-show="filteredAlerts.length"
-                  type="button"
-                  class="btn btn-link p-0 small text-secondary text-decoration-none"
-                  @click="markAllAsRead"
-                >
-                  모두 읽음
-                </button>
-              </div>
+  <!-- 카드 본문 영역 -->
+<div class="p-3 h-300px" style="overflow-y: auto;">
+  <!-- 진입 알림 탭 -->
+  <div
+    v-if="rightPanelTab === 'overview'"
+    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    style="background-color: #F0F2F5;"
+  >
+    <!-- 상단: 제목 + 모두 읽음 버튼 -->
+    <div class="d-flex justify-content-between align-items-center" style="height: 10%;">
+      <span class="badge bg-light text-muted small">
+        전체 {{ filteredAlerts.length }}건
+      </span>
 
-              <!-- 알림 리스트 -->
-              <div class="flex-grow-1 overflow-auto px-2 " style="height: 90%;">
-                <div
-                  v-for="item in filteredAlerts"
-                  :key="item.id"
-                  class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
-                  :class="item.read ? 'bg-read' : 'bg-unread'"
-                  @click="markAsRead(item.id)"
-                >
-                  <div class="small">
-                    <div class="fw-semibold">
-                      {{ item.label }}에서 위험 구역 진입
-                      <span class="badge bg-danger ms-1">{{ item.danger }}명</span>
-                    </div>
-                    <div class="text-muted" style="font-size: 0.75rem;">
-                      {{ item.timeText }}
-                    </div>
-                  </div>
+      <button
+        v-show="filteredAlerts.length"
+        type="button"
+        class="btn btn-link p-0 small text-secondary text-decoration-none"
+        @click="markAllAsRead"
+      >
+        모두 읽음
+      </button>
+    </div>
 
-                  <span
-                    class="badge rounded-pill"
-                    :class="item.read ? 'bg-secondary-subtle text-secondary' : 'bg-primary text-white'"
-                  >
-                    {{ item.read ? '읽음' : '신규' }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 알림 상세 탭 -->
-            <div
-              v-if="rightPanelTab === 'detail'"
-              class="map-placeholder-base border rounded d-flex flex-column h-100"
-              style="background-color: #F0F2F5;"
-            >
-            <div class="h-300px">
-
-            </div>
-            </div>
-
-            <!-- CCTV 정보 탭 -->
-            <div
-              v-if="rightPanelTab === 'cctv'"
-              class="map-placeholder-base border rounded d-flex flex-column h-100"
-              style="background-color: #F0F2F5;"
-            >
-
-              <!-- 🔹 네이버맵 컨테이너 -->
-              <div class="flex-grow-1 h-100">
-                <div
-                  ref="beachMap"
-                  class="naver-map-box"
-                ></div>
-              </div>
-            </div>
+    <!-- 알림 리스트 -->
+    <div class="flex-grow-1 overflow-auto px-2" style="height: 90%;">
+      <div
+        v-for="item in filteredAlerts"
+        :key="item.id"
+        class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
+        :class="item.read ? 'bg-read' : 'bg-unread'"
+        @click="markAsRead(item.id)"
+      >
+        <div class="small">
+          <div class="fw-semibold">
+            {{ item.label }}에서 위험 구역 진입
+            <span class="badge bg-danger ms-1">{{ item.danger }}명</span>
+          </div>
+          <div class="text-muted" style="font-size: 0.75rem;">
+            {{ item.timeText }}
           </div>
         </div>
+
+        <span
+          class="badge rounded-pill"
+          :class="item.read ? 'bg-secondary-subtle text-secondary' : 'bg-primary text-white'"
+        >
+          {{ item.read ? '읽음' : '신규' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기상 정보 탭 -->
+  <div
+    v-else-if="rightPanelTab === 'detail'"
+    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    style="background-color: #F0F2F5;"
+  >
+    <WeatherPanel :beach-number="beachNumber" />
+  </div>
+
+  <!-- CCTV 정보 탭 -->
+  <div
+    v-else-if="rightPanelTab === 'cctv'"
+    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    style="background-color: #F0F2F5;"
+  >
+    <div class="flex-grow-1 h-100">
+      <div
+        ref="beachMap"
+        class="naver-map-box"
+      ></div>
+    </div>
+  </div>
+</div>
+</div>
 
         <!-- 감지 정보 통계 카드 (아래 그대로 유지) -->
         <div class="card p-3 border-0 shadow-sm flex-grow-1" style="flex-grow: 1;">
@@ -366,12 +360,28 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import UseStreams from '@/components/useStreams.vue'
+import WeatherPanel from '@/components/WeatherPanel.vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
+import axios from 'axios'
+
+const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const store = useStore();
 const { controlView, cctvName } = storeToRefs(store)
-
 const rightPanelTab = ref('overview')
+const beachNumberMap = ref({})  // { '이호테우': 6, '중문': 2, ... } 이런 형태
+
+const beachNumber = computed(() => {
+  if (controlView.value !== '해수욕장') return 1
+
+  const key = cctvName.value        // 예: "중문", "이호테우"
+  const num = beachNumberMap.value[key]
+
+  console.log('▶ beachNumber 계산:', { key, num })
+
+  return num ?? 1
+})
+
 
 const rightTabs = [
   { key: 'overview', label: '진입 알림' },
@@ -557,13 +567,48 @@ const handleDangerUpdate = ({ camId, streamId, label, danger, timestamp }) => {
     alertEntries.value.pop()
   }
 }
+const fetchBeachNumberMap = async () => {
+  try {
+    const backendSort = 'name_asc'   // 아무거나 고정으로 써도 됨
 
+    const payload = {
+      region: '',
+      sort: backendSort,
+      tagFilter: null,
+      userLatitude: null,
+      userLongitude: null,
+    }
+
+    const res = await axios.post(BEACH_LIST_API_URL, payload)
+
+    const beachList = res.data.result || []
+
+    const map = {}
+    beachList.forEach((b) => {
+      if (!b.beachName || b.beachNumber == null) return
+
+      // 🔴 "해수욕장" 떼고, 양쪽 공백 제거
+      const shortName = b.beachName.replace(/해수욕장$/, '').trim()
+      // 예: "중문해수욕장" -> "중문"
+      //     "이호테우해수욕장" -> "이호테우"
+
+      map[shortName] = b.beachNumber
+    })
+
+    beachNumberMap.value = map
+    console.log('✅ beachNumberMap 로드됨:', map)
+  } catch (e) {
+    console.error('❌ beachNumberMap 불러오기 실패:', e)
+  }
+}
 
 
 // ⏱ 10분마다 10분 통계만 리셋 (금일 누적은 유지)
 let tenMinTimer = null
 
 onMounted(() => {
+
+  fetchBeachNumberMap()
   // 🔔 속보 문구 롤링
   alertTimer = window.setInterval(() => {
     alertIndex.value = (alertIndex.value + 1) % alerts.value.length
@@ -904,7 +949,6 @@ watch(
     })
   }
 )
-
 </script>
 
 
