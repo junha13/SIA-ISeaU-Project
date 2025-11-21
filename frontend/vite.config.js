@@ -74,7 +74,7 @@ export default defineConfig({
         proxy: {
             // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
-                target: 'https://subterete-reedy-dillon.ngrok-free.dev',
+                target: 'http://localhost:8080',
                 //target: 'https://hellokiyo.ngrok.io',
                 changeOrigin: true
             }
@@ -82,6 +82,6 @@ export default defineConfig({
     },
     build: {
         outDir: springBootStatic, // 빌드 결과 Spring Boot static으로
-        emptyOutDir: true,         // 기존 내용 삭제 후 빌드
+        emptyOutDir: true,        // 기존 내용 삭제 후 빌드
     },
 })
