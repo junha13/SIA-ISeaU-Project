@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
 
 
 /**
- * ✅ 워치에서 실시간 심박(heart_rate) 수집 → 서버로 {occurred_at, heart_rate} 전송하는 Foreground 서비스
+ * ✅ 워치에서 실시간 심박(heart_rate) 수집 → 서버로 {userNumber, heartRate, occurredAt, lat, lon, alt} 전송하는 Foreground 서비스
  * - Health Services API (MeasureClient) 사용
  * - 발생시각은 우선 수신 시각의 UTC ISO-8601 사용 (정밀 타임스탬프 동기화는 추후 확장)
  */
@@ -39,8 +39,8 @@ class HeartRateUploadService : Service() {
         private const val NOTI_ID = 212
 
         // 응급상황(이상치) 임계값만 사용
-        private const val EMERGENCY_LOW_HR = 76   // 이 값 이하 → 너무 느림
-        private const val EMERGENCY_HIGH_HR = 78 // 이 값 이상 → 너무 빠름
+        private const val EMERGENCY_LOW_HR = 75   // 이 값 이하 → 너무 느림
+        private const val EMERGENCY_HIGH_HR = 80 // 이 값 이상 → 너무 빠름
 
 
         fun start(context: Context) {
@@ -56,6 +56,9 @@ class HeartRateUploadService : Service() {
 
     private lateinit var measureClient: MeasureClient
     private var registered = false
+
+    // 위치 헬퍼
+    private lateinit var locationProvider: LocationProvider
 
     private val isoFormatter: DateTimeFormatter =
         DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC)
@@ -73,7 +76,7 @@ class HeartRateUploadService : Service() {
             for (p in points) {
                 val value = (p as? SampleDataPoint<Float>)?.value ?: continue
                 val userNumber = UserConfigListenerService.getSavedUserNumber(applicationContext)
-                val bpm = value.roundToInt()
+                val heartRateBpm = value.roundToInt()
                 val occurredAt = isoFormatter.format(Instant.now())
 
                 if (userNumber <= 0) {
@@ -82,25 +85,37 @@ class HeartRateUploadService : Service() {
                 }
 
                 // 워치 화면에도 심박 표시
-                (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(bpm)
+                (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(heartRateBpm)
 
                 // ✅ 임계치 기준으로만 응급 판단
-                val isEmergency = bpm <= EMERGENCY_LOW_HR || bpm >= EMERGENCY_HIGH_HR
+                val isEmergency = heartRateBpm <= EMERGENCY_LOW_HR || heartRateBpm >= EMERGENCY_HIGH_HR
 
                 if (isEmergency) {
-                    Log.i(TAG, "🚨 EMERGENCY HR=$bpm at $occurredAt → send to server")
-                    AlertSender.sendHeartRateAsync(userNumber, bpm,occurredAt)
+                    Log.i(TAG, "🚨 EMERGENCY HR=$heartRateBpm at $occurredAt → send to server")
+
+                    locationProvider.getCurrentLocation { latitude, longitude, altitude ->
+                        if (latitude != null && longitude != null) {
+                            Log.i(TAG, "📍 위치 정보: ($latitude, $longitude, ${altitude ?: "null"}")
+                        } else {
+                            Log.w(TAG, "⚠️ 위치 없음, 위치 없이 전송")
+                        }
+
+                    AlertSender.sendHeartRateAsync(userNumber, heartRateBpm, occurredAt, latitude, longitude, altitude)
+                    }
                 } else {
                     // 정상 구간이면 서버 전송 안 함
-                    Log.d(TAG, "Normal HR=$bpm at $occurredAt (not sent)")
+                    Log.d(TAG, "Normal HR=$heartRateBpm at $occurredAt (not sent)")
                 }
             }
         }
-    }
+    } // 이거 위치 맞나?
 
     override fun onCreate() {
         super.onCreate()
         measureClient = HealthServices.getClient(this).measureClient
+
+        // 위치 헬퍼 초기화
+        locationProvider = LocationProvider(this)
         createNotificationChannel()
         startAsForeground()
         register()

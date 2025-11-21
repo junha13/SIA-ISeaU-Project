@@ -46,8 +46,8 @@
     <!-- Welcome Modal (shown after successful login) -->
     <div v-if="showWelcomeModal" class="modal-backdrop d-flex align-items-center justify-content-center">
       <div class="modal-card p-4 shadow-lg rounded">
-        <h5 class="fw-bold mb-2">{{ welcomeName }}님 환영합니다!</h5>
-        <p class="small text-muted mb-3">정상적으로 로그인되었습니다.</p>
+        <h5 class="fw-bold mb-2">{{ welcomeName }}님 환영합니다 !</h5>
+        <p class="fs-5 mb-3">정상적으로 로그인되었습니다.</p>
         <div class="d-flex justify-content-end">
           <button class="btn btn-primary btn-sm" :style="{ backgroundColor: mainColor, borderColor: mainColor }" @click="confirmWelcome">확인</button>
         </div>

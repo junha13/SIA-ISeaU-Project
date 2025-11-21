@@ -6,15 +6,43 @@
 
     <insert id="insertWatchEvent">
         INSERT INTO tb_watch (
-            user_number,
-            heart_rate,
-            occurred_at
-        ) VALUES (
-                     #{userNumber},
-                     CAST(#{heartRate} AS INTEGER),
-                     CAST(#{occurredAt} AS TIMESTAMP WITH TIME ZONE)
-                 )
+        user_number,
+        heart_rate,
+        occurred_at,
+        watch_location,
+        watch_altitude
+    )
+    VALUES (
+        #{userNumber, jdbcType=INTEGER},
+        #{heartRate, jdbcType=INTEGER},
+        CAST(#{occurredAt} AS TIMESTAMP with time zone),  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+        CASE
+	        WHEN #{watchLatitude} IS NOT NULL AND #{watchLongitude} IS NOT NULL
+	        THEN ST_SetSRID(
+	                 ST_MakePoint(#{watchLongitude}, #{watchLatitude}),
+	                 4326
+	             )::geography
+	        ELSE NULL
+	      END,
+	    #{watchAltitude, jdbcType=DOUBLE}
+    )
     </insert>
+    
+    <!-- 추후에 워치 최신순 조회
+    <select id="selectLatestWatchByUser" parameterType="int" resultType="map">
+	    SELECT
+	        watch_nubmer,
+	        user_number,
+	        heart_rate,
+	        occurred_at,
+	        ST_Y(w.watch_location::geometry) AS latitude,
+    		ST_X(w.watch_location::geometry) AS longitude
+	    FROM tb_watch
+	    WHERE user_number = #{userNumber}
+	    ORDER BY occurred_at DESC
+	</select>
+ 	-->
+   
 
     <insert id="insertTaskOnEmergency">
         INSERT INTO tb_task (manager_number, user_number, task_processed)

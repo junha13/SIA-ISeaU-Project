@@ -118,8 +118,16 @@ const changeTab = (nextKey) => {
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value)?.comp);
 
 onMounted(() => {
+  const tabFromRoute = route.query.tab;
+
+  if (typeof tabFromRoute === 'string' && tabFromRoute.length > 0) {
+    // tagFilterOptions 에 있는 값이면 그대로 사용
+    activeTab.value = tabFromRoute;
+  }
+
   requestBeachDetail(route.params.beachNumber)
 })
+
 watch(
   () => route.params.beachNumber,
   (n) => n && requestBeachDetail(n)
