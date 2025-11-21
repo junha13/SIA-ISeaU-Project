@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lx.iseau.feature.cctv.CctvDAO">
+
+<insert id="insertDangerLog" parameterType="CctvDangerLogDto">
+    INSERT INTO tb_beach_danger_log (
+        cam_number,
+        beach_number,
+        danger_count,
+        created_at
+    )
+    VALUES (
+	    #{camNumber},
+	    (SELECT beach_number FROM tb_beach_cctv WHERE cam_number = #{camNumber}),
+	    #{dangerCount},
+	    NOW()
+	)
+</insert>
+
+<select id="selectDangerLogList" parameterType="CctvDangerLogDto" resultType="CctvDangerLogDto">
+	select danger_log_number, cam_number, beach_number, danger_count, created_at
+	from tb_beach_danger_log
+</select>
+
+<select id="selectDangerLogListByBeachNumber" parameterType="CctvDangerLogDto" resultType="CctvDangerLogDto">
+	select danger_log_number, cam_number, beach_number, danger_count, created_at
+	from tb_beach_danger_log
+	where beach_number = #{beachNumber}
+
+</select>
+
+</mapper>

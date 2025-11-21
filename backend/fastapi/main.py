@@ -10,9 +10,13 @@ import shlex
 import json
 import os
 import torch
+import httpx # 스프링 api 호출용
+import math
+from collections import deque # 최근 프레임 수 스무딩용
 from typing import List, Dict, Any, Tuple, Optional
 from ultralytics import YOLO 
 from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위한 모듈
+
 
 
 # ====================================================================
@@ -25,6 +29,10 @@ YOLO_MODEL_PATH = "beach_yolo.pt" # Docker 컨테이너 내부의 YOLO 모델 �
 YOLO_CONF_THRESHOLD = 0.44   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
 DET_EVERY_FRAMES = 1 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
 FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 프레임의 총 바이트 크기.
+
+MIN_STABLE_FRAMES = 4      # 몇 프레임 평균을 보고 "진짜 증가"라고 인정할지
+LOG_COOLDOWN_SEC = 3       # 같은 CAM에서 로그 연속 전송 최소 간격(초)
+SPRING_BASE_URL = "http://host.docker.internal:8080"  # ★여기 스프링 서버 주소 맞게 수정하기
 
 YOUTUBE_URL_TO_FETCH = ""
 
@@ -93,7 +101,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     },
     "CAM8": 
     {
-        "label": "애월 하귀 가문동 포구",
+        "label": "시연용 유튜브 라이브",
         "url": "/server/test/KakaoTalk_20251118_184824700.mp4",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
         "safe_zone_px": [(0, 290), (1024, 400), (1024, 768), (1024, 767),],                        
@@ -162,6 +170,18 @@ class AIStreamServer:
         self.video_sources: List[Tuple[str, str]] = []
         self.roi_masks = {}  # ★추가: ROI 마스크 캐시
 
+        # 🔻 위험 인원 수 스무딩 & 로그 상태 관리용
+        self.danger_histories: Dict[str, deque] = {
+            cam_id: deque(maxlen=MIN_STABLE_FRAMES)
+            for cam_id in CAMERA_CONFIG.keys()
+        }
+        self.prev_stable_danger: Dict[str, int] = {
+            cam_id: 0 for cam_id in CAMERA_CONFIG.keys()
+        }
+        self.last_log_time: Dict[str, float] = {
+            cam_id: 0.0 for cam_id in CAMERA_CONFIG.keys()
+        }
+
     async def initialize(self): # 기본 정보 세팅
         """서버 시작 시 Streamlink 호출 및 모든 모델을 안전하게 로드합니다."""
         global yolo_model, gmm_models, frame_counters, VIDEO_SOURCES
@@ -202,6 +222,68 @@ class AIStreamServer:
         gmm_models = self.gmm_models
         frame_counters = self.frame_counters
         print("초기화 완료.")
+
+    async def send_danger_log(self, payload: Dict[str, Any]):
+        """스프링 /api/cctv/addLog 로 비동기 POST"""
+        url = f"{SPRING_BASE_URL}/api/cctv/addLog"
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.post(url, json=payload)
+                print(f"[LOG] 스프링 응답: {resp.status_code}, {resp.text}")
+        except Exception as e:
+            print(f"[LOG] 스프링 전송 실패: {e}")
+
+    async def handle_danger_log(self, stream_id: str, danger_people_count: int):
+        """
+        - 최근 MIN_STABLE_FRAMES 프레임의 danger_people_count 평균을 보고
+        - 0이면 0, 그 이상이면 ceil(평균) = 안정 인원 수
+        - 안정 인원 수가 직전 값보다 증가할 때만 로그 전송
+        """
+        hist = self.danger_histories.get(stream_id)
+        if hist is None:
+            return
+
+        # 이번 프레임 값 추가
+        hist.append(danger_people_count)
+
+        # 프레임이 아직 충분히 쌓이지 않았으면 스킵
+        if len(hist) < MIN_STABLE_FRAMES:
+            return
+
+        avg = sum(hist) / len(hist)
+        if avg == 0:
+            stable_val = 0
+        else:
+            # 0 < avg <= 1 → 1명, 1 < avg <= 2 → 2명 ...
+            stable_val = math.ceil(avg)
+
+        prev = self.prev_stable_danger.get(stream_id, 0)
+
+        # ▶ 증가할 때만 로그 전송 (0→1, 1→2, 2→3 ...)
+        if stable_val > prev:
+            now = time.time()
+            last_time = self.last_log_time.get(stream_id, 0.0)
+
+            # 너무 자주 안 찍히게 쿨다운
+            if now - last_time >= LOG_COOLDOWN_SEC:
+                try:
+                    # "CAM1" → 1
+                    cam_number = int(stream_id.replace("CAM", ""))
+                except ValueError:
+                    cam_number = 0
+
+                if cam_number > 0:
+                    payload = {
+                        "camNumber": cam_number,
+                        "dangerCount": stable_val,
+                        # beachNumber는 DB에서 camNumber로 찾게 설계했으니까 안 보내도 됨
+                    }
+                    asyncio.create_task(self.send_danger_log(payload))
+                    self.last_log_time[stream_id] = now
+                    print(f"[{stream_id}] 🚨 위험구역 인원 증가 로그 전송: {payload}")
+
+        # 🔥 줄어든 것도 여기서 반영 → 다음에 다시 증가하면 또 이벤트 잡힘
+        self.prev_stable_danger[stream_id] = stable_val
 
 
     async def process_single_stream(self, websocket: WebSocket, stream_id: str, stream_url: str):
@@ -356,6 +438,8 @@ class AIStreamServer:
 
                             # YOLO 탐지 박스 (초록색)
                             cv2.rectangle(vis, (x1,y1), (x2,y2), color, 2)
+
+                    await self.handle_danger_log(stream_id, danger_people_count)
 
                 # 3. GMM 기반 움직임 보완 탐지 (YOLO가 놓친 움직이는 객체 찾기)
                 if fg is not None:

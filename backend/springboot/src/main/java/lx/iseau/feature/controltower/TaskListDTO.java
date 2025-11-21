@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaskListDTO {
+
     // tb_task
     private Integer taskNumber;
     private Integer taskProcessed;  // 0/1
@@ -23,4 +24,5 @@ public class TaskListDTO {
     // tb_user
     private String  birthDate;
     private String  gender;  
+    
 }

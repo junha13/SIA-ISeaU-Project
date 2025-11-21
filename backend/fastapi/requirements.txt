@@ -17,3 +17,5 @@ opencv-python-headless==4.10.0.84
 yt-dlp
 lapx
 filterpy
+
+httpx==0.27.2
