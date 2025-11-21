@@ -1,6 +1,6 @@
 <template>
   <div v-if="viewMode === 'list'" class="beach-list-page p-3">
-    <div class="sticky-top bg-white mt-n1 p-1" style="z-index: 1000;">
+    <div class="sticky-top bg-white mt-n1 p-1" style="z-index: 999;">
       <div class="d-flex align-items-center mb-3">
         <div class="dropdown me-2">
           <button
@@ -178,7 +178,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, watchEffect } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia';
@@ -192,6 +192,7 @@ const { header, beach, tabOptions, sortOptions, regionOptions } = storeToRefs(st
 const beachStore = useBeachStore();
 
 const router = useRouter();
+const route = useRoute();
 const beaches = ref([]);
 const { selectedBeachId } = storeToRefs(beachStore)
 const favoriteBeachIds = ref([]);
@@ -249,11 +250,20 @@ const searchParams = ref({
 const sortMap = {
   name: 'name_asc',
   distance: 'distance_asc',
-  review: 'review_desc',
+  review: 'review_desc', 
   rating: 'rating_desc',
 };
 
 onMounted(() => {
+  // URL 쿼리에서 tab 값 읽기 (예: ?tab=favorite)
+  const tabFromRoute = route.query.tab;
+
+  if (typeof tabFromRoute === 'string' && tabFromRoute.length > 0) {
+    // tagFilterOptions 에 있는 값이면 그대로 사용
+    // (favorite, all, 핫플, 레저, ...)
+    activeTab.value = tabFromRoute;
+  }
+
   loadData();
   fetchFavoriteIds();
   header.value = "해안가 리스트"
@@ -261,6 +271,7 @@ onMounted(() => {
 });
 
 async function loadData() {
+
   isLoading.value = true;
   apiError.value = null;
   beaches.value = [];

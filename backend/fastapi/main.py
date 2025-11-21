@@ -10,9 +10,13 @@ import shlex
 import json
 import os
 import torch
+import httpx # 스프링 api 호출용
+import math
+from collections import deque # 최근 프레임 수 스무딩용
 from typing import List, Dict, Any, Tuple, Optional
 from ultralytics import YOLO 
 from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위한 모듈
+
 
 
 # ====================================================================
@@ -22,9 +26,13 @@ from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위�
 OUT_W = 1024  # FFmpeg의 출력 프레임 너비 (픽셀). 분석 성능과 화질의 균형을 맞춥니다.
 OUT_H = 768   # FFmpeg의 출력 프레임 높이 (픽셀).
 YOLO_MODEL_PATH = "beach_yolo.pt" # Docker 컨테이너 내부의 YOLO 모델 파일 경로/이름.
-YOLO_CONF_THRESHOLD = 0.44   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
+YOLO_CONF_THRESHOLD = 0.50   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
 DET_EVERY_FRAMES = 1 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
 FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 프레임의 총 바이트 크기.
+
+MIN_STABLE_FRAMES = 6      # 몇 프레임 평균을 보고 "진짜 증가"라고 인정할지
+LOG_COOLDOWN_SEC = 3       # 같은 CAM에서 로그 연속 전송 최소 간격(초)
+SPRING_BASE_URL = "http://host.docker.internal:8080"  # ★여기 스프링 서버 주소 맞게 수정하기
 
 YOUTUBE_URL_TO_FETCH = ""
 
@@ -45,6 +53,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM1": 
     {
         "label": "이호테우",
+        "beachNumber": 6,
         "url": "http://211.114.96.121:1935/jejusi7/11-30T.stream/playlist.m3u8",
         "roi_px": [(0, 768), (1024, 400), (1024, 768), (0, 768)],       # yolo, gmm 관심 영역 설정 // 전체 해상도 변경 시 이것도 변경해야 함                    # ✳✳ CAM(스트림)별 해안선 설정 ✳✳
         "safe_zone_px": [(0, 550), (1024, 550), (1024, 768), (0, 768),],                       
@@ -52,6 +61,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM2": 
     {
         "label": "중문",
+        "beachNumber": 2,
         "url": "http://59.8.86.94:8080/media/api/v1/hls/vurix/192871/100010/0/1/1.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(350, 0), (350, 768), (1024, 768), (1024, 0),],                           
@@ -59,6 +69,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM3": 
     {
         "label": "함덕",
+        "beachNumber": 3,
         "url": "http://211.114.96.121:1935/jejusi6/11-19.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(0, 510), (1024, 350), (1024, 768), (0, 768),],                       
@@ -66,6 +77,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM4": 
     {
         "label": "월정리",
+        "beachNumber": 4,
         "url": "http://211.114.96.121:1935/jejusi7/11-21.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(0, 290), (1024, 220), (1024, 768), (0, 768),],                         
@@ -73,6 +85,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM5": 
     {
         "label": "애월 하귀 가문동 포구",
+        "beachNumber": 59,
         "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],      
         "safe_zone_px": [(600, 768), (500, 200), (600, 190), (1024, 700),],                        
@@ -80,6 +93,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM6": 
     {
         "label": "김녕리 포구",
+        "beachNumber": 60,
         "url": "http://211.114.96.121:1935/jejusi6/11-20.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
         "safe_zone_px": [(100, 0), (1024, 600), (1024, 768), (0, 768),],                    
@@ -87,16 +101,18 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM7": 
     {
         "label": "수마 포구",
+        "beachNumber": 61,
         "url": "http://211.34.191.215:1935/live/1-76.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],           
         "safe_zone_px": [(350, 768), (1024, 450), (1024, 768), (0, 768),],                   
     },
     "CAM8": 
     {
-        "label": "애월 하귀 가문동 포구",
-        "url": "",
+        "label": "시연용 유튜브 라이브",
+        "beachNumber": 62,
+        "url": "/server/test/KakaoTalk_20251118_184824700.mp4",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
-        "safe_zone_px": [(0, 290), (1024, 400), (1024, 768), (1024, 767),],                        
+        "safe_zone_px": [(900, 0), (900, 768), (1024, 0), (1024, 768),],                        
     },
 
 }
@@ -162,6 +178,18 @@ class AIStreamServer:
         self.video_sources: List[Tuple[str, str]] = []
         self.roi_masks = {}  # ★추가: ROI 마스크 캐시
 
+        # 🔻 위험 인원 수 스무딩 & 로그 상태 관리용
+        self.danger_histories: Dict[str, deque] = {
+            cam_id: deque(maxlen=MIN_STABLE_FRAMES)
+            for cam_id in CAMERA_CONFIG.keys()
+        }
+        self.prev_stable_danger: Dict[str, int] = {
+            cam_id: 0 for cam_id in CAMERA_CONFIG.keys()
+        }
+        self.last_log_time: Dict[str, float] = {
+            cam_id: 0.0 for cam_id in CAMERA_CONFIG.keys()
+        }
+
     async def initialize(self): # 기본 정보 세팅
         """서버 시작 시 Streamlink 호출 및 모든 모델을 안전하게 로드합니다."""
         global yolo_model, gmm_models, frame_counters, VIDEO_SOURCES
@@ -203,26 +231,98 @@ class AIStreamServer:
         frame_counters = self.frame_counters
         print("초기화 완료.")
 
+    async def send_danger_log(self, payload: Dict[str, Any]):
+        """스프링 /api/cctv/addLog 로 비동기 POST"""
+        url = f"{SPRING_BASE_URL}/api/cctv/addLog"
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.post(url, json=payload)
+                print(f"[LOG] 스프링 응답: {resp.status_code}, {resp.text}")
+        except Exception as e:
+            print(f"[LOG] 스프링 전송 실패: {e}")
+
+    async def handle_danger_log(self, stream_id: str, danger_people_count: int):
+        """
+        - 최근 MIN_STABLE_FRAMES 프레임의 danger_people_count 평균을 보고
+        - 0이면 0, 그 이상이면 ceil(평균) = 안정 인원 수
+        - 안정 인원 수가 직전 값보다 증가할 때만 로그 전송
+        """
+        hist = self.danger_histories.get(stream_id)
+        if hist is None:
+            return
+
+        # 이번 프레임 값 추가
+        hist.append(danger_people_count)
+
+        # 프레임이 아직 충분히 쌓이지 않았으면 스킵
+        if len(hist) < MIN_STABLE_FRAMES:
+            return
+
+        avg = sum(hist) / len(hist)
+        if avg == 0:
+            stable_val = 0
+        else:
+            # 0 < avg <= 1 → 1명, 1 < avg <= 2 → 2명 ...
+            stable_val = math.ceil(avg)
+
+        prev = self.prev_stable_danger.get(stream_id, 0)
+
+        # ▶ 증가할 때만 로그 전송 (0→1, 1→2, 2→3 ...)
+        if stable_val > prev:
+            now = time.time()
+            last_time = self.last_log_time.get(stream_id, 0.0)
+
+            # 너무 자주 안 찍히게 쿨다운
+            if now - last_time >= LOG_COOLDOWN_SEC:
+                try:
+                    # "CAM1" → 1
+                    cam_number = int(stream_id.replace("CAM", ""))
+                except ValueError:
+                    cam_number = 0
+
+                if cam_number > 0:
+                    payload = {
+                        "camNumber": cam_number,
+                        "dangerCount": stable_val,
+                        # beachNumber는 DB에서 camNumber로 찾게 설계했으니까 안 보내도 됨
+                    }
+                    asyncio.create_task(self.send_danger_log(payload))
+                    self.last_log_time[stream_id] = now
+                    print(f"[{stream_id}] 🚨 위험구역 인원 증가 로그 전송: {payload}")
+
+        # 🔥 줄어든 것도 여기서 반영 → 다음에 다시 증가하면 또 이벤트 잡힘
+        self.prev_stable_danger[stream_id] = stable_val
+
 
     async def process_single_stream(self, websocket: WebSocket, stream_id: str, stream_url: str):
         """단일 스트림의 FFmpeg 구동, AI 처리, 웹소켓 전송 파이프라인."""
         
-        command = (
-            'ffmpeg -hide_banner -loglevel error '
-            # 입력/분석 버퍼 최소화(+ 저지연 플래그)
-            '-fflags nobuffer -flags low_delay -avioflags direct '
-            '-analyzeduration 0 -probesize 32 -fpsprobesize 0 '
-            # 깨진 프레임은 즉시 버림 + 타임스탬프 안정화
-            '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 '
-            '-http_persistent 1 '
-            '-fflags +discardcorrupt '
-            '-use_wallclock_as_timestamps 1 -an '
-            f'-i "{stream_url}" '
-            # 가장 빠른 스케일러 + FPS 재생성 금지(내부 버퍼링 방지)
-            f'-map 0:v:0 -vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" -vsync passthrough '
-            # 파이프로 즉시 밀어내기 (OpenCV가 바로 쓰는 포맷)
-            '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
-        )
+        is_network = stream_url.startswith(("http://", "https://", "rtmp://"))
+
+        if is_network:
+        # 👇 스트림별로 필터 다르게
+            if stream_id in ("CAM1", "CAM2"):
+                vf_filter = f"scale={OUT_W}:{OUT_H},fps=12"
+            else:
+                vf_filter = f"scale={OUT_W}:{OUT_H}"
+
+            command = (
+                'ffmpeg -hide_banner -loglevel error '
+                f'-i "{stream_url}" '
+                f'-vf "{vf_filter}" '
+                '-an '
+                '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
+            )
+        else:
+            command = (
+                'ffmpeg -hide_banner -loglevel error '
+                '-re '
+                f'-i "{stream_url}" '
+                f'-vf "scale={OUT_W}:{OUT_H},fps=12" '
+                '-vsync passthrough '
+                '-an '
+                '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
+            )
         
         process = None
         try:
@@ -343,6 +443,8 @@ class AIStreamServer:
                             # YOLO 탐지 박스 (초록색)
                             cv2.rectangle(vis, (x1,y1), (x2,y2), color, 2)
 
+                    await self.handle_danger_log(stream_id, danger_people_count)
+
                 # 3. GMM 기반 움직임 보완 탐지 (YOLO가 놓친 움직이는 객체 찾기)
                 if fg is not None:
                     contours, _ = cv2.findContours(fg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -363,6 +465,33 @@ class AIStreamServer:
                             # gpt) YOLO가 못 잡았지만 GMM에서 움직임으로 포착된 영역 → 노란색 박스로 보완 표시
                             cv2.rectangle(vis, (x, y), (x + w, y + h), (0, 255, 255), 2)
                             people_count += 1  # gpt) 보완 탐지 인원도 people_count에 반영
+                # -----------------------------------------------------------------------
+                # 3-5. 디버그용 현재 시간 + 프레임 카운터 오버레이
+                # -----------------------------------------------------------------------
+                now_str = time.strftime("%H:%M:%S", time.localtime())
+                counter = self.frame_counters.get(stream_id, 0)
+
+                cv2.putText(
+                    vis,
+                    f"{stream_id} #{counter}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (255, 255, 255),
+                    2,
+                    cv2.LINE_AA,
+                )
+
+                cv2.putText(
+                    vis,
+                    now_str,
+                    (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (255, 255, 0),
+                    2,
+                    cv2.LINE_AA,
+                )
                 
                 # -----------------------------------------------------------------------
                 # 3-6. 인코딩 및 전송

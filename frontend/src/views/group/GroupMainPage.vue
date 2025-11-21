@@ -90,10 +90,18 @@
               <span
                 v-if="member.status === 'online'"
                 class="text-success small fw-bold"
+                style="font-size: 18px;"
+              >
+              🚨
+              </span>
+              <span
+                v-if="member.status === 'online'"
+                class="text-success small fw-bold"
                 style="font-size: 8px;"
               >
                 (등록완료)
               </span>
+               
               <span
                 v-else-if="member.status === 'pending'"
                 class="text-muted small fw-bold"
@@ -148,13 +156,13 @@
       @settings-updated="handleSettingsUpdated"
       @settings-synced="handleSettingsSynced" />
 
-    <GroupInviteConfirmModal
-      v-if="receivedInvitation"
-      :isVisible="true"
-      :invitationData="receivedInvitation"
-      @confirm="acceptInvitation"
-      @cancel="rejectInvitation"
-    />
+    <!-- 
+       🚨 GroupMainPage 내부의 모달은 제거하는 것이 좋습니다.
+       (App.vue에서 전역으로 관리하기 때문입니다. 중복 실행 방지)
+       하지만 필요하다면 유지하셔도 됩니다. 여기서는 주석 처리 추천.
+       <GroupInviteConfirmModal ... /> 
+    -->
+
   </div>
 
   <div v-if="alertDialog.visible" class="ga-backdrop">
@@ -182,13 +190,16 @@ import GroupAlertSettingsModal from '@/components/GroupAlertSettingsModal.vue'
 import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
 import { useStore } from '@/stores/store.js'
 import { useGroupStore } from '@/stores/groupStore'
-import { storeToRefs } from 'pinia'
+import { storeToRefs } from 'pinia' // 🚨 필수 추가
 
 const store = useStore()
 const { header } = storeToRefs(store)
 
 const groupStore = useGroupStore()
 const { receivedInvitation } = storeToRefs(groupStore)
+// 🚨 [추가] Store의 그룹 리스트를 반응형으로 가져옵니다.
+const { myGroupList: globalGroupList } = storeToRefs(groupStore)
+
 const { acceptInvitation, rejectInvitation, checkPendingInvitations } = groupStore
 
 /* ===== 색상 ===== */
@@ -250,6 +261,36 @@ const groupLocations = computed(() => {
   })
 })
 
+/* ===== [핵심 추가] Store 변경 감지 -> 화면 갱신 ===== */
+// App.vue에서 수락이 완료되면 groupStore의 목록이 바뀝니다.
+// 이 watch가 그것을 감지하고 즉시 이 페이지의 데이터를 갱신합니다.
+watch(globalGroupList, async (newList) => {
+    console.log('🔄 [GroupMainPage] Store 그룹 목록 변경 감지 -> 화면 갱신');
+    
+    // 1. 로컬 데이터 동기화
+    myGroupList.value = newList;
+
+    // 2. 새 그룹이 생겼다면 활성화
+    if (newList.length > 0 && !activeGroupId.value) {
+        // activeGroupId는 computed지만, 초기값 설정을 위해 여기서 로직이 필요할 수 있음
+        // (하지만 computed가 myGroupList를 바라보고 있으므로 자동 반영될 수 있음)
+    }
+    
+    // 3. 지도 및 위치 정보 즉시 갱신
+    // (activeGroupId가 computed로 갱신된 직후 실행되도록 nextTick이나 watchEffect 활용 가능하지만,
+    //  여기서는 직접 호출하여 강제 갱신)
+    if (myGroupList.value.length > 0) {
+        const newId = myGroupList.value[0].id;
+        alertSettingsArr.value = await fetchAlertSettings(newId);
+        await fetchLocations();
+        await pingBoundaryAndLocations();
+        restartGeoLoop();
+    } else {
+        activeGroupLocations.value = []; // 그룹 없으면 비우기
+    }
+}, { deep: true });
+
+
 /* ===== API: 그룹 ===== */
 const fetchGroups = async () => {
   try {
@@ -304,33 +345,46 @@ const fetchAlertSettings = async (groupId) => {
   ]
 }
 
+// Level 1, 2에 min/max/unit 정보를 추가하여 모달에 전달
 const transformDbToLevels = (dbSettings) => {
+  const maxRadius = Math.max(dbSettings.groupLeaveLevel1Distance || 10, dbSettings.groupLeaveLevel2Distance || 10)
+  const isDistanceEnabled = dbSettings.groupLeaveLevel1Alert === 'Y' || dbSettings.groupLeaveLevel2Alert === 'Y';
+  
   return [
     {
       id: 1,
-      label: '3m 이탈 알림',
-      radius: dbSettings.groupLeaveLevel1Distance || 3,
-      enabled: dbSettings.groupLeaveLevel1Alert === 'Y',
+      label: '안전 거리 이탈 알림',
+      radius: maxRadius, 
+      enabled: isDistanceEnabled, 
       levelField: 'groupLeaveLevel1',
+      min: 10,
+      max: 1000,
+      unit: 'm',
     },
     {
       id: 2,
-      label: '200m 이탈 알림',
-      radius: dbSettings.groupLeaveLevel2Distance || 200,
-      enabled: dbSettings.groupLeaveLevel2Alert === 'Y',
+      label: '안전 거리 이탈 알림 (Placeholder)', 
+      radius: maxRadius,
+      enabled: isDistanceEnabled,
       levelField: 'groupLeaveLevel2',
+      min: 10,
+      max: 1000,
+      unit: 'm',
+      hidden: true 
     },
     {
       id: 3,
-      label: '해안선 알림',
+      label: '해안선 이탈 알림',
       radius: 0,
       enabled: dbSettings.tideAlert === 'Y',
       levelField: 'tide',
+      min: 0,
+      max: 0,
+      unit: '',
     },
   ]
 }
 
-// 💡 [수정] alertSettings를 groupLevels로 변경하고, 초기값은 transformDbToLevels({})로 설정
 const alertSettingsArr = ref(transformDbToLevels({}))
 
 const handleNotificationSettings = async () => {
@@ -338,23 +392,15 @@ const handleNotificationSettings = async () => {
     alert('그룹을 선택/생성한 후 알림 설정을 할 수 있습니다.')
     return
   }
-  // alertSettingsArr.value = await fetchAlertSettings(activeGroupId.value) // 💡 GET 실패로 돌아가는 문제를 방지하기 위해 주석 처리 또는 제거 필요
+  alertSettingsArr.value = await fetchAlertSettings(activeGroupId.value)
   showAlertModal.value = true
 }
 
 const handleSettingsUpdated = async () => {
-  // 💡 GET 실패로 토글이 돌아가는 문제를 방지하기 위해 이 함수에서 props를 직접 갱신하지 않고, settings-synced를 사용합니다.
-  // 이 함수는 주로 부모가 자식에게 알리는 용도로 사용됩니다.
-  // alertSettingsArr.value = await fetchAlertSettings(activeGroupId.value) 
 }
 
-// 💡 [추가] 새로운 이벤트 핸들러: 자식 모달에서 저장 성공 후 최신 상태를 직접 받아 갱신
 const handleSettingsSynced = (syncedLevels) => {
-    // 💡 [핵심 추가] 알림 설정을 변경하면,
-    // 이전 거리 상태를 초기화하여 다음 위치 갱신 시
-    // 현재 거리가 새로운 '이탈 이벤트'로 재평가되도록 강제합니다.
   prevMemberDistances.value = {};
-    // 모달에서 전달받은 최신 상태로 alertSettingsArr를 직접 갱신
     alertSettingsArr.value = JSON.parse(JSON.stringify(syncedLevels));
 };
 
@@ -490,7 +536,6 @@ watch(
       return
     }
 
-    // 💡 [추가] 그룹 변경 시 알림 설정 초기 로드를 시도합니다. (GET 요청 성공 시 동기화)
     alertSettingsArr.value = await fetchAlertSettings(newId) 
 
     await fetchLocations()
@@ -585,9 +630,6 @@ watch(
 )
 
 /* ===== 알림 ===== */
-// 💡 [수정] alertSettingsArr는 그대로 두고, 모달에 전달되는 props를 groupLevels로 통일
-// const alertSettingsArr = ref(transformDbToLevels({})) // 이미 위에 정의됨
-
 const prevMemberDistances = ref({})
 const prevMemberSwim = ref({})
 const alertDialog = ref({ visible: false, message: '' })
@@ -620,24 +662,19 @@ const closeAlert = () => {
 watch(
   [groupLocations, alertSettingsArr],
   ([list, settings]) => {
-    
-    // 💡 [추가] 설정 데이터 로드 대기 중일 경우, 실행을 건너뜁니다.
     if (!settings || settings.length === 0) {
         return; 
     }
     
-    // 💡 [핵심 추가] 그룹 인원이 1명 이하(즉, 혼자 있거나 아무도 없을 때)이면 알림 로직 전체를 건너뜁니다.
     if (list.length <= 1) {
         return; 
     }
     
     list.forEach((m) => {
-      
       if (!m.id) return
       if (m.status !== 'online') return
 
       const isMe = Number(m.distance) <= 0.3
-      // 💡 [핵심] 자기 자신에 대한 거리 알림은 건너뜁니다. (위에 그룹 인원 체크가 있지만, 방어 로직으로 유지)
       if (isMe) return
 
       const now = Number(m.distance)
@@ -645,32 +682,15 @@ watch(
 
       const prev = prevMemberDistances.value[m.id]
       
-      // Level 1 알림 (3m 이탈)
-      const level1Settings = settings.find((l) => l.id === 1);
-      const level1Enabled = level1Settings?.enabled;
-      const threshold1 = level1Settings?.radius || 3;
+      const distanceSettings = settings.find((l) => l.levelField === 'groupLeaveLevel1');
+      const distanceEnabled = distanceSettings?.enabled;
+      const threshold = distanceSettings?.radius || 10; 
       
-      // 조건 1: 상태 변화 (prev < threshold1 에서 now >= threshold1)
-      const isTransition1 = (prev != null && prev < threshold1 && now >= threshold1);
+      const isTransition = (prev != null && prev < threshold && now >= threshold);
+      const isInitialBreach = (prev == null && now >= threshold);
       
-      // 조건 2: 앱 시작/로드 시 이미 이탈 상태인 경우 (prev == null && now >= threshold1)
-      const isInitialBreach1 = (prev == null && now >= threshold1);
-      
-      if (level1Enabled && (isTransition1 || isInitialBreach1)) {
-        pushAlert('radius', `⚠ ${m.name}님이 ${threshold1}m 이상 떨어졌어요. (${now.toFixed(1)}m)`);
-      }
-
-
-      // Level 2 알림 (200m 이탈) - Level 1과 동일한 로직 적용
-      const level2Settings = settings.find((l) => l.id === 2);
-      const level2Enabled = level2Settings?.enabled;
-      const threshold2 = level2Settings?.radius || 200;
-
-      const isTransition2 = (prev != null && prev < threshold2 && now >= threshold2);
-      const isInitialBreach2 = (prev == null && now >= threshold2);
-      
-      if (level2Enabled && (isTransition2 || isInitialBreach2)) { 
-          pushAlert('radius_2', `🚨 ${m.name}님이 ${threshold2}m 이상 크게 이탈했습니다. (${now.toFixed(1)}m)`);
+      if (distanceEnabled && (isTransition || isInitialBreach)) {
+        pushAlert('radius', `🚨 ${m.name}님이 설정 거리 ${threshold}m을 이탈했습니다. (${now.toFixed(1)}m)`);
       }
       
       prevMemberDistances.value[m.id] = now
@@ -721,22 +741,21 @@ watch(groupLocations, (members) => {
 /* 🎨 디자인 (CSS) */
 /* --------------------------------- */
 .group-main-page {
- min-height: calc(100vh - 55px - 60px);
+ min-height: calc(100vh - 55px - 60px);
 }
 
 .map-overlay-buttons button:first-child {
- background-color: rgba(255, 255, 255, 0.8);
- color: v-bind(darkColor);
- font-size: 0.8rem;
- padding: 5px 10px;
+ background-color: rgba(255, 255, 255, 0.8);
+ color: v-bind(darkColor);
+ font-size: 0.8rem;
+ padding: 5px 10px;
 }
 
 .map-overlay-buttons button:last-child {
- background-color: v-bind(mainColor) !important;
- color: white !important;
+ background-color: v-bind(mainColor) !important;
+ color: white !important;
 }
 
-/* 그룹이 없을 때 카드 스타일 */
 .empty-group-card {
 border-width: 1px !important;
 border-radius: 0.5rem;
@@ -744,13 +763,11 @@ width: 100%;
 max-width: 400px;
 }
 
-/* 버튼들을 지도 아래로 */
 .group-actions {
 position: relative;
 padding-top: 1rem;
 }
 
-/* 공통 버튼 */
 .action-button {
 font-size: 0.9rem;
 padding: 8px 12px;
@@ -781,94 +798,72 @@ color: white;
 .ga-backdrop {
 position: fixed;
 inset: 0;
-background: rgba(0, 0, 0, 0.4);
+background: rgba(0, 0, 0, 0.7);
 display: flex;
 align-items: center;
 justify-content: center;
 z-index: 3000;
 }
-/* 1. 배경 (Backdrop) - 더 어둡게 하여 모달 집중 */
-.ga-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7); /* 기존 0.4에서 0.7로 진하게 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-}
 
-/* 2. 모달 본체 (Modal) - 경고색 테두리 및 그림자 강조 */
 .ga-modal {
-  width: 280px;
-  background: #ffffff; /* 내부 배경은 흰색 유지 */
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #0b3356; 
+width: 280px;
+background: #ffffff; 
+border-radius: 12px;
+overflow: hidden;
+border: 1px solid v-bind(darkColor); 
 }
 
-/* 3. 헤더 (Header) - 긴급 경고 톤 */
 .ga-header {
-  background-color: #0B1956; 
-  color: white;
-  padding: 12px 14px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+background-color: v-bind(darkColor); 
+color: white;
+padding: 12px 14px 12px;
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 .ga-header h5 {
-  margin: 0;
-  font-weight: 1200;
-  font-size: 16px;
-  color: white; /* 텍스트 흰색 */
+margin: 0;
+font-weight: 800;
+font-size: 16px;
+color: white; 
 }
 .ga-close {
-  color: white; /* 닫기 버튼 흰색 */
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  line-height: 1; /* x 버튼 중앙 정렬 */
+color: white; 
+background: transparent;
+border: none;
+font-size: 18px;
+cursor: pointer;
+line-height: 1; 
 }
 
-
-/* 4. 내용 (Body) - 메시지 텍스트 강조 */
 .ga-body {
-  padding: 20px 18px; /* 패딩을 늘려 메시지 공간 확보 */
-  font-size: 16px;
-  font-weight: 1600;
-  color: #333333;
-  line-height: 1.4;
-  text-align: center; /* 메시지 중앙 정렬 */
+padding: 20px 18px;  
+font-size: 16px;
+font-weight: 600; 
+color: #333333;
+line-height: 1.4;
+text-align: center; 
 }
 
-/* 5. 푸터 (Footer) */
 .ga-footer {
-  padding: 10px 14px 14px;
-  display: flex;
-  justify-content: center; /* 버튼을 중앙에 배치 */
+padding: 10px 14px 14px; 
+display: flex;
+justify-content: center; 
 }
 
-/* 6. 버튼 (Button) - 확인 버튼을 눈에 띄게 */
 .ga-btn {
-  background: #0B1956; /* 헤더와 동일한 경고색 */
-  border: none;
-  color: #fff;
-  padding: 8px 24px;
-  border-radius: 20px; /* 둥근 버튼 */
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  box-shadow: 0 4px 6px rgba(255, 69, 0, 0.3); /* 버튼 그림자 */
+background: v-bind(darkColor); 
+border: none;
+color: #fff;
+padding: 8px 24px;
+border-radius: 20px; 
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: background-color 0.2s;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); 
 }
 .ga-btn:hover {
-    background: #0092BA; /* 호버 시 색상 진하게 */
-}
-.ga-close {
- background: transparent;
- border: none;
- font-size: 18px;
- cursor: pointer;
+background: v-bind(mainColor); 
 }
 </style>

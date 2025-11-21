@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="lx.iseau.feature.fcm.FcmDAO">
 
     <insert id="upsertToken">
+        INSERT INTO tb_fcm_token (login_id, fcm_token, updated_at)
+        VALUES (#{userNumber}, #{token}, NOW())
+        ON CONFLICT (login_id)
+        DO UPDATE SET
+            fcm_token = EXCLUDED.fcm_token, updated_at = NOW();
         INSERT INTO tb_fcm_token (
-            login_id, fcm_token,
-            updated_at
-        )
-        VALUES (
-                   #{userNumber}, #{token},
-                   now()
-               )
+            login_id, fcm_token, updated_at)
+        VALUES (#{userNumber}, #{token}, now())
             ON CONFLICT (login_id) DO UPDATE
-                                          SET
-                                              fcm_token = #{token},
+                                          SET fcm_token = #{token},
                                           updated_at = now();
     </insert>
 
@@ -23,5 +22,4 @@
         FROM tb_fcm_token
         WHERE login_id = #{userId}
     </select>
-
 </mapper>

@@ -17,6 +17,9 @@ public class RequestGroupInviteDTO {
     private String targetUserId;
     private String markerColor;
     
+    // 🚨 [추가됨] 이 필드가 없어서 GroupsService에서 컴파일 에러가 났습니다.
+    private String inviterName; 
+    
     private Integer inviterUserNumber;       
     private Integer targetUserNumber; 
 }

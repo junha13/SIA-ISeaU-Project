@@ -60,4 +60,27 @@ public class FcmController {
             return ResponseEntity.status(500).body("Error sending notification: " + e.getMessage());
         }
     }
+    /**
+     * 🔔 [수정 완료] sendInviteNotification 파라미터 개수 맞춤 (4개)
+     */
+    @PostMapping("/send-invite-test")
+    public ResponseEntity<String> sendInviteTestNotification(
+            @RequestParam String userId,
+            @RequestParam String inviterName,
+            @RequestParam Integer groupId,
+            @RequestParam Integer invitationId) {
+        try {
+            // 🚨 [수정] 4번째 파라미터(invitationId)에 0 전달
+            String response = notificationService.sendInviteNotification(
+                    userId,
+                    inviterName,
+                    groupId,
+                    invitationId// 임시 ID
+            );
+            return ResponseEntity.ok("Invite test sent: " + response);
+        } catch (FirebaseMessagingException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error sending invite notification: " + e.getMessage());
+        }
+    }
 }

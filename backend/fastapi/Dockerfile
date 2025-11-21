@@ -41,7 +41,8 @@ RUN pip install --no-cache-dir \
     "opencv-python-headless==4.10.0.84" \
     "yt-dlp==2024.10.22" \
     "lapx>=0.5.7" \
-    "filterpy>=1.4.5"
+    "filterpy>=1.4.5" \
+    "httpx==0.27.2"
 
 # 7. 설정 디렉토리 미리 생성 (권한 경고 방지)
 RUN mkdir -p ${YOLO_CONFIG_DIR}  

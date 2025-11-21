@@ -69,11 +69,13 @@ export default defineConfig({
         host: true,        // 외부에서도 접근 가능하게
         allowedHosts: [
             'hellokiyo.ngrok.io',   // ngrok 도메인 허용
+            'subterete-reedy-dillon.ngrok-free.dev'
         ],
         proxy: {
             // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
-                target: 'https://hellokiyo.ngrok.io',
+                target: 'http://localhost:8080',
+                //target: 'https://hellokiyo.ngrok.io',
                 changeOrigin: true
             }
         }

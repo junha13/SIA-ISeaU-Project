@@ -47,18 +47,19 @@
     <div class="card shadow-sm border-0 rounded-3 mb-4 p-4">
       <h6 class="fw-bold mb-3" :style="{ color: mainColor }">활동</h6>
 
-      <!-- 게시글 관리 -->
+      <!-- 게시글 관리 
       <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
         <span class="text-muted">게시글 관리</span>
         <button class="btn btn-sm text-white fw-bold" :style="{ backgroundColor: mainColor }">
           확인하기
         </button>
       </div>
-
+      -->
+      
       <!-- 댓글 관리 -->
-      <div class="d-flex justify-content-between align-items-center py-2" @click="$router.push({ name: 'MyComment' })" style="cursor: pointer;">
+      <div class="d-flex justify-content-between align-items-center py-2" >
         <span class="text-muted">댓글 관리</span>
-        <button class="btn btn-sm btn-outline-secondary fw-bold" style="border-color: #ced4da;">
+        <button class="btn btn-sm btn-outline-secondary fw-bold" :style="{ backgroundColor: mainColor }" @click="$router.push({ name: 'MyComment' })">
           확인하기
         </button>
       </div>
@@ -107,10 +108,6 @@
 
     <!-- 4. 이용 약관 및 로그아웃 -->
     <div class="card shadow-sm border-0 rounded-3 mb-5">
-      <div class="d-flex justify-content-between align-items-center py-3 px-4" style="cursor: pointer;">
-        <h6 class="fw-bold mb-0 text-muted">이용약관 확인</h6>
-        <i class="fas fa-chevron-right text-muted"></i>
-      </div>
       <div class="p-4 pt-0">
         <!-- 로그아웃 버튼 연결 -->
         <button class="btn w-100 fw-bolder py-3 fs-5 text-white rounded-3 shadow" :style="{ backgroundColor: dangerColor }" @click="handleLogout">
