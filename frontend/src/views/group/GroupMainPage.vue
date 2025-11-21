@@ -592,9 +592,25 @@ const prevMemberDistances = ref({})
 const prevMemberSwim = ref({})
 const alertDialog = ref({ visible: false, message: '' })
 
-const pushAlert = (_type, msg) => {
+const pushAlert = async (_type, msg) => {
+  // 1. 화면에 모달 띄우기 (사용자에게 보여줌)
   alertDialog.value.visible = true
   alertDialog.value.message = msg
+
+  // 2. 서버로 FCM 알림 요청 전송
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/send-alert`;
+
+    await axios.post(url, {
+      type: _type,   // 'radius', 'radius_2', 'swim' 등
+      message: msg
+    }, { withCredentials: true });
+
+    console.log('🚀 FCM 알림 요청 전송 완료:', msg);
+
+  } catch (e) {
+    console.error('❌ FCM 알림 요청 실패:', e);
+  }
 }
 
 const closeAlert = () => {

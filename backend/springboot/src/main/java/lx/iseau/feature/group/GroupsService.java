@@ -1,13 +1,7 @@
 package lx.iseau.feature.group;
 
-import lx.iseau.feature.group.RequestGroupInviteDTO;
-import lx.iseau.feature.group.ResponseGroupListItemDTO;
-import lx.iseau.feature.group.ResponseGroupMemberLocationDTO;
-import lx.iseau.feature.group.RequestLocationShare;
-import lx.iseau.feature.group.ResponseGroupDTO;
-// import lx.iseau.feature.group.vo.GroupVO;
-// import lx.iseau.feature.post.PostDAO; // 사용되지 않아 주석 처리
-
+import lombok.extern.slf4j.Slf4j;
+import lx.iseau.feature.fcm.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DuplicateKeyException; // PK/UNIQUE 제약조건 위반 처리
@@ -20,12 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroupsService {
 
 	private final GroupsDAO dao;
 	private final HttpSession session;
+    private final NotificationService notificationService; // FCM 알림
 
     private static final String DEFAULT_LEADER_COLOR = "#0B1956";
     
@@ -327,9 +323,6 @@ public class GroupsService {
  }
     
     // --- 헬퍼 메서드 (Helper Methods) ---
- 
- 
-
 	private Integer getLoggedInUserNumber() {
 	    Object userNumberObj = session.getAttribute("userNumber");
 	    if (userNumberObj == null) return null;
@@ -443,6 +436,49 @@ public class GroupsService {
 	    map.put("data", dataMap); // 최상위 Map에 "data" 키로 삽입
 	    return map;
 	}
-    // NOTE: validateAndGetPendingInvitation 헬퍼 메서드는 제거됨.
 
+    // --- 11. 거리 이탈 알림 발송 ---
+    public void sendDistanceAlert(int senderUserNumber, String alertType, String message) {
+
+        // 1. 그룹 조회
+        Integer groupId = dao.findGroupIdByUser(senderUserNumber);
+        if (groupId == null) {
+            log.warn("⚠️ [거리 알림 중단] 그룹 없음. Sender: {}", senderUserNumber);
+            return;
+        }
+
+        // 2. 그룹 멤버 조회
+        ResponseGroupMemberLocationDTO searchDto = new ResponseGroupMemberLocationDTO();
+        searchDto.setGroupNumber(groupId);
+        List<ResponseGroupMemberLocationDTO> members = dao.findGroupMemberLocations(searchDto);
+
+        // 3. 알림 제목 설정
+        String title = "⚠️ 그룹 안전 알림";
+        if ("swim".equals(alertType)) {
+            title = "🌊 입수 감지 알림";
+        } else if ("radius_2".equals(alertType)) {
+            title = "🚨 그룹 위험 이탈 경고";
+        } else if ("radius".equals(alertType)) {
+            title = "⚠️ 그룹 이탈 주의";
+        }
+
+        log.info("🔔 [거리 알림 시작] Type: {}, Sender: {}", alertType, senderUserNumber);
+
+        // 4. 그룹원 전원에게 전송 (본인 제외)
+        for (ResponseGroupMemberLocationDTO member : members) {
+            if (member.getId() != null && !member.getId().equals(senderUserNumber)) {
+                try {
+                    notificationService.sendNotificationToUser(
+                            String.valueOf(member.getId()),
+                            title,
+                            message
+                    );
+                    log.info("   -> 전송 성공 (To User: {})", member.getId());
+
+                } catch (Exception e) {
+                    log.error("   -> 전송 실패 (To User: {}) : {}", member.getId(), e.getMessage());
+                }
+            }
+        }
+    }
 }

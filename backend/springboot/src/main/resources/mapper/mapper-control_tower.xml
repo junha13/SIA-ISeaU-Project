@@ -11,21 +11,26 @@
         occurred_at,
         watch_location,
         watch_altitude
-    )
-    VALUES (
+        )
+        VALUES (
         #{userNumber, jdbcType=INTEGER},
         #{heartRate, jdbcType=INTEGER},
-        CAST(#{occurredAt} AS TIMESTAMP with time zone),  <!-- 컬럼이 timestamp니까 이렇게만 캐스팅 -->
+        CAST(#{occurredAt} AS TIMESTAMP with time zone),
         CASE
-	        WHEN #{watchLatitude} IS NOT NULL AND #{watchLongitude} IS NOT NULL
-	        THEN ST_SetSRID(
-	                 ST_MakePoint(#{watchLongitude}, #{watchLatitude}),
-	                 4326
-	             )::geography
-	        ELSE NULL
-	      END,
-	    #{watchAltitude, jdbcType=DOUBLE}
-    )
+        <!-- 🚨 수정 부분: 파라미터 뒤에 ::numeric 또는 ::double precision을 붙여 타입을 명시 -->
+        WHEN #{watchLatitude}::double precision IS NOT NULL
+        AND #{watchLongitude}::double precision IS NOT NULL
+        THEN ST_SetSRID(
+        ST_MakePoint(
+        #{watchLongitude, jdbcType=DOUBLE},
+        #{watchLatitude, jdbcType=DOUBLE}
+        ),
+        4326
+        )::geography
+        ELSE NULL
+        END,
+        #{watchAltitude, jdbcType=DOUBLE}
+        )
     </insert>
     
     <!-- 추후에 워치 최신순 조회

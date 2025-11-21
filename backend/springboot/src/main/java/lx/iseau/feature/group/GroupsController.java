@@ -1,35 +1,27 @@
 package lx.iseau.feature.group;
 
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-// import org.springframework.web.bind.annotation.RequestAttribute; // 임시 제거
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lx.iseau.feature.group.RequestGroupInviteDTO;
-import lx.iseau.feature.group.ResponseGroupListItemDTO;
-import lx.iseau.feature.group.ResponseGroupMemberLocationDTO;
-import lx.iseau.feature.group.RequestLocationShare;
-import lx.iseau.feature.post.PostDAO;
 
+@Slf4j
 @RequestMapping("/api/groups")
 @RestController
 @RequiredArgsConstructor
 public class GroupsController {
 
     private final GroupsService service;
-
 
     /**
      * 그룹 만들기
@@ -62,6 +54,7 @@ public class GroupsController {
                 .header("api", "Groups/getGroupsList")
                 .body(Map.of("data", result));
     }
+
     /**
      * 그룹원 초대 (POST /api/groups/invite)
      */
@@ -96,6 +89,7 @@ public class GroupsController {
                 .header("api", "Groups/location/accept")
                 .body(Map.of("data", result));
     }
+
     /**
      *
      * 위치 공유 거절 (POST /api/groups/location/reject)
@@ -110,6 +104,7 @@ public class GroupsController {
                 .header("api", "Groups/location/reject")
                 .body(Map.of("data", result));
     }
+
     /**
      * 그룹 멤버 위치 조회 (GET /api/groups/locations)
      * 이 API는 원래 userId가 필요 없었으므로 변경 없음
@@ -122,6 +117,7 @@ public class GroupsController {
                 .header("api", "Groups/locations")
                 .body(Map.of("data", result));
     }
+
     @RequestMapping("/invitations/pending")
     public ResponseEntity<?> getPendingInvitations() {
         Map<String, Object> result = service.getPendingInvitations();
@@ -131,7 +127,8 @@ public class GroupsController {
                 .header("api", "Groups/invitations/pending")
                 .body(Map.of("data", result));
     }
-    @RequestMapping("/{id}") 
+
+    @RequestMapping("/{id}")
     public ResponseEntity<?> deleteGroup(@PathVariable("id") int id) {
         // @PathVariable("id")는 받지만, 
         // 서비스는 세션 ID를 기준으로만 동작하게 합니다.        
@@ -161,7 +158,7 @@ public class GroupsController {
                 .body(Map.of("data", result));
     }
     
- // --- 2. 알림 설정 조회 (GET 요청) ---
+    // --- 2. 알림 설정 조회 (GET 요청) ---
     @GetMapping("/settings/{groupNumber}") // GET 요청만 처리
     public ResponseEntity<?> getGroupSettings(@PathVariable("groupNumber") int groupNumber) {
         
@@ -178,5 +175,28 @@ public class GroupsController {
                 // 💡 클라이언트 기대 구조: { "data": { "settings": {...} } }
                 .body(Map.of("data", result));
     }
-    
+
+    /**
+     * 그룹 알림 전송 요청 (거리 이탈, 입수 등)
+     * URL: POST /api/groups/send-alert
+     */
+    @PostMapping("/send-alert")
+    public ResponseEntity<?> sendGroupAlert(@RequestBody Map<String, String> body, HttpSession session) {
+
+        Integer userNumber = (Integer) session.getAttribute("userNumber");
+        if (userNumber == null) {
+            log.warn("⛔ [알림 요청 거부] 로그인 세션 없음");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String type = body.getOrDefault("type", "general");
+        String message = body.getOrDefault("message", "그룹 알림이 발생했습니다.");
+
+        log.info("📥 [API 요청] 그룹 알림 전송 요청 - Type: {}, Msg: {}", type, message);
+
+        // 서비스 호출
+        service.sendDistanceAlert(userNumber, type, message);
+
+        return ResponseEntity.ok(Map.of("success", true));
+    }
 }
