@@ -90,10 +90,18 @@
               <span
                 v-if="member.status === 'online'"
                 class="text-success small fw-bold"
+                style="font-size: 18px;"
+              >
+              🚨
+              </span>
+              <span
+                v-if="member.status === 'online'"
+                class="text-success small fw-bold"
                 style="font-size: 8px;"
               >
                 (등록완료)
               </span>
+               
               <span
                 v-else-if="member.status === 'pending'"
                 class="text-muted small fw-bold"
