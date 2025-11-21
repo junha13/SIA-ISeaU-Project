@@ -75,7 +75,7 @@ const emit = defineEmits(['danger-update'])
 
 const props = defineProps({
   // WebSocket 베이스 URL(슬래시 없이 끝남) 예: ws://IP:8000/ws/stream
- wsUrl: { type: String, default: 'ws://localhost:8000/ws/stream' },
+ wsUrl: { type: String, default: `${import.meta.env.VITE_PYTHON_API_BASE_URL}/ws/stream` },
  // 렌더할 카메라 번호 목록 (CAM n ↔ 서버 sid n 매핑)
  camIds: { type: Array, default: () => [1, 2, 3, 4] },
 });

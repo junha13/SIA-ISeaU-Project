@@ -24,7 +24,7 @@
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
           <UseStreams
-            :ws-url="'ws://localhost:8000/ws/stream'"
+            :ws-url="`${import.meta.env.VITE_PYTHON_API_BASE_URL}/ws/stream`"
             :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
             :key="controlView"  
           />
@@ -447,7 +447,7 @@ const markAsRead = async (id) => {
     logNumber: id
   }
   try {
-    await axios.post('http://localhost:8080/api/cctv/readLog', null, {
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/cctv/readLog`, null, {
       params: {
         logNumber: id,   // 👉 이게 @RequestParam("logNumber") 로 들어감
       },
