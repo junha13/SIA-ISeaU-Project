@@ -7,6 +7,7 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
+
 /**
  * ✅ 서버 전송 전담 모듈 (워치 → 데이터 서버)
  * - 의존성 없이 HttpURLConnection 사용
@@ -34,24 +35,36 @@ object AlertSender {
     fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String, latitude: Double?, longitude: Double?, altitude: Double?) {
         io.execute {
             try {
-                // 위치/고도 값은 있을 때만 JSON에 추가
-                val locationPart =
-                    if (latitude != null && longitude != null)
-                        ""","latitude":$latitude,"longitude":$longitude"""
-                    else
-                        ""
-                val altitudePart =
-                    if (altitude != null)
-                        ""","altitude":$altitude"""
-                    else
-                        ""
+                // 1. 추가 데이터(위치/고도) JSON 조각 만들기
+                // 주의: 이전 DTO(HeartRateRequest)에 맞춰 키 이름을 watchLatitude 등으로 변경함
+                val sb = StringBuilder()
 
-                val json = """{"userNumber":$userNumber,"heartRate":$heartRateBpm,"occurredAt":$occurredAtIso,"location":$locationPart"$locationPart$altitudePart}"""
+                if (latitude != null && longitude != null) {
+                    sb.append(""", "watchLatitude": $latitude""")
+                    sb.append(""", "watchLongitude": $longitude""")
+                }
+
+                if (altitude != null) {
+                    sb.append(""", "watchAltitude": $altitude""")
+                }
+// 2. JSON 조립 (occurredAt에 따옴표 "" 추가됨 확인하세요!)
+                // 구조: {"key":value, "key":"StringValue" ... }
+                val json = """
+                    {
+                        "userNumber": $userNumber,
+                        "heartRate": $heartRateBpm,
+                        "occurredAt": "$occurredAtIso"
+                        $sb
+                    }
+                """.trimIndent().replace("\n", "") // 줄바꿈 제거 (선택사항)
+
+                Log.d(TAG, "🚀 전송 시도 JSON: $json") // 디버깅용 로그
+
                 val url = URL(ENDPOINT)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
-                    connectTimeout = 7000
-                    readTimeout = 7000
+                    connectTimeout = 5000
+                    readTimeout = 5000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json; charset=utf-8")
                     setRequestProperty("Accept", "application/json")
@@ -64,19 +77,19 @@ object AlertSender {
                 }
 
                 val code = conn.responseCode
-                val errBody = try {
-                    val es = conn.errorStream ?: conn.inputStream
-                    es?.bufferedReader()?.use { it.readText() }
-                } catch (_: Throwable) { null }
 
                 if (code in 200..299) {
-                    Log.i(TAG, "✅ HR 전송 성공: $code, $json")
+                    Log.i(TAG, "✅ HR 전송 성공: HTTP $code")
                 } else {
-                    Log.w(TAG, "⚠️ HR 전송 실패: HTTP $code, $json${if (errBody!=null) ", server=$errBody" else ""}")
+                    // 에러 내용 읽기
+                    val errStream = conn.errorStream ?: conn.inputStream
+                    val errBody = errStream?.bufferedReader()?.use { it.readText() }
+                    Log.e(TAG, "⚠️ HR 전송 실패: HTTP $code, ServerMsg: $errBody")
                 }
+
                 conn.disconnect()
             } catch (t: Throwable) {
-                Log.e(TAG, "❌ HR 전송 에러: ${t.message}", t)
+                Log.e(TAG, "❌ 네트워크 에러: ${t.message}", t)
             }
         }
     }

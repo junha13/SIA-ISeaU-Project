@@ -8,5 +8,7 @@ data class HeartRateRequest(
     val userNumber: Int?,
     val heartRate: Int?,
     val occurredAt: String, // ISO 8601 형식
-    val isEmergency: Boolean = false
+    val latitude : Double? = null,
+    val longitude : Double? = null,
+    val altitude :  Double? = null
 )
