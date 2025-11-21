@@ -48,8 +48,8 @@ const props = defineProps({
   levels: {
     type: Array,
     default: () => [
-      { id: 1, label: '1단계', radius: 3, enabled: true },
-      { id: 2, label: '2단계', radius: 200, enabled: false },
+      { id: 1, label: '1단계', radius: 5, enabled: true },
+      { id: 2, label: '2단계', radius: 100, enabled: false },
       { id: 3, label: '수영 알림', radius: 0, enabled: true },
     ],
   },

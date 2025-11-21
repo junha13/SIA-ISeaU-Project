@@ -1,43 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.health.PERMISSION_SELF" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- 위치 권한 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <!-- API 34+ 필수 권한 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- ✅ API 34+ 필수 권한 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
+        android:name="com.lx.iseau.presentation.ISeaUApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault"
-        android:name="com.lx.iseau.presentation.ISeaUApp"
-        android:networkSecurityConfig="@xml/network_security_config" >
-
+        android:theme="@android:style/Theme.DeviceDefault">
 
         <uses-library
             android:name="com.google.android.wearable"
             android:required="true" />
-        <uses-library
-            android:name="wear-sdk"
-            android:required="false" />
 
         <meta-data
             android:name="com.google.android.wearable.standalone"
@@ -46,7 +40,6 @@
         <activity
             android:name="com.lx.iseau.presentation.ISeaUWear"
             android:exported="true"
-            android:taskAffinity=""
             android:theme="@style/ISeaUWearTheme.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -54,13 +47,13 @@
             </intent-filter>
         </activity>
 
-        <!-- ✅ foregroundServiceType 추가 -->
+
+        <!--  foregroundServiceType 추가 -->
         <service
             android:name="com.lx.iseau.presentation.HeartRateUploadService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health">
-
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/health_services_config" />
@@ -68,12 +61,12 @@
 
         <service
             android:name="com.lx.iseau.presentation.UserConfigListenerService"
-            android:exported="true"
-            >
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:scheme="wear" android:host="*" android:path="/USER_INFO" />
             </intent-filter>
         </service>
+
     </application>
 </manifest>

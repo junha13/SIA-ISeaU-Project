@@ -22,8 +22,10 @@ public class NotificationService {
     public String sendNotificationToUser(String targetUserNumber, String title, String body) throws FirebaseMessagingException {
         String registrationToken = fcmService.getRegistrationToken(targetUserNumber);
 
+        // 토큰이 없으면 여기서 끝
         if (registrationToken == null || registrationToken.isEmpty()) {
-            return "Error: User token not found for user " + targetUserNumber;
+            System.err.println("❌ 토큰 없음: 유저 " + targetUserNumber);
+            return "Token not found";
         }
 
         // 🚨 FCM 메시지 구성 (Notification payload 사용)

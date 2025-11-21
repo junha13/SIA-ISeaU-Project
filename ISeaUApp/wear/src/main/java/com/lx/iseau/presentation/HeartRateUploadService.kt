@@ -88,8 +88,7 @@ class HeartRateUploadService : Service() {
                 (application as? ISeaUApp)?.healthViewModel?.updateHeartRate(heartRateBpm)
 
                 // ✅ 임계치 기준으로만 응급 판단
-                val isEmergency = heartRateBpm <= EMERGENCY_LOW_HR || heartRateBpm >= EMERGENCY_HIGH_HR
-
+                val isEmergency = heartRateBpm > 0 && (heartRateBpm <= EMERGENCY_LOW_HR || heartRateBpm >= EMERGENCY_HIGH_HR)
                 if (isEmergency) {
                     Log.i(TAG, "🚨 EMERGENCY HR=$heartRateBpm at $occurredAt → send to server")
 

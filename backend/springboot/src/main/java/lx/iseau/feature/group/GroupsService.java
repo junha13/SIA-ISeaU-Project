@@ -442,10 +442,7 @@ public class GroupsService {
 
         // 1. 그룹 조회
         Integer groupId = dao.findGroupIdByUser(senderUserNumber);
-        if (groupId == null) {
-            log.warn("⚠️ [거리 알림 중단] 그룹 없음. Sender: {}", senderUserNumber);
-            return;
-        }
+        if (groupId == null) return;
 
         // 2. 그룹 멤버 조회
         ResponseGroupMemberLocationDTO searchDto = new ResponseGroupMemberLocationDTO();
@@ -454,19 +451,18 @@ public class GroupsService {
 
         // 3. 알림 제목 설정
         String title = "⚠️ 그룹 안전 알림";
-        if ("swim".equals(alertType)) {
-            title = "🌊 입수 감지 알림";
-        } else if ("radius_2".equals(alertType)) {
-            title = "🚨 그룹 위험 이탈 경고";
-        } else if ("radius".equals(alertType)) {
-            title = "⚠️ 그룹 이탈 주의";
-        }
+        if ("swim".equals(alertType)) title = "🌊 입수 감지 알림";
+        else if ("radius_2".equals(alertType)) title = "🚨 그룹 위험 이탈 경고";
+        else if ("radius".equals(alertType)) title = "⚠️ 그룹 이탈 주의";
 
-        log.info("🔔 [거리 알림 시작] Type: {}, Sender: {}", alertType, senderUserNumber);
+        log.info("🔔 [거리 알림] Type: {}, Sender: {}", alertType, senderUserNumber);
 
-        // 4. 그룹원 전원에게 전송 (본인 제외)
+        // 4. 그룹원 전원에게 전송
+        // 🚨 [중요 변경] 본인(sender) 포함 모든 멤버에게 보냅니다!
+        // 보호자가 웹으로 감지해도 보호자 폰이 울려야 하기 때문입니다.
         for (ResponseGroupMemberLocationDTO member : members) {
-            if (member.getId() != null && !member.getId().equals(senderUserNumber)) {
+            // if 조건문 삭제함 (본인 제외 로직 제거)
+            if (member.getId() != null) {
                 try {
                     notificationService.sendNotificationToUser(
                             String.valueOf(member.getId()),
@@ -474,9 +470,8 @@ public class GroupsService {
                             message
                     );
                     log.info("   -> 전송 성공 (To User: {})", member.getId());
-
                 } catch (Exception e) {
-                    log.error("   -> 전송 실패 (To User: {}) : {}", member.getId(), e.getMessage());
+                    log.error("   -> 전송 실패 (To User: {})", member.getId());
                 }
             }
         }
