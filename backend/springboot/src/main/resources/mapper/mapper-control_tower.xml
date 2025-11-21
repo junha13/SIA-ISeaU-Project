@@ -92,6 +92,65 @@
 	  LIMIT 1
 	</select>
 
+  <!-- =========================(지서)
+         관제센터 처리 리스트 (합치기)
+         - tb_task + tb_watch + tb_user(피처) + tb_manager + tb_user(매니저) + tb_control_tower
+         ========================= -->
+    <select id="getTaskListByControlTowerNumber"
+        resultType="ControlTowerTaskListDTO"
+        parameterType="int">
+
+        SELECT
+          t.task_number    AS id,
+          t.task_processed AS taskProcessed,
+          w.occurred_at    AS dateAndTime,
+          u.birth_date     AS birthDateForAge,
+          u.gender         AS gender,
+          -- user 테이블 위치
+          ST_X(u.location::geometry)        AS userLon,
+          ST_Y(u.location::geometry)        AS userLat,
+          -- watch 위치
+          ST_X(w.watch_location::geometry)  AS watchLon,
+          ST_Y(w.watch_location::geometry)  AS watchLat,
+          w.heart_rate     AS hr,
+          w.watch_count    AS count,
+          m.manager_number AS managerNumber,
+          b.beach_name     AS beachName
+      FROM tb_task t
+      JOIN tb_manager m
+        ON m.manager_number = t.manager_number
+      JOIN tb_control_tower c
+        ON c.control_tower_number = m.control_tower_number
+      JOIN tb_user u
+        ON u.user_number = t.user_number
+      LEFT JOIN tb_beach b
+        ON b.beach_number = u.beach_number
+      JOIN (
+        SELECT user_number,
+              occurred_at,
+              heart_rate,
+              watch_location,
+              watch_count
+        FROM (
+          SELECT
+            user_number,
+            occurred_at,
+            heart_rate,
+            watch_location,
+            COUNT(*) OVER (PARTITION BY user_number) AS watch_count,
+            ROW_NUMBER() OVER (PARTITION BY user_number
+                              ORDER BY occurred_at DESC) AS rn
+          FROM tb_watch
+        ) w1
+        WHERE w1.rn = 1
+      ) w
+        ON w.user_number = t.user_number
+      WHERE c.control_tower_number = #{controlTowerNumber}
+      ORDER BY w.occurred_at DESC,
+        w.watch_count DESC;
+
+    </select>
+
     <!-- =========================
          처리완료 플래그 수정
          ========================= -->

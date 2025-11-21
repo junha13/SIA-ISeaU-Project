@@ -4,125 +4,113 @@
 
       <!-- Left: Active reports list -->
       <div class="col-lg-4 mb-4 mb-lg-0">
-        <h4 class="mb-3 text-secondary">활성 신고 리스트</h4>
+        <h4 class="mb-3 text-secondary">신고 리스트</h4>
         <div class="list-group" style="height: 700px; overflow-y: auto;">
-          <a
-            href="#"
-            v-for="report in activeReports"
-            :key="report.id"
-            class="list-group-item list-group-item-action py-3 border-start border-5 report-list-item"
-            :class="[
-              selectedReport.id === report.id ? 'bg-primary-light-active border-primary-light' : 'bg-light-card border-light-card-border',
-              getListBorderClass(report.level)
-            ]"
-            @click.prevent="selectReport(report)"
-          >
-            <div class="d-flex w-100 justify-content-between">
-              <span class="badge rounded-pill me-2 fw-bold" :class="getBadgeClass(report.level)">
-                {{ report.level.toUpperCase() }}
-              </span>
-            </div>
-            <div class="mt-1 small text-dark">
-              <strong>{{ report.age }}세 {{ report.gender }}</strong>
-              <small class="text-muted">{{ report.time }}</small>
-            </div>
-            <div class="report-type-badge">{{ report.type }}</div>
-          </a>
-          <p v-if="activeReports.length === 0" class="text-center text-muted mt-5">현재 활성 신고가 없습니다.</p>
+          <template v-if="!isLoading && !loadError">
+            <template v-if="activeReports.length">
+              <a
+                href="#"
+                v-for="report in activeReports"
+                :key="report.id"
+                class="list-group-item list-group-item-action py-3 border-start border-5 report-list-item"
+                :class="[
+                  selectedReport && selectedReport.id === report.id ? 'bg-primary-light-active border-primary-light' : 'bg-light-card border-light-card-border',
+                  getListBorderClass(report.level)
+                ]"
+                @click.prevent="selectReport(report)"
+              >
+                <div class="d-flex w-100 justify-content-between">
+                  <span class="badge rounded-pill me-2 fw-bold" :class="getBadgeClass(report.level)">
+                    {{ report.level.toUpperCase() }}
+                  </span>
+                </div>
+                <div class="mt-1 small text-dark">
+                  <strong>{{ report.ageLabel }} · {{ report.genderLabel }}</strong>
+                  <small class="text-muted">{{ report.date }} {{ report.time }}</small>
+                </div>
+                <div class="report-type-badge">{{ report.type }}</div>
+              </a>
+            </template>
+            <p v-else class="text-center text-muted mt-5">현재 활성 신고가 없습니다.</p>
+          </template>
+          <p v-else-if="isLoading" class="text-center text-muted mt-5">데이터를 불러오는 중입니다...</p>
+          <p v-else class="text-center text-danger mt-5">관제 데이터를 가져오는 데 실패했습니다.</p>
         </div>
       </div>
 
-      <!-- Right: Detail panel -->
+      <!-- Right: Detail panel (narrower for better balance) -->
       <div class="col-lg-8" v-if="selectedReport">
-        <h4 class="mb-3 text-secondary">신고 상세</h4>
+        <h4 class="mb-3 text-secondary">신고 상세정보</h4>
         <div class="row g-3">
 
-          <div class="col-md-6">
+          <div class="col-md-8 pe-3 map-col">
+            <div class="mb-3 text-secondary ps-2">신고자 위치</div>
             <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
               <span class="text-muted">지도에 신고자 위치 (API 연동 필요)</span>
             </div>
           </div>
 
-          <div class="col-md-6">
-            <div :class="['detail-card card h-100 border-0', { 'flash-highlight': highlight }]" style="background-color: #FFFFFF;">
-              <div class="card-header border-0 pb-0" style="background-color: #FFFFFF; border-color: #EAECEF !important;">
-                <div class="d-flex w-100 justify-content-between align-items-start">
-                  <div class="pt-3">
-                    <h5 class="card-title fw-bold mb-1" :class="getAlertColor(selectedReport.level)">{{ selectedReport.type }}</h5>
-                    <div class="text-secondary-default small">신고자 정보 · 빠른 확인</div>
-                  </div>
-
-                  <div class="report-datetime-box text-end">
-                    <div class="d-flex align-items-center justify-content-end">
-                      <i class="bi bi-calendar-event me-2 text-info-custom"></i>
-                      <div class="fw-semibold fs-6">{{ selectedReport.date }}</div>
-                    </div>
-                    <div class="text-muted small mono-time">{{ selectedReport.time }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Updated 신고 정보 영역 -->
-              <div class="card-body text-dark">
-
-                <div class="info-grid row gy-3">
-                  
-                  <div class="col-6">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-person-fill info-icon text-muted me-2" title="신고인"></i>
-                      <div class="info-value fw-bold">{{ selectedReport.age }}세 · {{ selectedReport.gender }}</div>
-                    </div>
-                  </div>
-
-                  <div class="col-6">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
-                      <div class="info-value fw-bold text-truncate">{{ selectedReport.location || '위치 정보 없음' }}</div>
-                    </div>
-                  </div>
-
-
-                  <div class="col-6 pt-8">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-heart-pulse info-icon text-muted me-2" title="심박수"></i>
-                      <div class="info-value fw-bold d-flex align-items-center">
-                        <span :class="{'text-danger': selectedReport.hr > 150, 'me-2': true}">{{ selectedReport.hr }} BPM</span>
-                        <small class="ms-2 badge bg-light border text-muted">실시간</small>
+          <div class="col-md-4 d-flex justify-content-end align-items-start detail-col pt-1">
+            <div class="detail-inner w-100">
+              <div class="mb-3 text-secondary ps-2">신고자 상태정보</div>
+              <div :class="['detail-card card h-100 border-0', { 'flash-highlight': highlight }]" style="background-color: #FFFFFF;">
+                <div class="card-header border-0 pb-0" style="background-color: #FFFFFF; border-color: #EAECEF !important;">
+                  <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div class="pt-5">
+                      <h class="card-title fw-bold mb-1 fs-1" :class="getAlertColor(selectedReport.level)">{{ selectedReport.type }}</h>
+                      <div class="report-datetime-box mt-2">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-clock-fill me-2 text-info-custom fs-5"></i>
+                          <div class="fw-semibold mono-time">{{ selectedReport.time }}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
+                    
+                  </div>
+                  
+                  <!-- Updated 신고 정보 영역 -->
+                  <div class="card-body text-dark">
+                    <div class="info-grid row gy-3">
+                      <div class="col-12 d-flex align-items-center">
+                      <i class="fs-1 bi bi-person-fill info-icon text-muted me-2" title="신고인"></i>
+                      <div class="info-value fw-bold fs-2">{{ selectedReport.ageLabel }} · {{ selectedReport.genderLabel }}</div>
+                    </div>
 
+                    <div class="col-12 d-flex align-items-center">
+                      <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
+                      <div class="fs-2 info-value fw-bold text-truncate">{{ selectedReport.location }}</div>
+                    </div>
+
+                    <div class="col-12 d-flex align-items-center">
+                      <i class="fs-1 bi bi-heart-pulse info-icon text-muted me-2" title="심박수"></i>
+                      <div class="fs-2 info-value fw-bold d-flex align-items-center">
+                        <span :class="{'text-danger': selectedReport.hr !== null && selectedReport.hr > 150, 'me-2': true}">{{ prettyHr(selectedReport.hr) }}</span>
+                        <small class="fs-3 ms-2 badge bg-light border text-muted">실시간</small>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div class="card-footer border-0 d-flex justify-content-end" style="background-color: #F8F9FA; border-color: #EAECEF !important;">
-                <button
-                  class="btn btn-sm me-2"
-                  :class="['btn-receive', { 'btn-disabled': isReceiveDisabled(selectedReport) }]"
-                  :disabled="isReceiveDisabled(selectedReport)"
-                  @click="receiveReport(selectedReport)"
-                >
-                  신고 접수
-                </button>
+                  <button
+                    class="btn btn-sm"
+                    :class="selectedReport.processed === 1 ? 'btn-processed-disabled' : 'btn-processed'"
+                    :disabled="selectedReport.processed === 1"
+                    @click="markProcessed(selectedReport)"
+                  >
+                    {{ selectedReport.processed === 1 ? '구조 요청 처리됨' : '구조 요청' }}
+                  </button>
 
-                <button
-                  class="btn btn-sm ms-2"
-                  :class="[ isDispatchDisabled(selectedReport) ? 'btn-dispatch-disabled' : getButtonClass(selectedReport.level) ]"
-                  :disabled="isDispatchDisabled(selectedReport)"
-                  @click="confirmDispatch(selectedReport)"
-                >
-                  {{ dispatchButtonText(selectedReport) }}
-                </button>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 mt-4">
+          <div class="col-12 mt-4">
             <div class="card p-3 border-0" style="background-color: #FFFFFF;">
               <h6 class="fw-bold text-secondary-default mb-3"><i class="bi bi-journal-text me-2"></i>상황 기록 로그</h6>
               <div class="log-area small" style="height: 150px; overflow-y: auto; background-color: #F8F9FA; padding: 10px; border-radius: 6px; border: 1px solid #EAECEF;">
                 <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="fw-semibold text-dark">신고 접수 완료 (레벨: {{ selectedReport.level.toUpperCase() }})</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-muted">심박수 {{ selectedReport.hr }} BPM, 산소포화도 {{ selectedReport.spo2 }}% 기록</span></div>
+                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-muted">심박수 {{ prettyHr(selectedReport.hr) }}, 산소포화도 {{ prettySpo2(selectedReport.spo2) }} 기록</span></div>
                 <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-dark">최단거리 출동 경로 탐색 완료</span></div>
                 <div class="log-item"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span :class="getAlertColor(selectedReport.level)">**{{ selectedReport.type }}** 발생 확인. 위치: {{ selectedReport.location }}</span></div>
               </div>
@@ -137,34 +125,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
+import { useApi } from '@/utils/useApi.js';
 
-// activeReports에 상태 필드(status)와 processed 플래그를 추가합니다.
-// status: 'initial' -> 'received' -> 'completed'
-const activeReports = ref([
-  { id: 1, type: '자동(낙상)', level: 'danger', date: '2025-11-10', time: '11:24:32', age: 23, gender: '남성', hr: 160, spo2: 92, zChange: '정상', location: '제1구역 인근', status: 'initial', processed: false },
-  { id: 2, type: '자동(익수)', level: 'emergency', date: '2025-11-10', time: '10:05:10', age: 10, gender: '여성', hr: 95, spo2: 98, zChange: '정상', location: '백사장 중앙', status: 'initial', processed: false },
-  { id: 3, type: '수동(119)', level: 'warning', date: '2025-11-10', time: '09:40:00', age: 40, gender: '여성', hr: 70, spo2: 99, zChange: '정상', location: '부모님 신고', status: 'initial', processed: false },
-  { id: 4, type: '수동(라이프가드)', level: 'emergency', date: '2025-11-10', time: '12:15:00', age: 72, gender: '남성', hr: 130, spo2: 91, zChange: '급격', location: '제2구역 벤치', status: 'initial', processed: false },
-  { id: 5, type: '수동(112)', level: 'danger', date: '2025-11-10', time: '13:30:45', age: 35, gender: '여성', hr: 185, spo2: 98, zChange: '정상', location: '해변 산책로', status: 'initial', processed: false },
-  { id: 6, type: '수동(해파리)', level: 'warning', date: '2025-11-10', time: '14:55:00', age: 50, gender: '남성', hr: 60, spo2: 99, zChange: '정상', location: '파라솔 아래', status: 'initial', processed: false },
-  { id: 7, type: '수동(112)', level: 'danger', date: '2025-11-10', time: '15:10:20', age: 28, gender: '여성', hr: 80, spo2: 97, zChange: '정상', location: '제3구역 외곽', status: 'initial', processed: false },
-  { id: 8, type: '수동(119)', level: 'warning', date: '2025-11-10', time: '16:02:55', age: 55, gender: '남성', hr: 80, spo2: 98, zChange: '정상', location: '시스템 알림', status: 'initial', processed: false },
-]);
-
-const selectedReport = ref(activeReports.value[0]);
-
-// 상세영역 하이라이트 상태 및 타이머
+const activeReports = ref([]);
+const selectedReport = ref(null);
 const highlight = ref(false);
+const isLoading = ref(false);
+const loadError = ref(null);
+
+const route = useRoute();
+const DEFAULT_CONTROL_TOWER_NUMBER = 1;
+
+const controlTowerNumber = computed(() => {
+  const raw = Number(route.query.controlTowerNumber);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_CONTROL_TOWER_NUMBER;
+});
+
+const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+
 let highlightTimer = null;
 
-const selectReport = (report) => {
-  selectedReport.value = report;
-  // 트리거 애니메이션
-  highlight.value = false; // reflow for retrigger
+const clearHighlightTimer = () => {
+  if (!highlightTimer) return;
+  clearTimeout(highlightTimer);
+  highlightTimer = null;
+};
+
+const triggerHighlight = () => {
+  highlight.value = false;
   requestAnimationFrame(() => {
     highlight.value = true;
-    if (highlightTimer) clearTimeout(highlightTimer);
+    clearHighlightTimer();
     highlightTimer = setTimeout(() => {
       highlight.value = false;
       highlightTimer = null;
@@ -172,38 +165,185 @@ const selectReport = (report) => {
   });
 };
 
-// 버튼 상태 제어 함수들
-const receiveReport = (report) => {
-  if (!report || report.status !== 'initial') return;
-  report.status = 'received';
-};
-
-const confirmDispatch = (report) => {
-  if (!report) return;
-  // '출동 확인'은 'received' 상태에서만 동작
-  if (report.status === 'received') {
-    report.status = 'completed';
-    report.processed = true;
+const setSelectedReport = (report, shouldHighlight = false) => {
+  selectedReport.value = report ?? null;
+  if (report && shouldHighlight) {
+    triggerHighlight();
+  }
+  if (!report) {
+    highlight.value = false;
+    clearHighlightTimer();
   }
 };
 
-const isReceiveDisabled = (report) => !report || report.status !== 'initial';
-const isDispatchDisabled = (report) => !report || report.status !== 'received';
-const dispatchButtonText = (report) => (report && report.status === 'completed') ? '처리완료' : '출동 확인';
+const selectReport = (report) => {
+  if (!report) return;
+  setSelectedReport(report, true);
+};
 
-// --- Color Mapping (Using custom classes based on new palette) ---
+const toFiniteNumber = (value) => {
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+};
 
-// 위험 단계에 따른 뱃지 색상 클래스 반환
+const isValidCoordinatePair = (lat, lon) => {
+  if (lat === null || lon === null) return false;
+  return !(lat === 0 && lon === 0);
+};
+
+const parseDateTime = (value) => {
+  if (!value) return { date: '-', time: '--:--:--' };
+  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) {
+    return {
+      date: parsed.toISOString().slice(0, 10),
+      time: parsed.toLocaleTimeString('ko-KR', { hour12: false })
+    };
+  }
+  const [datePart, timePart] = String(value).split(' ');
+  return { date: datePart ?? '-', time: timePart ?? '--:--:--' };
+};
+
+const computeInternationalAge = (birthDate) => {
+  if (!birthDate) return null;
+  const normalized = String(birthDate).split(' ')[0].replace(/\./g, '-');
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+    age -= 1;
+  }
+  return age;
+};
+
+const mapGender = (gender) => {
+  if (!gender) return '성별 정보 없음';
+  const normalized = String(gender).trim().toLowerCase();
+  if (['f', 'female', '여', '여자', '여성'].includes(normalized)) return '여성';
+  if (['m', 'male', '남', '남자', '남성'].includes(normalized)) return '남성';
+  return String(gender);
+};
+
+const determineLevel = (count) => {
+  const numeric = Number(count);
+  if (!Number.isFinite(numeric)) return 'warning';
+  if (numeric >= 10) return 'emergency';
+  if (numeric >= 5) return 'danger';
+  return 'warning';
+};
+
+const determineTypeAndLocation = (task) => {
+  const watchLat = toFiniteNumber(task?.watchLat);
+  const watchLon = toFiniteNumber(task?.watchLon);
+  const userLat = toFiniteNumber(task?.userLat);
+  const userLon = toFiniteNumber(task?.userLon);
+
+  if (isValidCoordinatePair(watchLat, watchLon)) {
+    return { type: '심박수 이상', mapLat: watchLat, mapLon: watchLon };
+  }
+
+  if (isValidCoordinatePair(userLat, userLon)) {
+    return { type: '라이프가드 호출', mapLat: userLat, mapLon: userLon };
+  }
+
+  return { type: '라이프가드 호출', mapLat: null, mapLon: null };
+};
+
+const toReportViewModel = (task) => {
+  const { date, time } = parseDateTime(task?.dateAndTime);
+  const age = computeInternationalAge(task?.birthDateForAge);
+  const genderLabel = mapGender(task?.gender);
+  const hr = toFiniteNumber(task?.hr);
+  const count = toFiniteNumber(task?.count);
+  const { type, mapLat, mapLon } = determineTypeAndLocation(task);
+
+  return {
+    id: task?.id ?? task?.taskNumber ?? null,
+    type,
+    level: determineLevel(count),
+    date,
+    time,
+    age,
+    ageLabel: age !== null ? `(만)${age}세` : '연령 정보 없음',
+    genderLabel,
+    hr,
+    spo2: toFiniteNumber(task?.spo2),
+    location: task?.beachName ?? '위치 정보 없음',
+    mapLat,
+    mapLon,
+    processed: task?.taskProcessed === 1 ? 1 : 0,
+    count,
+    raw: task
+  };
+};
+
+const fetchReports = async () => {
+  isLoading.value = true;
+  loadError.value = null;
+  try {
+    const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
+    const list = Array.isArray(response?.result) ? response.result : [];
+    const mapped = list.map(toReportViewModel);
+
+    activeReports.value = mapped;
+
+    if (!mapped.length) {
+      setSelectedReport(null);
+      return;
+    }
+
+    const previousId = selectedReport.value?.id;
+    const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
+    const shouldFlash = previousId !== nextSelected?.id;
+    setSelectedReport(nextSelected, shouldFlash);
+  } catch (error) {
+    console.error('관제 신고 목록 조회 실패:', error);
+    loadError.value = error;
+    activeReports.value = [];
+    setSelectedReport(null);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+watch(controlTowerNumber, fetchReports);
+onMounted(fetchReports);
+onBeforeUnmount(clearHighlightTimer);
+
+const prettyHr = (hr) => {
+  const numeric = toFiniteNumber(hr);
+  if (numeric === null) return '정보 없음';
+  return `${numeric} BPM`;
+};
+
+const prettySpo2 = (spo2) => {
+  const numeric = toFiniteNumber(spo2);
+  if (numeric === null) return '정보 없음';
+  return `${numeric}%`;
+};
+
+const markProcessed = (report) => {
+  if (!report || report.processed === 1) return;
+  report.processed = 1;
+  if (selectedReport.value?.id === report.id) {
+    selectedReport.value.processed = 1;
+  }
+  // TODO: 필요 시 백엔드 API 호출로 persisted 처리
+};
+
 const getBadgeClass = (level) => {
   switch (level) {
     case 'warning': return 'bg-warning-custom text-dark';
     case 'danger': return 'bg-danger-custom';
     case 'emergency': return 'bg-emergency-custom';
-    default: return 'bg-safety-custom'; // 안전/관심은 #7EEC85
+    default: return 'bg-safety-custom';
   }
 };
 
-// 리스트 좌측 보더 색상 클래스 반환
 const getListBorderClass = (level) => {
   switch (level) {
     case 'warning': return 'border-warning-custom';
@@ -213,7 +353,6 @@ const getListBorderClass = (level) => {
   }
 };
 
-// 신고 제목 및 텍스트 색상 반환
 const getAlertColor = (level) => {
   switch (level) {
     case 'warning': return 'text-warning-custom';
@@ -221,23 +360,6 @@ const getAlertColor = (level) => {
     case 'emergency': return 'text-emergency-custom';
     default: return 'text-safety-custom';
   }
-}
-
-// 출동 확인 버튼 색상 반환 (활성 시에만 적용)
-const getButtonClass = (level) => {
-    switch (level) {
-        case 'emergency': return 'btn-emergency-custom';
-        case 'danger': return 'btn-danger-custom';
-        case 'warning': return 'btn-warning-custom text-dark';
-        default: return 'btn-safety-custom';
-    }
-}
-
-// 산소 포화도에 따른 텍스트 색상 클래스 반환
-const getOxygenClass = (spo2) => {
-  if (spo2 <= 92) return 'text-emergency-custom';
-  if (spo2 <= 95) return 'text-danger-custom';
-  return 'text-safety-custom';
 };
 </script>
 
@@ -383,6 +505,20 @@ const getOxygenClass = (spo2) => {
 
 .btn-dispatch-disabled:hover { transform: none; }
 
+/* Processed button styles */
+.btn-processed {
+  background-color: #0092BA;
+  color: #fff;
+  border-color: #0092BA;
+}
+.btn-processed-disabled {
+  background-color: #F1F3F5;
+  color: #6c757d;
+  border-color: #E6E9EE;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 /* Info grid and status badge */
 .info-grid .info-label { color: #6c757d; }
 .info-grid .info-value { color: #212529; }
@@ -406,8 +542,23 @@ const getOxygenClass = (spo2) => {
   top: 16px;
   text-align: right;
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  background-color: #F8FAFC;
+  border: 1px solid #E6EEF5;
+  padding: 6px 10px;
+  border-radius: 8px;
+  width: auto; /* size to content */
+  min-width: 0;
 }
 .mono-time { white-space: nowrap; }
+
+/* Narrow wrapper for the detail section to improve readability */
+.detail-inner { max-width: 380px; padding-left: 8px; }
+.detail-inner .detail-card { width: 100%; }
+.detail-inner { display: block; }
+
+@media (max-width: 992px) {
+  /* tablet and below: let detail full width under map */
+  .detail-inner { max-width: 100%; padding-left: 0; }
+}
 </style>

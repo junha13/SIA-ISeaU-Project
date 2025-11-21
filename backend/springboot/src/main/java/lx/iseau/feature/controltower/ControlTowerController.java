@@ -15,6 +15,15 @@ public class ControlTowerController {
 
     private final ControlTowerService service;
 
+    // ============ 관제센터의 처리 리스트(지서) ============
+    @GetMapping("/task/list/controltower")
+    public ResponseEntity<?> getTaskListByControlTowerNumber(@RequestParam int controlTowerNumber) {
+        List<TaskListDTO> result = service.getTaskListByControlTowerNumber(controlTowerNumber);
+        return ResponseEntity
+                .ok()
+                .body(Map.of("result", result));
+    }
+
     // =========================
     // 워치 심박수/긴급 상황 데이터 수신
     // Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
