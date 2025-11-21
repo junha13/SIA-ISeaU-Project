@@ -71,6 +71,8 @@ const { controlView, cctvName } = storeToRefs(store)
 
 const emit = defineEmits(['danger-update'])
 
+// let frameCounter = 0
+
 const props = defineProps({
   // WebSocket 베이스 URL(슬래시 없이 끝남) 예: ws://IP:8000/ws/stream
  wsUrl: { type: String, default: 'ws://localhost:8000/ws/stream' },
@@ -106,7 +108,6 @@ function openOne(id) {
     ws: null,
     ok: false,
     src: '',
-    tmp: null,
     live: null,
     t: null,
     people: 0,
@@ -124,63 +125,57 @@ function openOne(id) {
   };
 
     s.ws.onmessage = (e) => {
-    // 1) 바이너리: JPEG 프레임 → 임시 Blob URL로 교체
-    if (e.data instanceof ArrayBuffer) {
-      revoke(s.tmp); // 이전 임시 URL 해제
-      s.tmp = URL.createObjectURL(new Blob([e.data], { type: 'image/jpeg' }));
-      return;
+
+    console.log(`[CAM${id}] binary frame size =`, e.data.byteLength);
+
+  // 1) 바이너리: JPEG 프레임 → 바로 화면 src 교체
+  if (e.data instanceof ArrayBuffer) {
+    const old = s.live; // 이전 URL 잠깐 보관
+
+    const url = URL.createObjectURL(
+      new Blob([e.data], { type: 'image/jpeg' })
+    );
+
+    console.log(`[CAM${id}] src changed ->`, url.slice(-10));
+
+    // 새 프레임 먼저 꽂고
+    s.src = url;
+    s.live = url;
+
+    // 이전 것은 약간 있다가 정리 (렌더링 끝난 뒤에)
+    if (old && old !== url) {
+      setTimeout(() => {
+        URL.revokeObjectURL(old);
+      }, 2000); // 2초 뒤 정리 (필요하면 500~1000ms로 줄여도 됨)
     }
 
-      // 2) 텍스트: 메타데이터(JSON) 도착
-    try {
-      const meta = JSON.parse(e.data);
-      // meta 예시:
-      // {
-      //   stream_id: "CAM1",
-      //   label: "이호테우",
-      //   people: 3,
-      //   danger: 2,
-      //   timestamp: 1731580000000
-      // }
+    return;
+  }
 
-      if (meta.people != null) s.people = meta.people;
 
-      // 🔴 위험 인원 수 저장
-      if (meta.danger != null) {
-        s.danger = meta.danger;
+ // 2) 텍스트(JSON) 처리 그대로
+  try {
+    const meta = JSON.parse(e.data);
+    if (meta.people != null) s.people = meta.people;
+    if (meta.danger != null) s.danger = meta.danger;
+    if (meta.label) s.label = meta.label;
+
+    if (meta.danger != null && meta.danger > 0 && meta.stream_id) {
+      const camId = Number(String(meta.stream_id).replace('CAM', ''));
+      if (!Number.isNaN(camId)) {
+        emit('danger-update', {
+          camId,
+          streamId: meta.stream_id,
+          label: meta.label,
+          danger: meta.danger,
+          timestamp: meta.timestamp ?? Date.now(),
+        });
       }
-
-      if (meta.label) {
-        s.label = meta.label;
-      }
-
-      // 🔴 부모에게 이벤트로 알려주기 (통계/알림용)
-      if (meta.danger != null && meta.danger > 0 && meta.stream_id) {
-        // "CAM1" → 1
-        const camId = Number(String(meta.stream_id).replace('CAM', ''));
-
-        if (!Number.isNaN(camId)) {
-          emit('danger-update', {
-            camId,                            // 1~8 숫자
-            streamId: meta.stream_id,         // "CAM1"
-            label: meta.label,                // "이호테우" 같은 이름
-            danger: meta.danger,              // 이번 프레임에서 위험 인원
-            timestamp: meta.timestamp ?? Date.now(),
-          });
-        }
-      }
-    } catch {
-      // 그냥 문자열일 수도 있으니 파싱 실패는 무시
     }
-
-    // 3) 직전에 받은 프레임(tmp)을 실제 화면(src)으로 승격
-    if (s.tmp) {
-      revoke(s.live); // 이전 화면용 URL 해제
-      s.src = s.tmp;  // <img> 교체
-      s.live = s.tmp; // 현재 화면용으로 보관
-      s.tmp = null;   // 임시 슬롯 비우기
-    }
-  };
+  } catch {
+    // 무시
+  }
+};
 
   s.ws.onclose = () => {
     s.ok = false; // 상태 배지: reconnect
@@ -210,7 +205,7 @@ function closeOne(id) {
     s.ws && s.ws.close();
   } catch {}
   clearTimeout(s.t);
-  revoke(s.tmp);
+
   revoke(s.live);
   delete state[k];
 }

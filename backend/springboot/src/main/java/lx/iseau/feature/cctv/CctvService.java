@@ -40,4 +40,12 @@ public class CctvService {
     	map.put("result", dto);
         return map;
     }
+    
+    // ============ 로그 읽음처리 ============
+    public Map<String, Object> updateDangerLog(int logNumber) {
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	int data = dao.updateDangerLog(logNumber);
+    	map.put("result", data);
+    	return map;
+    }
 }

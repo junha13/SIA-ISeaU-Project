@@ -10,26 +10,37 @@
         cam_number,
         beach_number,
         danger_count,
-        created_at
+        created_at,
+        is_read
     )
     VALUES (
 	    #{camNumber},
 	    (SELECT beach_number FROM tb_beach_cctv WHERE cam_number = #{camNumber}),
 	    #{dangerCount},
-	    NOW()
+	    NOW(),
+	    false
 	)
 </insert>
 
 <select id="selectDangerLogList" parameterType="CctvDangerLogDto" resultType="CctvDangerLogDto">
-	select danger_log_number, cam_number, beach_number, danger_count, created_at
+	select danger_log_number, cam_number, beach_number, danger_count, created_at, is_read
 	from tb_beach_danger_log
+	ORDER BY created_at DESC
 </select>
 
 <select id="selectDangerLogListByBeachNumber" parameterType="CctvDangerLogDto" resultType="CctvDangerLogDto">
-	select danger_log_number, cam_number, beach_number, danger_count, created_at
+	select danger_log_number, cam_number, beach_number, danger_count, created_at, is_read
 	from tb_beach_danger_log
 	where beach_number = #{beachNumber}
+	ORDER BY created_at DESC
 
 </select>
+
+<update id="updateDangerLog" parameterType="int">
+	UPDATE tb_beach_danger_log
+    SET
+        is_read = true
+    WHERE danger_log_number = #{logNumber}
+</update>
 
 </mapper>

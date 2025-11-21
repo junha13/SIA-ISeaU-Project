@@ -15,6 +15,9 @@ public interface CctvDAO {
     List<CctvDangerLogDto> selectDangerLogList(CctvDangerLogDto logDto);
     // 오늘 날짜 기준 CCTV 위험 로그들 조회
     List<CctvDangerLogDto> selectDangerLogListByBeachNumber(CctvDangerLogDto logDto);
+    
+    // 오늘 날짜 기준 CCTV 위험 로그들 조회
+    int updateDangerLog(int logNumber);
 
 	
 }
