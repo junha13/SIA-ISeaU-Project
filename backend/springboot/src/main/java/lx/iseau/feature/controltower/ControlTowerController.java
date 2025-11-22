@@ -36,7 +36,7 @@ public class ControlTowerController {
     public ResponseEntity<?> receiveHeartRate(@RequestBody HeartRateRequest request) {
         log.info("📥 /api/controltower/heart-rate 요청 수신: {}", request);
 
-        try {
+        try { 
             // 1) 기본 유효성 검사
             if (request.getUserNumber() == null || request.getUserNumber() <= 0) {
                 return ResponseEntity.badRequest().body(
