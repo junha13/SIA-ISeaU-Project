@@ -37,7 +37,7 @@ public class SpringbootApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootApplication.class, args);
-		
+
         // ★★★ 확인을 위해 새로운 로그를 추가해 보세요! ★★★
         //logger.info("======= Logback 테스트 성공! =======");
         //logger.warn("======= 경고(WARN) 레벨 테스트 =======");

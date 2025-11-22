@@ -283,6 +283,9 @@
         placeholder="관제센터에서 송출할 방송 문구를 입력하세요. "
         style="height: 120px; resize: none;"
       ></textarea>
+      <div class="mt-2">
+    <TtsPlayer :audio-content="ttsAudioBase64" />
+  </div>
     </div>
 
     <!-- 푸터 -->
@@ -364,6 +367,9 @@ import WeatherPanel from '@/components/WeatherPanel.vue';
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
+import TtsPlayer from "@/components/TtsPlayer.vue";
+
+
 
 const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const store = useStore();
@@ -371,6 +377,12 @@ const { controlView, cctvName } = storeToRefs(store)
 const rightPanelTab = ref('overview')
 const beachNumberMap = ref({})  // { '이호테우': 6, '중문': 2, ... } 이런 형태
 
+// 🔊 TTS 관련 상태는 여기 “위쪽 전역”에 둔다
+const cctvAlert = ref(false)
+const alertMessage = ref('')
+const ttsAudioBase64 = ref(null)
+
+// 해수욕장 번호 계산만 담당
 const beachNumber = computed(() => {
   if (controlView.value !== '해수욕장') return 1
 
@@ -381,6 +393,19 @@ const beachNumber = computed(() => {
 
   return num ?? 1
 })
+
+// 안내방송 모달이 열릴 때마다 옛날 오디오는 초기화
+watch(
+  () => cctvAlert.value,
+  (visible) => {
+    if (visible) {
+      ttsAudioBase64.value = null
+      // 필요하면 문구도 여기서 같이 초기화
+      // alertMessage.value = ''
+    }
+  }
+)
+
 
 
 const rightTabs = [
@@ -799,30 +824,40 @@ watch(
   }
 )
 
-/**
- *  alert
- */
 
-const cctvAlert = ref(false)
-const alertMessage = ref('')
+const sendAlertMessage = async () => {
+  const msg = alertMessage.value?.trim()
+  if (!msg) return
 
-// 실제 알림 발송 (백엔드 붙일 자리)
-const sendAlertMessage = () => {
-  if (!alertMessage.value.trim()) {
-    // 비어 있으면 그냥 리턴 (원하면 alert 넣어도 됨)
-    return
+  try {
+    const payload = {
+      beachNumber: beachNumber.value,
+      cctvName: cctvName.value,
+      message: msg,
+    }
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/controltower/tts`,
+      payload
+    )
+
+    // 🔊 여기서 새 TTS를 플레이어로 보냄
+    ttsAudioBase64.value =
+      res.data.audioContent ||
+      res.data.result?.audioContent ||
+      null
+
+    console.log('✅ TTS 요청 결과:', res.data)
+
+    // 🔵 일단 모달은 열어둬야 오디오를 들을 수 있음
+    // alertMessage.value = ''   // 필요하면 나중에만 비우기
+    // cctvAlert.value = false   // ❌ 이 줄 지우기/주석 처리
+  } catch (e) {
+    console.error('❌ TTS 요청 실패:', e)
+    alert('안내 방송 요청 중 오류가 발생했습니다.')
   }
-
-  // TODO: 여기서 백엔드로 API 호출해서 알림 발송하면 됨
-  console.log('🔔 알림 발송:', {
-    cctv: cctvName.value,
-    message: alertMessage.value,
-  })
-
-  // 일단 모달 닫고 내용 비우기
-  alertMessage.value = ''
-  cctvAlert.value = false
 }
+
 
 /**
  *  rescue
