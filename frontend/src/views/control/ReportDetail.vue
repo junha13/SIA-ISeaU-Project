@@ -109,10 +109,19 @@
             <div class="card p-3 border-0" style="background-color: #FFFFFF;">
               <h6 class="fw-bold text-secondary-default mb-3"><i class="bi bi-journal-text me-2"></i>상황 기록 로그</h6>
               <div class="log-area small" style="height: 150px; overflow-y: auto; background-color: #F8F9FA; padding: 10px; border-radius: 6px; border: 1px solid #EAECEF;">
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="fw-semibold text-dark">신고 접수 완료 (레벨: {{ selectedReport.level.toUpperCase() }})</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-muted">심박수 {{ prettyHr(selectedReport.hr) }}, 산소포화도 {{ prettySpo2(selectedReport.spo2) }} 기록</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-dark">최단거리 출동 경로 탐색 완료</span></div>
-                <div class="log-item"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span :class="getAlertColor(selectedReport.level)">**{{ selectedReport.type }}** 발생 확인. 위치: {{ selectedReport.location }}</span></div>
+                <div v-if="logsLoading" class="text-muted text-center py-2">상황 기록을 불러오는 중입니다...</div>
+                <div v-else-if="logsError" class="text-danger text-center py-2">상황 기록을 가져오지 못했습니다.</div>
+                <div v-else-if="!activityLogs.length" class="text-muted text-center py-2">기록이 없습니다.</div>
+                <div v-else>
+                  <div
+                    class="log-item mb-1"
+                    v-for="log in activityLogs"
+                    :key="`${log.forTime ?? ''}-${log.hr ?? ''}`"
+                  >
+                    <span class="log-time text-muted">[{{ formatLogTime(log.forTime) }}]</span>
+                    <span class="text-dark">심박수 : {{ formatLogHr(log.hr) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -134,6 +143,9 @@ const selectedReport = ref(null);
 const highlight = ref(false);
 const isLoading = ref(false);
 const loadError = ref(null);
+const activityLogs = ref([]);
+const logsLoading = ref(false);
+const logsError = ref(null);
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -144,6 +156,7 @@ const controlTowerNumber = computed(() => {
 });
 
 const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+const { execute: fetchTaskLog } = useApi('get', '/api/controltower/task/log');
 const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
@@ -176,12 +189,54 @@ const setSelectedReport = (report, shouldHighlight = false) => {
   if (!report) {
     highlight.value = false;
     clearHighlightTimer();
+    activityLogs.value = [];
+    logsLoading.value = false;
+    logsError.value = null;
   }
 };
 
 const selectReport = (report) => {
   if (!report) return;
   setSelectedReport(report, true);
+  loadReportLogs(report).catch(() => {});
+};
+
+const loadReportLogs = async (report, { silent = false } = {}) => {
+  const userNumber = report?.userNumber
+    ?? report?.raw?.userNumber
+    ?? report?.raw?.user_number
+    ?? null;
+  if (!userNumber) {
+    if (!silent) {
+      activityLogs.value = [];
+      logsError.value = null;
+      logsLoading.value = false;
+    }
+    return;
+  }
+
+  if (!silent) {
+    logsLoading.value = true;
+    logsError.value = null;
+  }
+
+  try {
+    const response = await fetchTaskLog({ userNumber });
+    const list = Array.isArray(response?.result) ? response.result : [];
+    activityLogs.value = list;
+    if (!silent) {
+      logsError.value = null;
+    }
+  } catch (error) {
+    if (!silent) {
+      logsError.value = error;
+      activityLogs.value = [];
+    }
+  } finally {
+    if (!silent) {
+      logsLoading.value = false;
+    }
+  }
 };
 
 const toFiniteNumber = (value) => {
@@ -240,20 +295,22 @@ const determineLevel = (count) => {
 };
 
 const determineTypeAndLocation = (task) => {
+  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
+  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
   const userLat = toFiniteNumber(task?.userLat);
   const userLon = toFiniteNumber(task?.userLon);
 
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: '심박수 이상', mapLat: watchLat, mapLon: watchLon };
+    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
   }
 
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: '라이프가드 호출', mapLat: userLat, mapLon: userLon };
+    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: '라이프가드 호출', mapLat: null, mapLon: null };
+  return { type: resolvedType, mapLat: null, mapLon: null };
 };
 
 const toReportViewModel = (task) => {
@@ -280,6 +337,7 @@ const toReportViewModel = (task) => {
     mapLon,
     processed: task?.taskProcessed === 1 ? 1 : 0,
     count,
+    userNumber: task?.userNumber ?? task?.user_number ?? null,
     raw: task
   };
 };
@@ -303,6 +361,11 @@ const fetchReports = async ({ silent = false } = {}) => {
 
     if (!mapped.length) {
       setSelectedReport(null);
+      activityLogs.value = [];
+      if (!silent) {
+        logsError.value = null;
+        logsLoading.value = false;
+      }
       return;
     }
 
@@ -310,12 +373,14 @@ const fetchReports = async ({ silent = false } = {}) => {
     const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
     const shouldFlash = previousId !== nextSelected?.id;
     setSelectedReport(nextSelected, shouldFlash);
+    loadReportLogs(nextSelected, { silent }).catch(() => {});
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
     if (!silent) {
       loadError.value = error;
       activeReports.value = [];
       setSelectedReport(null);
+      activityLogs.value = [];
     }
   } finally {
     if (!silent) {
@@ -363,6 +428,23 @@ const prettySpo2 = (spo2) => {
   const numeric = toFiniteNumber(spo2);
   if (numeric === null) return '정보 없음';
   return `${numeric}%`;
+};
+
+const formatLogTime = (value) => {
+  if (!value) return '--:--:--';
+  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString('ko-KR', { hour12: false });
+  }
+  const [, timePart] = String(value).split(' ');
+  return timePart ?? String(value) ?? '--:--:--';
+};
+
+const formatLogHr = (hr) => {
+  const numeric = toFiniteNumber(hr);
+  if (numeric === null) return '정보 없음';
+  return `${numeric}bpm`;
 };
 
 const markProcessed = (report) => {
