@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lx.iseau.feature.controltower.TtsBroadcastRequest;
+import lx.iseau.feature.voice.VoiceWebSocketHandler;
 
 
 @RequestMapping("/api/controltower")
@@ -17,6 +18,7 @@ public class ControlTowerController {
 
 	private final ControlTowerService service;
 	private final TtsService ttsService;
+	private final VoiceWebSocketHandler voiceWebSocketHandler;
 	// =========================
 	// 워치 심박수/긴급 상황 데이터 수신
 	// Endpoint: POST /api/controltower/heart-rate (경로가 이상할 수 있음)
@@ -94,30 +96,39 @@ public class ControlTowerController {
 
 	// 예시: /api/controltower/tts 로 POST
 	@PostMapping("/tts")
-    public ResponseEntity<?> sendTtsBroadcast(@RequestBody TtsBroadcastRequest req) {
-        try {
-            System.out.println("[TTS 방송 요청] beachNumber=" + req.getBeachNumber()
-                    + ", cctvName=" + req.getCctvName()
-                    + ", message=" + req.getMessage());
+	public ResponseEntity<?> sendTtsBroadcast(@RequestBody TtsBroadcastRequest req) {
+	    try {
+	        System.out.println("[TTS 방송 요청] beachNumber=" + req.getBeachNumber()
+	                + ", cctvName=" + req.getCctvName()
+	                + ", message=" + req.getMessage());
 
-            // 🔹 실제 TTS 호출 → Base64 MP3 생성
-            String audioBase64 = ttsService.synthesizeToBase64(req.getMessage());
+	        // 🔹 실제 TTS 호출 → Base64 MP3 생성
+	        String audioBase64 = ttsService.synthesizeToBase64(req.getMessage());
 
-            return ResponseEntity.ok().body(
-                    Map.of(
-                            "success", true,
-                            "audioContent", audioBase64   // 프론트에서 쓸 필드 이름
-                    )
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(
-                    Map.of(
-                            "success", false,
-                            "message", "TTS 처리 중 오류가 발생했습니다.",
-                            "detail", e.getMessage()
-                    )
-            );
-        }
-    }
+	        // 🔊🔊🔊 여기 추가: WebSocket으로 /voice 접속한 단말들에게 뿌리기
+	        voiceWebSocketHandler.broadcastTts(
+	                req.getCctvName(),   // 어떤 CCTV에서 나온 방송인지
+	                req.getMessage(),    // 안내 문구
+	                audioBase64          // Base64 MP3 데이터
+	        );
+
+	        // 🔁 원래대로 프론트(관제 화면)에도 응답 리턴
+	        return ResponseEntity.ok().body(
+	                Map.of(
+	                        "success", true,
+	                        "audioContent", audioBase64
+	                )
+	        );
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.internalServerError().body(
+	                Map.of(
+	                        "success", false,
+	                        "message", "TTS 처리 중 오류가 발생했습니다.",
+	                        "detail", e.getMessage()
+	                )
+	        );
+	    }
+	}
+
 }

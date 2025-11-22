@@ -46,6 +46,7 @@ import ControlLayout from '@/views/control/ControlLayout.vue'
 import CCTVMonitoring from '@/views/control/CCTVMonitoring.vue'
 import ReportDetail from '@/views/control/ReportDetail.vue'
 
+import Voice from '@/views/Voice.vue'
 
 const routes = [
     // ----------------------------------------------------
@@ -113,6 +114,10 @@ const routes = [
             // 해수욕장
             { path: 'beach-list', name: 'BeachList', component: BeachListPage },
             { path: 'beach/:beachNumber', name: 'beachDetail', component: BeachDetailPage},
+
+            // tts
+            { path: 'voice', name: 'Voice', component: Voice },
+
             // 그룹
             { path: 'group', name: 'GroupMain', component: GroupMainPage },
             { path: 'firebase', name: 'Firebase', component: FirebaseTest },
