@@ -144,8 +144,11 @@ const controlTowerNumber = computed(() => {
 });
 
 const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
+let pollTimer = null;
+let isFetching = false;
 
 const clearHighlightTimer = () => {
   if (!highlightTimer) return;
@@ -281,11 +284,18 @@ const toReportViewModel = (task) => {
   };
 };
 
-const fetchReports = async () => {
-  isLoading.value = true;
-  loadError.value = null;
+const fetchReports = async ({ silent = false } = {}) => {
+  if (isFetching) {
+    return;
+  }
+  isFetching = true;
+  if (!silent) {
+    isLoading.value = true;
+    loadError.value = null;
+  }
   try {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
+    loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
     const mapped = list.map(toReportViewModel);
 
@@ -302,17 +312,46 @@ const fetchReports = async () => {
     setSelectedReport(nextSelected, shouldFlash);
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
-    loadError.value = error;
-    activeReports.value = [];
-    setSelectedReport(null);
+    if (!silent) {
+      loadError.value = error;
+      activeReports.value = [];
+      setSelectedReport(null);
+    }
   } finally {
-    isLoading.value = false;
+    if (!silent) {
+      isLoading.value = false;
+    }
+    isFetching = false;
   }
 };
 
-watch(controlTowerNumber, fetchReports);
-onMounted(fetchReports);
-onBeforeUnmount(clearHighlightTimer);
+const startPolling = () => {
+  stopPolling();
+  pollTimer = setInterval(() => {
+    fetchReports({ silent: true }).catch(() => {});
+  }, POLL_INTERVAL_MS);
+};
+
+const stopPolling = () => {
+  if (!pollTimer) return;
+  clearInterval(pollTimer);
+  pollTimer = null;
+};
+
+watch(controlTowerNumber, () => {
+  fetchReports().catch(() => {});
+  startPolling();
+});
+
+onMounted(() => {
+  fetchReports().catch(() => {});
+  startPolling();
+});
+
+onBeforeUnmount(() => {
+  clearHighlightTimer();
+  stopPolling();
+});
 
 const prettyHr = (hr) => {
   const numeric = toFiniteNumber(hr);
