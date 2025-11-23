@@ -518,17 +518,58 @@ watchEffect(() => {
   // 네이버 지도 스크립트 안 올라와 있으면 리턴
   if (!window.naver?.maps) return;
 
-  const { mapLat, mapLon } = selectedReport.value;
+  const { mapLat, mapLon, level } = selectedReport.value;
   const pos = new window.naver.maps.LatLng(mapLat, mapLon);
 
-  // 최초 1회: 지도 생성
+  // 🔵 레벨별 색상 (워치 위치 동그라미 테두리 색)
+  let borderColor = '#7EEC85'; // safety 기본
+  if (level === 'warning') borderColor = '#FFB354';
+  else if (level === 'danger') borderColor = '#EB725B';
+  else if (level === 'emergency') borderColor = '#B93F67';
+
+  // 1) 지도 최초 생성
   if (!map) {
     map = new window.naver.maps.Map(mapEl.value, {
       center: pos,
-      zoom: 16
+      zoom: 17
+    });
+
+    // DOM에 처음 그려질 때 사이즈 재계산
+    window.naver.maps.Event.trigger(map, 'resize');
+  } else {
+    // 2) 선택된 신고가 바뀌면 중심만 이동
+    map.setCenter(pos);
+  }
+
+  // 3) 워치 위치 마커 생성 또는 위치 업데이트
+  const markerHtml = `
+    <div style="
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 3px solid ${borderColor};
+      background: rgba(0,146,186,0.20);
+      box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+      box-sizing: border-box;
+    "></div>
+  `;
+
+  if (!watchMarker) {
+    watchMarker = new window.naver.maps.Marker({
+      position: pos,
+      map,
+      icon: {
+        content: markerHtml,
+        anchor: new window.naver.maps.Point(11, 11) // 동그라미 중심 기준
+      }
     });
   } else {
-    map.setCenter(pos);
+    watchMarker.setPosition(pos);
+    // 레벨이 바뀔 수도 있으니 아이콘도 같이 업데이트
+    watchMarker.setIcon({
+      content: markerHtml,
+      anchor: new window.naver.maps.Point(11, 11)
+    });
   }
 });
 </script>
