@@ -187,8 +187,8 @@
 
         <div class="modal-info-grid">
           <div class="modal-info-row">
-            <span class="label">위경도</span>
-            <span class="value">{{ selectedReport.coordinateLabel ?? '정보 없음' }}</span>
+            <span class="label">신고 유형</span>
+            <span class="value">{{ selectedReport.type }}</span>
           </div>
           <div class="modal-info-row">
             <span class="label">만나이</span>
