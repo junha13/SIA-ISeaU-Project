@@ -17,7 +17,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         // 모든 요청을 index.html로 포워딩 (단, .js, .css 등 제외)
         registry.addViewController("/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+                .setViewName("forward:/9");
 //        registry.addViewController("/**/{path:[^\\.]*}")
 //                .setViewName("forward:/index.html");
     }
