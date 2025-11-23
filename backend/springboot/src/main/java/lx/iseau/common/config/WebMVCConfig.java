@@ -15,12 +15,20 @@ public class WebMVCConfig implements WebMvcConfigurer {
     // ------------------------------------
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // 모든 요청을 index.html로 포워딩 (단, .js, .css 등 제외)
+        // 1. 루트 경로 (메인 페이지)
+        registry.addViewController("/").setViewName("forward:/index.html");
+
+        // 2. 1단계 경로 (예: /login, /register, /group 등) - 점(.)이 없는 경우만
         registry.addViewController("/{path:[^\\.]*}")
                 .setViewName("forward:/index.html");
-//        registry.addViewController("/**/{path:[^\\.]*}")
-//                .setViewName("forward:/index.html");
+
+        // 3. 2단계 이상 깊은 경로 (예: /control/cctv, /beach/1, /sos/first-aid/cases 등)
+        // 이 부분이 없어서 404 에러가 났던 것입니다.
+        registry.addViewController("/**/{path:[^\\.]*}")
+                .setViewName("forward:/index.html");
     }
+
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/resources/**").addResourceLocations("classpath:/resources/");
