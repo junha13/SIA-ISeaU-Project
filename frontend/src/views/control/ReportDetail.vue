@@ -342,18 +342,60 @@ const isValidCoordinatePair = (lat, lon) => {
   return !(lat === 0 && lon === 0);
 };
 
-const parseDateTime = (value) => {
-  if (!value) return { date: '-', time: '--:--:--' };
-  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
-  const parsed = new Date(normalized);
-  if (!Number.isNaN(parsed.getTime())) {
-    return {
-      date: parsed.toISOString().slice(0, 10),
-      time: parsed.toLocaleTimeString('ko-KR', { hour12: false })
-    };
+const padTwoDigits = (value) => String(value).padStart(2, '0');
+
+const formatKoreanTimeParts = (hour, minute, second) => `${hour}시${minute}분${second}초`;
+
+const formatKoreanTimeDisplay = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return formatKoreanTimeParts(
+      padTwoDigits(value.getHours()),
+      padTwoDigits(value.getMinutes()),
+      padTwoDigits(value.getSeconds())
+    );
   }
-  const [datePart, timePart] = String(value).split(' ');
-  return { date: datePart ?? '-', time: timePart ?? '--:--:--' };
+
+  const str = String(value ?? '').trim();
+  if (!str) return '--시--분--초';
+
+  const timeMatch = str.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    const [, hour, minute, second] = timeMatch;
+    return formatKoreanTimeParts(
+      padTwoDigits(hour),
+      padTwoDigits(minute),
+      padTwoDigits(second)
+    );
+  }
+
+  return '--시--분--초';
+};
+
+const normalizeDateTimeString = (value) => {
+  if (!value) return '';
+  let normalized = String(value).trim();
+  if (!normalized.includes('T') && normalized.includes(' ')) {
+    normalized = normalized.replace(' ', 'T');
+  }
+  normalized = normalized.replace(/([+-]\d{2})(?!:)/, '$1:00');
+  return normalized;
+};
+
+const parseDateTime = (value) => {
+  if (!value) return { date: '-', time: '--시--분--초' };
+  const str = String(value).trim();
+  const normalized = normalizeDateTimeString(str);
+  const parsed = new Date(normalized);
+  const hasValidDate = !Number.isNaN(parsed.getTime());
+  const datePart = hasValidDate
+    ? parsed.toISOString().slice(0, 10)
+    : (str.split(' ')[0] ?? '-');
+
+  const timePart = hasValidDate
+    ? formatKoreanTimeDisplay(parsed)
+    : formatKoreanTimeDisplay(str);
+
+  return { date: datePart, time: timePart };
 };
 
 const computeInternationalAge = (birthDate) => {
@@ -381,8 +423,8 @@ const mapGender = (gender) => {
 const determineLevel = (count) => {
   const numeric = Number(count);
   if (!Number.isFinite(numeric)) return 'warning';
-  if (numeric >= 10) return 'emergency';
-  if (numeric >= 5) return 'danger';
+  if (numeric >= 20) return 'emergency';
+  if (numeric >= 10) return 'danger';
   return 'warning';
 };
 
@@ -543,14 +585,7 @@ const prettySpo2 = (spo2) => {
 };
 
 const formatLogTime = (value) => {
-  if (!value) return '--:--:--';
-  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
-  const parsed = new Date(normalized);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toLocaleTimeString('ko-KR', { hour12: false });
-  }
-  const [, timePart] = String(value).split(' ');
-  return timePart ?? String(value) ?? '--:--:--';
+  return formatKoreanTimeDisplay(value);
 };
 
 const formatLogHr = (hr) => {
