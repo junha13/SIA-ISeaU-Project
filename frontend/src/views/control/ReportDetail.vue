@@ -45,8 +45,21 @@
 
           <div class="col-md-8 pe-3 map-col">
             <div class="mb-3 text-secondary ps-2">신고자 위치</div>
-            <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
-              <span class="text-muted">지도에 신고자 위치 (API 연동 필요)</span>
+              <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
+              <div
+                v-if="!hasValidMapPosition"
+                class="text-muted small text-center px-3"
+              >
+                신고자의 위치 정보가 없거나<br />
+                지도 API 준비 중입니다.
+              </div>
+
+              <!-- 좌표 있으면 지도 렌더링 -->
+              <div
+                v-else
+                ref="mapEl"
+                style="width: 100%; height: 100%;"
+              ></div>
             </div>
           </div>
 
@@ -109,10 +122,19 @@
             <div class="card p-3 border-0" style="background-color: #FFFFFF;">
               <h6 class="fw-bold text-secondary-default mb-3"><i class="bi bi-journal-text me-2"></i>상황 기록 로그</h6>
               <div class="log-area small" style="height: 150px; overflow-y: auto; background-color: #F8F9FA; padding: 10px; border-radius: 6px; border: 1px solid #EAECEF;">
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="fw-semibold text-dark">신고 접수 완료 (레벨: {{ selectedReport.level.toUpperCase() }})</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-muted">심박수 {{ prettyHr(selectedReport.hr) }}, 산소포화도 {{ prettySpo2(selectedReport.spo2) }} 기록</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-dark">최단거리 출동 경로 탐색 완료</span></div>
-                <div class="log-item"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span :class="getAlertColor(selectedReport.level)">**{{ selectedReport.type }}** 발생 확인. 위치: {{ selectedReport.location }}</span></div>
+                <div v-if="logsLoading" class="text-muted text-center py-2">상황 기록을 불러오는 중입니다...</div>
+                <div v-else-if="logsError" class="text-danger text-center py-2">상황 기록을 가져오지 못했습니다.</div>
+                <div v-else-if="!activityLogs.length" class="text-muted text-center py-2">기록이 없습니다.</div>
+                <div v-else>
+                  <div
+                    class="log-item mb-1"
+                    v-for="log in activityLogs"
+                    :key="`${log.forTime ?? ''}-${log.hr ?? ''}`"
+                  >
+                    <span class="log-time text-muted">[{{ formatLogTime(log.forTime) }}]</span>
+                    <span class="text-dark">심박수 : {{ formatLogHr(log.hr) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -125,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/utils/useApi.js';
 
@@ -134,6 +156,12 @@ const selectedReport = ref(null);
 const highlight = ref(false);
 const isLoading = ref(false);
 const loadError = ref(null);
+const activityLogs = ref([]);
+const logsLoading = ref(false);
+const logsError = ref(null);
+const mapEl = ref(null);
+
+let map = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -144,8 +172,12 @@ const controlTowerNumber = computed(() => {
 });
 
 const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+const { execute: fetchTaskLog } = useApi('get', '/api/controltower/task/log');
+const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
+let pollTimer = null;
+let isFetching = false;
 
 const clearHighlightTimer = () => {
   if (!highlightTimer) return;
@@ -173,12 +205,54 @@ const setSelectedReport = (report, shouldHighlight = false) => {
   if (!report) {
     highlight.value = false;
     clearHighlightTimer();
+    activityLogs.value = [];
+    logsLoading.value = false;
+    logsError.value = null;
   }
 };
 
 const selectReport = (report) => {
   if (!report) return;
   setSelectedReport(report, true);
+  loadReportLogs(report).catch(() => {});
+};
+
+const loadReportLogs = async (report, { silent = false } = {}) => {
+  const userNumber = report?.userNumber
+    ?? report?.raw?.userNumber
+    ?? report?.raw?.user_number
+    ?? null;
+  if (!userNumber) {
+    if (!silent) {
+      activityLogs.value = [];
+      logsError.value = null;
+      logsLoading.value = false;
+    }
+    return;
+  }
+
+  if (!silent) {
+    logsLoading.value = true;
+    logsError.value = null;
+  }
+
+  try {
+    const response = await fetchTaskLog({ userNumber });
+    const list = Array.isArray(response?.result) ? response.result : [];
+    activityLogs.value = list;
+    if (!silent) {
+      logsError.value = null;
+    }
+  } catch (error) {
+    if (!silent) {
+      logsError.value = error;
+      activityLogs.value = [];
+    }
+  } finally {
+    if (!silent) {
+      logsLoading.value = false;
+    }
+  }
 };
 
 const toFiniteNumber = (value) => {
@@ -237,20 +311,22 @@ const determineLevel = (count) => {
 };
 
 const determineTypeAndLocation = (task) => {
+  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
+  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
   const userLat = toFiniteNumber(task?.userLat);
   const userLon = toFiniteNumber(task?.userLon);
 
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: '심박수 이상', mapLat: watchLat, mapLon: watchLon };
+    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
   }
 
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: '라이프가드 호출', mapLat: userLat, mapLon: userLon };
+    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: '라이프가드 호출', mapLat: null, mapLon: null };
+  return { type: resolvedType, mapLat: null, mapLon: null };
 };
 
 const toReportViewModel = (task) => {
@@ -277,15 +353,23 @@ const toReportViewModel = (task) => {
     mapLon,
     processed: task?.taskProcessed === 1 ? 1 : 0,
     count,
+    userNumber: task?.userNumber ?? task?.user_number ?? null,
     raw: task
   };
 };
 
-const fetchReports = async () => {
-  isLoading.value = true;
-  loadError.value = null;
+const fetchReports = async ({ silent = false } = {}) => {
+  if (isFetching) {
+    return;
+  }
+  isFetching = true;
+  if (!silent) {
+    isLoading.value = true;
+    loadError.value = null;
+  }
   try {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
+    loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
     const mapped = list.map(toReportViewModel);
 
@@ -293,6 +377,11 @@ const fetchReports = async () => {
 
     if (!mapped.length) {
       setSelectedReport(null);
+      activityLogs.value = [];
+      if (!silent) {
+        logsError.value = null;
+        logsLoading.value = false;
+      }
       return;
     }
 
@@ -300,19 +389,50 @@ const fetchReports = async () => {
     const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
     const shouldFlash = previousId !== nextSelected?.id;
     setSelectedReport(nextSelected, shouldFlash);
+    loadReportLogs(nextSelected, { silent }).catch(() => {});
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
-    loadError.value = error;
-    activeReports.value = [];
-    setSelectedReport(null);
+    if (!silent) {
+      loadError.value = error;
+      activeReports.value = [];
+      setSelectedReport(null);
+      activityLogs.value = [];
+    }
   } finally {
-    isLoading.value = false;
+    if (!silent) {
+      isLoading.value = false;
+    }
+    isFetching = false;
   }
 };
 
-watch(controlTowerNumber, fetchReports);
-onMounted(fetchReports);
-onBeforeUnmount(clearHighlightTimer);
+const startPolling = () => {
+  stopPolling();
+  pollTimer = setInterval(() => {
+    fetchReports({ silent: true }).catch(() => {});
+  }, POLL_INTERVAL_MS);
+};
+
+const stopPolling = () => {
+  if (!pollTimer) return;
+  clearInterval(pollTimer);
+  pollTimer = null;
+};
+
+watch(controlTowerNumber, () => {
+  fetchReports().catch(() => {});
+  startPolling();
+});
+
+onMounted(() => {
+  fetchReports().catch(() => {});
+  startPolling();
+});
+
+onBeforeUnmount(() => {
+  clearHighlightTimer();
+  stopPolling();
+});
 
 const prettyHr = (hr) => {
   const numeric = toFiniteNumber(hr);
@@ -324,6 +444,23 @@ const prettySpo2 = (spo2) => {
   const numeric = toFiniteNumber(spo2);
   if (numeric === null) return '정보 없음';
   return `${numeric}%`;
+};
+
+const formatLogTime = (value) => {
+  if (!value) return '--:--:--';
+  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
+  const parsed = new Date(normalized);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString('ko-KR', { hour12: false });
+  }
+  const [, timePart] = String(value).split(' ');
+  return timePart ?? String(value) ?? '--:--:--';
+};
+
+const formatLogHr = (hr) => {
+  const numeric = toFiniteNumber(hr);
+  if (numeric === null) return '정보 없음';
+  return `${numeric}bpm`;
 };
 
 const markProcessed = (report) => {
@@ -361,6 +498,80 @@ const getAlertColor = (level) => {
     default: return 'text-safety-custom';
   }
 };
+
+/** 현재 선택된 신고에 지도에 찍을 수 있는 좌표가 있는지 여부 */
+const hasValidMapPosition = computed(() => {
+  const r = selectedReport.value;
+  if (!r) return false;
+  return isValidCoordinatePair(r.mapLat, r.mapLon);
+});
+
+/**
+ * 선택된 신고가 바뀌거나 좌표가 바뀔 때마다
+ * 네이버 지도 초기화 또는 위치 업데이트
+ */
+watchEffect(() => {
+  // 좌표 없으면 지도 안 띄움
+  if (!hasValidMapPosition.value) return;
+  // DOM 아직 안 잡혔으면 리턴
+  if (!mapEl.value) return;
+  // 네이버 지도 스크립트 안 올라와 있으면 리턴
+  if (!window.naver?.maps) return;
+
+  const { mapLat, mapLon, level } = selectedReport.value;
+  const pos = new window.naver.maps.LatLng(mapLat, mapLon);
+
+  // 🔵 레벨별 색상 (워치 위치 동그라미 테두리 색)
+  let borderColor = '#7EEC85'; // safety 기본
+  if (level === 'warning') borderColor = '#FFB354';
+  else if (level === 'danger') borderColor = '#EB725B';
+  else if (level === 'emergency') borderColor = '#B93F67';
+
+  // 1) 지도 최초 생성
+  if (!map) {
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 17
+    });
+
+    // DOM에 처음 그려질 때 사이즈 재계산
+    window.naver.maps.Event.trigger(map, 'resize');
+  } else {
+    // 2) 선택된 신고가 바뀌면 중심만 이동
+    map.setCenter(pos);
+  }
+
+  // 3) 워치 위치 마커 생성 또는 위치 업데이트
+  const markerHtml = `
+    <div style="
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 3px solid ${borderColor};
+      background: rgba(0,146,186,0.20);
+      box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+      box-sizing: border-box;
+    "></div>
+  `;
+
+  if (!watchMarker) {
+    watchMarker = new window.naver.maps.Marker({
+      position: pos,
+      map,
+      icon: {
+        content: markerHtml,
+        anchor: new window.naver.maps.Point(11, 11) // 동그라미 중심 기준
+      }
+    });
+  } else {
+    watchMarker.setPosition(pos);
+    // 레벨이 바뀔 수도 있으니 아이콘도 같이 업데이트
+    watchMarker.setIcon({
+      content: markerHtml,
+      anchor: new window.naver.maps.Point(11, 11)
+    });
+  }
+});
 </script>
 
 <style scoped>
