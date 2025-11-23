@@ -40,5 +40,38 @@ const sortOptions = ref([
 
   const cctvName = ref('')
 
-  return { header, beach, tabOptions, sortOptions, regionOptions, controlView, cctvName }
+  const camLabelMap = {
+    1: '이호테우',
+    2: '중문',
+    3: '함덕',
+    4: '월정리',
+    5: '애월 하귀 가문동 포구',
+    6: '김녕리 포구',
+    7: '수마 포구',
+    8: '유튜브 시연용 라이브',
+  }
+
+  const dangerTemplate = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
+  }
+
+  const cctvLocation = [
+    { type: '해수욕장', label: '이호테우', latitude: 33.49794, longitude: 126.453614, direction: 300, fov: 45, range: 300 },
+    { type: '해수욕장', label: '중문', latitude: 33.243882, longitude: 126.41454, direction: 285, fov: 45, range: 300 },
+    { type: '해수욕장', label: '함덕', latitude: 33.54432, longitude: 126.674138, direction: 200, fov: 60, range: 300 },
+    { type: '해수욕장', label: '월정리', latitude: 33.556556, longitude: 126.795072, direction: 70, fov: 45, range: 200 },
+    { type: '항구', label: '애월 하귀 가문동 포구', latitude: 33.486824, longitude: 126.392415, direction: 60, fov: 60, range: 300 },
+    { type: '항구', label: '김녕리 포구', latitude: 33.486824, longitude: 126.392415, direction: 60, fov: 60, range: 300 },
+    { type: '항구', label: '수마 포구', latitude: 33.486824, longitude: 126.392415, direction: 60, fov: 60, range: 300 },
+    { type: '항구', label: '유튜브 시연용 라이브', latitude: 33.486824, longitude: 126.392415, direction: 60, fov: 60, range: 300 }
+  ]
+
+  return { header, beach, tabOptions, sortOptions, regionOptions, controlView, cctvName, camLabelMap, dangerTemplate, cctvLocation }
 })

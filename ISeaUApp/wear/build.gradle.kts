@@ -61,8 +61,11 @@ dependencies {
     // gms - google moblie service
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
 
+    // 위치 서비스 사용 (FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0")
-    // 기존 Compose Dependencies
+    // Compose Dependencies
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
     implementation(libs.ui.graphics)

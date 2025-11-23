@@ -66,16 +66,16 @@
           </button>
         </div>
       </div>
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 38%;">
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="sideMenu" style="max-width: 80%;">
         <div class="offcanvas-header border-3 border-bottom shadow-sm">
           <span class="offcanvas-title fw-bold mt-2" style="font-size: 17px;">메뉴</span>
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body">
-          <a class="d-block mb-3 text-dark text-decoration-none" href="#">해수욕장 목록</a>
-          <a class="d-block mb-3 text-dark text-decoration-none" href="#">위험도 / 예보</a>
-          <a class="d-block mb-3 text-dark text-decoration-none" href="#">즐겨찾기</a>
-          <a class="d-block mb-3 text-dark text-decoration-none" href="#">마이페이지</a>
+        <div class="offcanvas-body" style="font-size: 20px">
+          <div id="font-title1" class="d-block mb-3 text-dark text-decoration-none hambuger" @click="goTo('/beach-list')">해안가 목록</div>
+          <div id="font-title2" class="d-block mb-3 text-dark text-decoration-none hambuger" @click="goToDanger()">나의 해안가 위험정보</div>
+          <div id="font-title3" class="d-block mb-3 text-dark text-decoration-none hambuger" @click="goToFavorites()">해안가 즐겨찾기</div>
+          <div id="font-title4" class="d-block mb-3 text-dark text-decoration-none hambuger" @click="goTo('/my-info')">마이페이지</div>
         </div>
       </div>
     </header>
@@ -137,7 +137,6 @@ import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
 import { useBeachStore } from '@/stores/beachStore'
 import { useGroupStore } from '@/stores/groupStore'
 import { useConfirmModal } from '@/utils/modalUtils'
-
 import { useStore } from '@/stores/store.js';
 import { storeToRefs } from 'pinia'
 const store = useStore();
@@ -194,6 +193,39 @@ const { selectedBeachId } = storeToRefs(beachStore) // 숫자 또는 null
 
 function goToSOS() {
   router.push(`/sos`)
+}
+
+function goToFavorites() {
+  // BeachList 페이지로 가면서 쿼리 파라미터로 tab=favorite 전달
+  router.push({
+    name: 'BeachList',
+    query: { tab: 'favorite' }
+  })
+}
+
+function goToDanger() {
+  const id = Number(selectedBeachId.value || 0); // 0/null ⇒ 미선택
+
+  if (id > 0) {
+    // ✅ 선택된 해수욕장 상세 + danger 탭으로 이동
+    router.push(`/beach/${id}?tab=danger`)
+    // 또는 이름 기반으로 쓰고 싶으면:
+    // router.push({
+    //   name: 'BeachDetail',
+    //   params: { beachNumber: id },
+    //   query: { tab: 'danger' }
+    // })
+  } else {
+    // ✅ 선택된 해수욕장이 없을 때는 안내 후 목록으로
+    showConfirmModal({
+      title: '알림',
+      message: '현재 선택된 해수욕장이 없습니다.\n해수욕장 목록 페이지로 이동합니다.',
+      type: 'info',
+      autoHide: true,
+      duration: 1500
+    })
+    router.push({ name: 'BeachList' })
+  }
 }
 
 function goToSelectedBeach() {
@@ -304,6 +336,7 @@ onMounted(() => {
     }
     next()
   })
+
 })
 </script>
 
@@ -371,5 +404,10 @@ onMounted(() => {
 
 .fast-route {
   animation-duration: .12s !important;
+}
+
+.hambuger {
+  cursor: pointer;
+  font-weight: bold;
 }
 </style>

@@ -23,5 +23,8 @@ public class CctvDangerLogDto {
     private String viewType;
     
     private Integer dangerCount;
-    private LocalDateTime cratedAt;
+    private Integer dangerAdded;
+    private LocalDateTime createdAt;
+    
+    private boolean isRead;
 }

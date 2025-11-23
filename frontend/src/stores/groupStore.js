@@ -1,225 +1,249 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { groupApi } from '@/api/group'; 
+import { groupApi } from '@/api/group';
 import { useConfirmModal } from '@/utils/modalUtils';
-import axios from 'axios'; 
+import axios from 'axios';
+import { getMessaging, onMessage, getToken } from 'firebase/messaging';
+import { useAuthStore } from '@/stores/authStore'; 
 
-// 🚨 API 엔드포인트 URL (groupApi에 정의되지 않았을 경우 대비)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const FCM_TOKEN_SAVE_URL = `${API_BASE_URL}/api/fcm/save-token`;
 const PENDING_URL = `${API_BASE_URL}/api/groups/invitations/pending`;
+const SERVICE_WORKER_URL = '/firebase-messaging-sw.js';
 
 export const useGroupStore = defineStore('group', () => {
-    const { showConfirmModal } = useConfirmModal();
-    // --- State ---
-    const myGroupList = ref([]);
-    const activeGroupId = ref(null);
-    const activeGroupLocations = ref([]);
-    const receivedInvitation = ref(null); // 초대 모달 데이터
+  const { showConfirmModal } = useConfirmModal();
+  const authStore = useAuthStore();
 
-    // --- Actions ---
+  // --- State ---
+  const myGroupList = ref([]);
+  const activeGroupId = ref(null);
+  const activeGroupLocations = ref([]);
+  const receivedInvitation = ref(null);
 
-    /**
-     * 그룹 목록을 API로부터 가져와 업데이트합니다.
-     */
-    const fetchGroups = async () => {
-        try {
-            const response = await groupApi.fetchGroupList();
-            
-            // 🚨 [핵심 수정]
-            // useApi.js가 반환하는 response.data가 { result: [...] } 입니다.
-            // response.data.data.result (X) -> response.data.result (O)
-            myGroupList.value = response.data.result;
+  // --- Actions ---
 
-            // 초기 활성 그룹 설정
-            if (!activeGroupId.value && myGroupList.value.length > 0) {
-                activeGroupId.value = myGroupList.value[0].id;
-            }
-        } catch (error) {
-            console.error('그룹 목록 조회 실패:', error);
-            if (error.response && error.response.status === 401) {
-                console.log('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
-                // (필요시) router.push('/login');
-            }
-        }
-    };
+  const fetchGroups = async () => {
+    try {
+      const response = await groupApi.fetchGroupList();
+      myGroupList.value = response.data.result || [];
 
-    /**
-     * 특정 그룹을 활성화합니다.
-     */
-    const setActiveGroup = (groupId) => {
-        activeGroupId.value = groupId;
+      if (!activeGroupId.value && myGroupList.value.length > 0) {
+        activeGroupId.value = myGroupList.value[0].id;
+      } else if (myGroupList.value.length === 0) {
+        activeGroupId.value = null;
+      }
+    } catch (error) {
+      console.error('그룹 목록 조회 실패:', error);
+    }
+  };
+
+  const setActiveGroup = (groupId) => {
+    activeGroupId.value = groupId;
+  };
+
+  const fetchLocations = async () => {
+    if (!activeGroupId.value) return;
+    try {
+      const response = await groupApi.fetchGroupLocations({ groupId: activeGroupId.value });
+      activeGroupLocations.value = response.data.result || [];
+    } catch (error) {
+      console.error('그룹 위치 정보 조회 실패:', error);
+      activeGroupLocations.value = [];
+    }
+  };
+
+  const closeModal = () => {
+    receivedInvitation.value = null;
+  };
+
+  /** 초대장 데이터 설정 (매핑 강화) */
+  const setInvitation = async (data) => { // async 추가
+    console.group('📦 [Store] setInvitation 실행 (데이터 수신)');
+    console.log('수신 데이터:', data);
+
+    if (!data) {
+        console.warn('❌ 데이터가 비어있습니다.');
+        console.groupEnd();
+        return;
     }
 
-    /**
-     * 활성화된 그룹의 멤버 위치 정보를 가져옵니다.
-     */
-    const fetchLocations = async () => {
-        if (!activeGroupId.value) return;
+    // 1. ID 추출 (소문자/대문자/카멜케이스 모두 확인)
+    const rawId = data.id || data.invitationId || data.ID || data.invitationid;
 
-        try {
-            const response = await groupApi.fetchGroupLocations({ groupId: activeGroupId.value });
-            
-            // 🚨 [핵심 수정]
-            // useApi.js가 반환하는 response.data가 { result: [...] } 입니다.
-            // response.data.data.result (X) -> response.data.result (O)
-            activeGroupLocations.value = response.data.result;
+    // 🚨 [안전장치] ID가 없거나 '0'이면 API를 찔러서 진짜 데이터를 가져옵니다.
+    // (백엔드에서 ID를 못 찾아서 0을 보냈거나, 데이터가 유실된 경우 대비)
+    if (!rawId || String(rawId) === '0') {
+        console.warn('⚠️ 초대장 ID가 0이거나 없습니다. 서버에서 최신 목록을 다시 가져옵니다...');
+        console.groupEnd();
+        await checkPendingInvitations(); 
+        return;
+    }
 
-        } catch (error) {
-            console.error('그룹 위치 정보 조회 실패:', error);
-            activeGroupLocations.value = [];
-        }
+    // 2. 나머지 데이터 매핑 (소문자 키 포함)
+    const name = data.inviterName || data.inviter_name || data.invitername || '알 수 없음';
+    const phone = data.inviterPhone || data.inviter_phone || data.inviterphone || '';
+    
+    let gId = data.groupId || data.group_id || data.groupNumber || data.groupnumber;
+    if (gId) gId = Number(gId);
+
+    // 3. 상태 업데이트
+    receivedInvitation.value = {
+        id: rawId,
+        inviterName: name,
+        inviterPhone: phone,
+        groupId: gId
     };
     
-    // --- 🚨 [추가된 로직] 초대 모달 관련 ---
+    console.log('✅ 최종 매핑 결과:', receivedInvitation.value);
+    console.groupEnd();
+  };
 
-    /**
-     * [추가] 모달 닫기 (공통 로직)
-     */
-    const closeModal = () => {
-        receivedInvitation.value = null;
-    };
+  const checkPendingInvitations = async () => {
+    try {
+      const response = await axios.get(PENDING_URL, { withCredentials: true });
+      const responseData = response.data.data || response.data;
+      const invitationList = responseData.invitations || responseData.result || [];
 
-    /**
-     * 1. [핵심] 앱 시작 시, 로그인한 사용자의 대기 중인 초대를 확인합니다.
-     */
-    const checkPendingInvitations = async () => {
-        // 이미 모달이 떠 있거나 초대장 데이터가 있으면 중복 실행 방지
-        if (receivedInvitation.value) return;
+      if (invitationList.length > 0) {
+        console.log("API 조회: 대기 중 초대 발견:", invitationList[0]);
+        // API 데이터도 setInvitation을 통해 안전하게 매핑
+        setInvitation(invitationList[0]);
+      }
+    } catch (error) {
+      console.error("대기 중 초대 확인 실패:", error);
+    }
+  };
 
-        try {
-            // 🚨 'axios'를 직접 사용했으므로 response.data.data 형태를 가정합니다.
-            const response = await axios.get(PENDING_URL, { withCredentials: true });
-            
-            // 💡 [수정] axios 응답에서 최상위 data 필드의 result 또는 invitations를 확인
-            // 서버 응답 형태가 { data: { success: true, result: [...] } } 또는 
-            // { data: { success: true, invitations: [...] } } 일 수 있습니다.
-            // 서버가 보내는 실제 리스트 필드 이름(invitations)으로 가정하고 수정
-            const responseData = response.data.data || response.data; // 컨트롤러 래핑을 대비하여 데이터 경로를 유동적으로 설정
-            const invitationList = responseData.invitations || responseData.result || []; // 초대 리스트 필드 확인
+  const setupFCMListener = () => {
+    console.log('[FCM] Listener setup started.');
+    const messaging = getMessaging();
 
-            // 1. 대기 중인 초대가 있는지 확인 (리스트의 길이 확인)
-            if (invitationList.length > 0) {
-                console.log("대기 중인 초대 발견:", invitationList[0]);
-                // 2. 첫 번째 초대장을 스토어 상태에 저장 (이 순간 App.vue의 모달이 뜸)
-                receivedInvitation.value = invitationList[0];
-            } else {
-                console.log("대기 중인 초대 없음.");
-                receivedInvitation.value = null;
-            }
-        } catch (error) {
-            console.error("대기 중인 초대 확인 실패:", error);
-            receivedInvitation.value = null;
-        }
-    };
+    return onMessage(messaging, (payload) => {
+      console.log('🚨 [Foreground] FCM Message:', payload);
+      if (payload.data && payload.data.type === 'GROUP_INVITE_PENDING') {
+        setInvitation(payload.data);
+      }
+    });
+  };
 
-    /**
-     * 초대 수락 (초대 모달에서 호출)
-     */
-    const acceptInvitation = async (invitation) => {
-        if (!invitation) {
-            console.log("[수락] invitation 객체가 null입니다.");
-            return; 
-        }
+  const initFCM = async () => {
+      const currentUserNumber = authStore.userInfo?.userNumber;
 
-        const groupId = invitation.id; // 💡 [수정] invitation.invitationId 대신 invitation.id 사용
-        console.log(`[수락 시작] invitationId: ${groupId} 수락 API 호출 시도...`); 
+      if (!currentUserNumber) {
+          console.warn('🚫 [FCM] 로그인 정보 없음(authStore). 토큰 발급 대기.');
+          return;
+      }
 
-        try {
-            // 1. API 호출 (useApi.js가 응답 본문 { data: {...} }를 반환)
-            const response = await groupApi.acceptLocationSharing({ invitationId: groupId });
-            
-            // 🚨 [수정 완료] 
-            // response.data.data.success (X) -> response.data.success (O)
-            if (response.data && response.data.success === true) {
-                
-                // --- 2. [진짜 성공] ---
-                console.log("[수락 성공] API 응답 받음:", response.data); 
-                showConfirmModal({ title: '초대 수락', message: `${invitation.inviterName} 님의 그룹 초대를 수락했습니다.`, type: 'success', autoHide: true });
-                closeModal(); 
-                
-                // 3. 그룹 목록 새로고침 (중앙 관리소의 핵심 기능)
-                console.log("[수락 성공] 그룹 목록 새로고침(fetchGroups)을 호출합니다."); 
-                fetchGroups(); 
+      try {
+          const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL);
+          console.log('[FCM INIT] Service Worker registered.');
 
-            } else {
-                
-                // --- 4. [조용한 실패] ---
-                console.error("🚨 [수락 실패] 서버가 success: false를 반환했습니다.", response.data);
-                const failMessage = response.data?.message || '초대 수락에 실패했습니다.';
-                showConfirmModal({ title: '오류', message: failMessage, type: 'error' });
-                closeModal();
-            }
+          const messaging = getMessaging();
+          
+          // VAPID Key
+          const currentToken = await getToken(messaging, { 
+              vapidKey: "BOrTN03wDt5R3KnzYIclpfQrQJKKyqMM_OkQLLjaHwvLN8H0jEjjDooo4KFH-bj8HCCta_43a4xuOllOZ-aoTRw",
+              serviceWorkerRegistration: registration 
+          });
 
-        } catch (error) {
-            // --- 5. [진짜 실패] (서버가 4xx, 5xx 에러 반환) ---
-            console.error("🚨 [수락 실패] CATCH 블록 실행됨:", error); 
-            showConfirmModal({ title: '오류', message: '초대 수락 중 서버 오류가 발생했습니다.', type: 'error' });
-            closeModal(); 
-        }
-    };
+          if (currentToken) {
+              console.log(`[FCM] Token obtained for User ${currentUserNumber}`);
+              
+              await axios.post(FCM_TOKEN_SAVE_URL, { 
+                  userId: String(currentUserNumber), 
+                  token: currentToken
+              }, { withCredentials: true });
 
-    /**
-     * 초대 거절 (초대 모달에서 호출)
-     */
-    const rejectInvitation = async (invitation) => {
-        if (!invitation) {
-            console.log("[거절] invitation 객체가 null입니다.");
-            return; 
-        }
+              console.log('[FCM] 토큰 서버 저장 완료');
+          } else {
+              console.warn('[FCM] No registration token available.');
+          }
+          
+          setupFCMListener();
+      } catch (error) {
+          console.error('🚨 [FCM INIT FATAL] Failed:', error);
+      }
+  };
 
-        const groupId = invitation.id; // 💡 [수정] invitation.invitationId 대신 invitation.id 사용
-        console.log(`[거절 시작] invitationId: ${groupId} 거절 API 호출 시도...`); 
+  const acceptInvitation = async (invitation) => {
+    const target = invitation || receivedInvitation.value;
+    const payload = target.id ? { invitationId: target.id } : { groupId: target.groupId };
 
-        try {
-            // 1. API 호출
-            const response = await groupApi.rejectLocationSharing({ invitationId: groupId });
-            
-            // 🚨 [수정 완료] 
-            // response.data.data.success (X) -> response.data.success (O)
-            if (response.data && response.data.success === true) {
+    console.log(`[수락 시작]`, payload);
 
-                // --- 2. [진짜 성공] ---
-                console.log("[거절 성공] API 응답 받음:", response.data);
-                showConfirmModal({ title: '초대 거절', message: `${invitation.inviterName} 님의 그룹 초대를 거절했습니다.`, type: 'info', autoHide: true });
-                closeModal(); 
+    try {
+      // 백엔드 경로: /location/accept
+      const response = await axios.post(`${API_BASE_URL}/api/groups/location/accept`, payload, { withCredentials: true });
 
-            } else {
-                
-                // --- 3. [조용한 실패] ---
-                console.error("🚨 [거절 실패] 서버가 success: false를 반환했습니다.", response.data);
-                const failMessage = response.data?.message || '초대 거절에 실패했습니다.';
-                showConfirmModal({ title: '오류', message: failMessage, type: 'error' });
-                closeModal();
-            }
+      if (response.data?.success || response.data?.data?.success) {
+        console.log("[수락 성공]");
+        showConfirmModal({
+          title: '초대 수락',
+          message: `${target.inviterName} 님의 초대를 수락했습니다.`,
+          type: 'success',
+          autoHide: true,
+        });
+        closeModal();
+        await fetchGroups(); 
+      } else {
+        throw new Error(response.data?.message || '실패');
+      }
+    } catch (error) {
+      console.error("수락 실패:", error);
+      showConfirmModal({ title: '오류', message: '초대 수락에 실패했습니다.', type: 'error' });
+      closeModal();
+    }
+  };
 
-        } catch (error) {
-            // --- 4. [진짜 실패] ---
-            console.error("🚨 [거절 실패] CATCH 블록 실행됨:", error);
-            showConfirmModal({ title: '오류', message: '초대 거절 중 서버 오류가 발생했습니다.', type: 'error' });
-            closeModal(); 
-        }
-    };
-    // --- 🚨 [추가된 로직] 끝 ---
+  const rejectInvitation = async (invitation) => {
+    const target = invitation || receivedInvitation.value;
+    const payload = target.id ? { invitationId: target.id } : { groupId: target.groupId };
 
-    // --- Getters ---
-    const getActiveGroupLocations = computed(() => activeGroupLocations.value);
-    const getActiveGroupId = computed(() => activeGroupId.value);
-    const getMyGroupList = computed(() => myGroupList.value);
+    console.log(`[거절 시작]`, payload);
 
-    return {
-        myGroupList,
-        activeGroupId,
-        activeGroupLocations,
-        receivedInvitation,
-        fetchGroups,
-        setActiveGroup,
-        fetchLocations,
-        acceptInvitation,
-        rejectInvitation,
-        checkPendingInvitations, 
-        closeModal, 
-        getActiveGroupLocations,
-        getActiveGroupId,
-        getMyGroupList,
-    };
+    try {
+      // 백엔드 경로: /location/reject
+      const response = await axios.post(`${API_BASE_URL}/api/groups/location/reject`, payload, { withCredentials: true });
+
+      if (response.data?.success || response.data?.data?.success) {
+        console.log("[거절 성공]");
+        showConfirmModal({
+          title: '초대 거절',
+          message: '초대를 거절했습니다.',
+          type: 'info',
+          autoHide: true,
+        });
+        closeModal();
+      } else {
+        throw new Error(response.data?.message || '실패');
+      }
+    } catch (error) {
+      console.error("거절 실패:", error);
+      showConfirmModal({ title: '오류', message: '초대 거절 처리에 실패했습니다.', type: 'error' });
+      closeModal();
+    }
+  };
+
+  return {
+    myGroupList,
+    activeGroupId,
+    activeGroupLocations,
+    receivedInvitation,
+
+    fetchGroups,
+    setActiveGroup,
+    fetchLocations,
+    acceptInvitation,
+    rejectInvitation,
+    checkPendingInvitations,
+    setupFCMListener,
+    initFCM,
+    setInvitation,
+    closeModal,
+
+    getActiveGroupLocations: computed(() => activeGroupLocations.value),
+    getActiveGroupId: computed(() => activeGroupId.value),
+    getMyGroupList: computed(() => myGroupList.value),
+  };
 });

@@ -26,11 +26,11 @@ from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위�
 OUT_W = 1024  # FFmpeg의 출력 프레임 너비 (픽셀). 분석 성능과 화질의 균형을 맞춥니다.
 OUT_H = 768   # FFmpeg의 출력 프레임 높이 (픽셀).
 YOLO_MODEL_PATH = "beach_yolo.pt" # Docker 컨테이너 내부의 YOLO 모델 파일 경로/이름.
-YOLO_CONF_THRESHOLD = 0.44   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
+YOLO_CONF_THRESHOLD = 0.50   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
 DET_EVERY_FRAMES = 1 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
 FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 프레임의 총 바이트 크기.
 
-MIN_STABLE_FRAMES = 4      # 몇 프레임 평균을 보고 "진짜 증가"라고 인정할지
+MIN_STABLE_FRAMES = 6      # 몇 프레임 평균을 보고 "진짜 증가"라고 인정할지
 LOG_COOLDOWN_SEC = 3       # 같은 CAM에서 로그 연속 전송 최소 간격(초)
 SPRING_BASE_URL = "http://host.docker.internal:8080"  # ★여기 스프링 서버 주소 맞게 수정하기
 
@@ -53,6 +53,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM1": 
     {
         "label": "이호테우",
+        "beachNumber": 6,
         "url": "http://211.114.96.121:1935/jejusi7/11-30T.stream/playlist.m3u8",
         "roi_px": [(0, 768), (1024, 400), (1024, 768), (0, 768)],       # yolo, gmm 관심 영역 설정 // 전체 해상도 변경 시 이것도 변경해야 함                    # ✳✳ CAM(스트림)별 해안선 설정 ✳✳
         "safe_zone_px": [(0, 550), (1024, 550), (1024, 768), (0, 768),],                       
@@ -60,6 +61,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM2": 
     {
         "label": "중문",
+        "beachNumber": 2,
         "url": "http://59.8.86.94:8080/media/api/v1/hls/vurix/192871/100010/0/1/1.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(350, 0), (350, 768), (1024, 768), (1024, 0),],                           
@@ -67,6 +69,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM3": 
     {
         "label": "함덕",
+        "beachNumber": 3,
         "url": "http://211.114.96.121:1935/jejusi6/11-19.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(0, 510), (1024, 350), (1024, 768), (0, 768),],                       
@@ -74,6 +77,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM4": 
     {
         "label": "월정리",
+        "beachNumber": 4,
         "url": "http://211.114.96.121:1935/jejusi7/11-21.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],     
         "safe_zone_px": [(0, 290), (1024, 220), (1024, 768), (0, 768),],                         
@@ -81,6 +85,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM5": 
     {
         "label": "애월 하귀 가문동 포구",
+        "beachNumber": 59,
         "url": "http://211.114.96.121:1935/jejusi6/11-15.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],      
         "safe_zone_px": [(600, 768), (500, 200), (600, 190), (1024, 700),],                        
@@ -88,6 +93,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM6": 
     {
         "label": "김녕리 포구",
+        "beachNumber": 60,
         "url": "http://211.114.96.121:1935/jejusi6/11-20.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
         "safe_zone_px": [(100, 0), (1024, 600), (1024, 768), (0, 768),],                    
@@ -95,6 +101,7 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM7": 
     {
         "label": "수마 포구",
+        "beachNumber": 61,
         "url": "http://211.34.191.215:1935/live/1-76.stream/playlist.m3u8",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],           
         "safe_zone_px": [(350, 768), (1024, 450), (1024, 768), (0, 768),],                   
@@ -102,9 +109,10 @@ CAMERA_CONFIG: Dict[str, Dict[str, Any]] = {
     "CAM8": 
     {
         "label": "시연용 유튜브 라이브",
+        "beachNumber": 62,
         "url": "/server/test/KakaoTalk_20251118_184824700.mp4",
         "roi_px": [(0, 200), (1024, 200), (1024, 768), (0, 768)],       
-        "safe_zone_px": [(0, 290), (1024, 400), (1024, 768), (1024, 767),],                        
+        "safe_zone_px": [(900, 0), (900, 768), (1024, 0), (1024, 768),],                        
     },
 
 }
@@ -180,6 +188,10 @@ class AIStreamServer:
         }
         self.last_log_time: Dict[str, float] = {
             cam_id: 0.0 for cam_id in CAMERA_CONFIG.keys()
+        }
+        # ⭐ 프레임 단위 "직전 danger 값" 저장용 (WebSocket delta 계산)
+        self.prev_raw_danger: Dict[str, int] = {
+            cam_id: 0 for cam_id in CAMERA_CONFIG.keys()
         }
 
     async def initialize(self): # 기본 정보 세팅
@@ -273,9 +285,11 @@ class AIStreamServer:
                     cam_number = 0
 
                 if cam_number > 0:
+                    added = stable_val - prev
                     payload = {
                         "camNumber": cam_number,
                         "dangerCount": stable_val,
+                        "dangerAdded": added         # 이번에 추가로 들어온 인원
                         # beachNumber는 DB에서 camNumber로 찾게 설계했으니까 안 보내도 됨
                     }
                     asyncio.create_task(self.send_danger_log(payload))
@@ -292,33 +306,29 @@ class AIStreamServer:
         is_network = stream_url.startswith(("http://", "https://", "rtmp://"))
 
         if is_network:
+        # 👇 스트림별로 필터 다르게
+            if stream_id in ("CAM1", "CAM2"):
+                vf_filter = f"scale={OUT_W}:{OUT_H},fps=12"
+            else:
+                vf_filter = f"scale={OUT_W}:{OUT_H}"
+
             command = (
                 'ffmpeg -hide_banner -loglevel error '
-                # 입력/분석 버퍼 최소화(+ 저지연 플래그)
-                '-fflags nobuffer -flags low_delay -avioflags direct '
-                '-analyzeduration 0 -probesize 32 -fpsprobesize 0 '
-                # 깨진 프레임은 즉시 버림 + 타임스탬프 안정화
-                '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 '
-                '-http_persistent 1 '
-                '-fflags +discardcorrupt '
-                '-use_wallclock_as_timestamps 1 -an '
                 f'-i "{stream_url}" '
-                # 가장 빠른 스케일러 + FPS 재생성 금지(내부 버퍼링 방지)
-                f'-map 0:v:0 -vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" -vsync passthrough '
-                # 파이프로 즉시 밀어내기 (OpenCV가 바로 쓰는 포맷)
+                f'-vf "{vf_filter}" '
+                '-an '
                 '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
             )
         else:
             command = (
-            'ffmpeg -hide_banner -loglevel error '
-            '-re '  # 실시간 속도로 처리 (너무 빨리 안 넘어가게)
-            # '-stream_loop -1 '  # 🔁 무한반복하려면 이 줄 주석 해제
-            f'-i "{stream_url}" '
-            f'-vf "scale={OUT_W}:{OUT_H}:flags=fast_bilinear,fps=10" '
-            '-vsync passthrough '
-            '-an '
-            '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
-        )
+                'ffmpeg -hide_banner -loglevel error '
+                '-re '
+                f'-i "{stream_url}" '
+                f'-vf "scale={OUT_W}:{OUT_H},fps=12" '
+                '-vsync passthrough '
+                '-an '
+                '-f image2pipe -pix_fmt bgr24 -vcodec rawvideo -'
+            )
         
         process = None
         try:
@@ -461,10 +471,43 @@ class AIStreamServer:
                             # gpt) YOLO가 못 잡았지만 GMM에서 움직임으로 포착된 영역 → 노란색 박스로 보완 표시
                             cv2.rectangle(vis, (x, y), (x + w, y + h), (0, 255, 255), 2)
                             people_count += 1  # gpt) 보완 탐지 인원도 people_count에 반영
+                # -----------------------------------------------------------------------
+                # 3-5. 디버그용 현재 시간 + 프레임 카운터 오버레이
+                # -----------------------------------------------------------------------
+                now_str = time.strftime("%H:%M:%S", time.localtime())
+                counter = self.frame_counters.get(stream_id, 0)
+
+                cv2.putText(
+                    vis,
+                    f"{stream_id} #{counter}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (255, 255, 255),
+                    2,
+                    cv2.LINE_AA,
+                )
+
+                cv2.putText(
+                    vis,
+                    now_str,
+                    (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (255, 255, 0),
+                    2,
+                    cv2.LINE_AA,
+                )
                 
                 # -----------------------------------------------------------------------
                 # 3-6. 인코딩 및 전송
                 # -----------------------------------------------------------------------
+
+                # 🔹 프레임 기준 "새로 추가된 위험 인원" 계산
+                prev_raw = self.prev_raw_danger.get(stream_id, 0)
+                # 이번 프레임에서 위험구역 인원이 늘어난 만큼만 계산 (줄어든 건 0 처리)
+                added_danger = max(danger_people_count - prev_raw, 0)
+                self.prev_raw_danger[stream_id] = danger_people_count
                 
                 ok, buf = cv2.imencode(".jpg", vis, [cv2.IMWRITE_JPEG_QUALITY, 60])  # JPEG 품질
                 if not ok: continue
@@ -476,7 +519,8 @@ class AIStreamServer:
                     "timestamp": int(time.time() * 1000), 
                     "people": people_count, 
                     "motion": motion_count, 
-                    "danger":danger_people_count
+                    "danger":danger_people_count,
+                    "dangerAdded": added_danger
                 }
                 try:
                     await asyncio.wait_for(websocket.send_bytes(jpg_chunk), timeout=SEND_TIMEOUT)           # 1) JPEG 프레임

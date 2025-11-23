@@ -16,6 +16,11 @@ public class ControlTowerService {
     private final ControlTowerDAO dao;
     private final int DEFAULT_MANAGER_NUMBER = 1; // 임시 매니저 번호
 
+    // ============ 관제센터의 처리 리스트(지서) ============
+    public List<TaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
+        return dao.getTaskListByControlTowerNumber(controlTowerNumber);
+    }
+
     // ============ 매니저 기본정보 조회 ============
     public Map<String, Object> selectManagerInfoByManagerNumber(int managerNumber) {
     	Map<String, Object> map = new HashMap<String, Object>();
@@ -55,18 +60,19 @@ public class ControlTowerService {
     }
     // ============ 워치 데이터 처리 및 Task 생성 ============
     @Transactional // 두 개 이상의 DAO 호출이 있어 트랜잭션 처리
-    public void processHeartRateData(HeartRateRequest request) {
+    public void insertWatchEvent(HeartRateRequest request) {
 
         // 1. DB 저장 (tb_watch에 Upsert)
-        int updatedWatch = dao.insertWatchEvent(request);
+        int inserted = dao.insertWatchEvent(request);
 
         System.out.println("✅ Watch Event DB 저장 완료. userNumber: " + request.getUserNumber() + ", HR: " + request.getHeartRate());
 
-        // 2. 긴급 알림 처리 (Task 생성)
+        /*2. 긴급 알림 처리 (Task 생성)
         if (Boolean.TRUE.equals(request.getIsEmergency())) {
             // TODO: handleEmergencyAlert (FCM 발송 및 Task 생성) 로직 필요
             handleEmergencyAlert(request.getUserNumber());
         }
+        */
     }
 
     // 긴급 상황 처리 (Task 생성) - 분리된 비즈니스 로직

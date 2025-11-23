@@ -44,4 +44,17 @@ public class CctvController {
                .body(Map.of("result", result));
    }
    
+   // =========================
+   // 로그리스트 가져오기
+   // Endpoint: POST /api/cctv/logList 
+   // =========================
+   @PostMapping("/readLog")
+   public ResponseEntity<?> readDangerLog(@RequestParam("logNumber") int logNumber) {
+	   log.info("📥 /api/cctv/readLog 요청 수신: {}");
+	   Map<String, Object> result = service.updateDangerLog(logNumber);
+	   return ResponseEntity
+			   .ok()
+			   .body(Map.of("result", result));
+   }
+   
 }
