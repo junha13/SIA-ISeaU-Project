@@ -53,13 +53,13 @@
         <div class="card p-0 border-0 shadow-sm flex-grow-1 h-300px" style="flex-grow: 2;">
           <!-- 탭 바 (카드 헤더처럼) -->
           <div
-            class="tab-segment-group w-100 rounded-1 h-30px"
+            class="tab-segment-group w-100 rounded-1 h-30px" style="z-index: 1;"
           >
           <button
             v-for="tab in rightTabs"
             :key="tab.key"
             type="button"
-            class="tab-segment flex-fill"
+            class="tab-segment flex-fill h-100"
             :class="{ active: rightPanelTab === tab.key }"
             @click="rightPanelTab = tab.key"
           >
@@ -68,7 +68,7 @@
           </div>
 
   <!-- 카드 본문 영역 -->
-<div class="p-3 h-300px" style="overflow-y: auto;">
+<div class="p-3 " style="overflow-y: auto;">
   <!-- 진입 알림 탭 -->
   <div
     v-if="rightPanelTab === 'overview'"
@@ -141,19 +141,21 @@
   <!-- 기상 정보 탭 -->
   <div
     v-else-if="rightPanelTab === 'detail'"
-    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    class="map-placeholder-base border rounded d-flex flex-column"
     style="background-color: #F0F2F5;"
   >
+  <div class="flex-grow-1">
     <WeatherPanel :beach-number="beachNumber" />
+  </div>
   </div>
 
   <!-- CCTV 정보 탭 -->
   <div
     v-else-if="rightPanelTab === 'cctv'"
-    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    class="map-placeholder-base border rounded d-flex flex-column"
     style="background-color: #F0F2F5;"
   >
-    <div class="flex-grow-1 h-100">
+    <div class="flex-grow-1">
       <div
         ref="beachMap"
         class="naver-map-box"
@@ -728,9 +730,68 @@ watch(
           })
           markers.push(marker)
         })
+        focusSelectedCctvOnMap()
     })
+    
   },
 )
+const focusSelectedCctvOnMap = () => {
+  // CCTV 탭 아닐 땐 아무 것도 안 함
+  if (rightPanelTab.value !== 'cctv') return
+  if (!map || !window.naver?.maps) return
+  if (!cctvName.value) return
+
+  const currentType =
+    controlView.value === '해수욕장' ? '해수욕장' : '항구'
+
+  const target = cctvLocation.find(
+    (loc) => loc.type === currentType && loc.label === cctvName.value,
+  )
+
+  if (!target) return
+
+  const { latitude: lat, longitude: lng, direction, fov, range } = target
+
+  const center = new window.naver.maps.LatLng(lat, lng)
+
+  // 🔍 선택된 CCTV 위치로 포커스
+  map.setCenter(center)
+  map.setZoom(18)
+
+  // 이전 FOV 폴리곤 제거
+  if (fovPolygon) {
+    fovPolygon.setMap(null)
+    fovPolygon = null
+  }
+
+  // 🔺 FOV(시야) 쐐기 폴리곤 다시 그리기
+  const toRad = (deg) => (deg * Math.PI) / 180
+  const dist = range / 111000 // m → 위도/경도 대략 환산
+
+  const makePoint = (baseLat, baseLng, angleDeg) => {
+    const rad = toRad(angleDeg)
+    const dLat = Math.cos(rad) * dist
+    const dLng = Math.sin(rad) * dist
+    return new window.naver.maps.LatLng(baseLat + dLat, baseLng + dLng)
+  }
+
+  const startAngle = direction - fov / 2
+  const endAngle = direction + fov / 2
+
+  const p1 = makePoint(lat, lng, startAngle)
+  const p2 = makePoint(lat, lng, endAngle)
+  const path = [center, p1, p2, center]
+
+  fovPolygon = new window.naver.maps.Polygon({
+    map,
+    paths: path,
+    fillColor: 'rgba(51, 51, 51, 1)',
+    fillOpacity: 0.18,
+    strokeColor: '#4f4f4f',
+    strokeOpacity: 0.9,
+    strokeWeight: 1,
+  })
+}
 
 watch(
   [() => cctvName.value, () => controlView.value, () => rightPanelTab.value],

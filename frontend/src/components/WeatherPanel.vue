@@ -1,5 +1,5 @@
 <template>
-  <div v-if="weatherData && weatherData.length > 0" class="p-3">
+  <div v-if="weatherData && weatherData.length > 0" class="">
     <!-- 🔹 기상 정보 내부 탭 -->
     <div class="tab-segment-group mb-3">
       <button
@@ -29,22 +29,50 @@
       <small class="text-muted">위험 정보를 불러오는 중...</small>
     </div>
 
-    <div v-else class="row text-center small">
-      <div class="col">
-        <small>예측 시각</small>
-        <div class="fw-bold">{{ latestDanger.forecastTime ?? '--' }}</div>
+    <!-- 🔹 숫자 + 차트 모두 v-else 안에 -->
+    <div v-else>
+      <!-- 1) 위쪽 숫자 영역 -->
+      <div class="row text-center small mb-3">
+        <div class="col">
+          <small>유의 파고</small>
+          <div class="fw-bold">
+            {{ latestDanger.waveHeight ?? '--' }} m
+          </div>
+        </div>
+        <div class="col">
+          <small>수온</small>
+          <div class="fw-bold">
+            {{ latestDanger.seaSurfaceTemperature ?? '--' }} ℃
+          </div>
+        </div>
       </div>
-      <div class="col">
-        <small>유의 파고</small>
-        <div class="fw-bold">{{ latestDanger.waveHeight ?? '--' }} m</div>
+
+      <hr class="my-2" />
+
+      <!-- 2) 여기부터가 “위험 정보 밑 차트” 부분 -->
+      <h6 class="fw-bold mb-2">시간별 유의 파고</h6>
+      <div class="border rounded p-2">
+        <VChart
+          class="chart"
+          :option="waveChartOption"
+          style="width: 100%; height: 220px"
+          autoresize
+        />
       </div>
-      <div class="col">
-        <small>수온</small>
-        <div class="fw-bold">{{ latestDanger.seaSurfaceTemperature ?? '--' }} ℃</div>
+      <h6 class="fw-bold mt-3 mb-2">시간별 수온</h6>
+      <div class="border rounded p-2">
+        <VChart
+          class="chart"
+          :option="seaSurfaceTemperatureChartOption"
+          style="width: 100%; height: 220px"
+          autoresize
+        />
       </div>
+
     </div>
   </div>
 </div>
+
 
 
     <!-- ================== ② 실시간 날씨 탭 ================== -->
@@ -155,8 +183,39 @@
 
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import axios from 'axios'
+import VChart from 'vue-echarts'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart } from 'echarts/charts'
+import { TooltipComponent, GridComponent } from 'echarts/components'
+import * as echarts from 'echarts/core'
+
+echarts.use([CanvasRenderer, LineChart, TooltipComponent, GridComponent])
+
+// 🔹 예측 시각 포맷 함수 (IMPORT 바로 아래에 위치)
+function formatForecastDateTime(str) {
+  if (!str) return '--'
+  try {
+    const d = new Date(String(str).replace(' ', 'T'))
+    if (isNaN(d)) return String(str)
+
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+
+    return `${y}-${m}-${day} ${hh}:${mm}`
+  } catch (e) {
+    return String(str)
+  }
+}
+
+const refreshTimer = ref(null)
+const REFRESH_MS = 5 * 60 * 1000   // 5분마다 갱신 (원하면 60000 = 1분으로 바꿔도 됨)
+
+
 
 
 // 🔹 관제 화면에서 넘겨주는 해수욕장 번호
@@ -171,13 +230,43 @@ const props = defineProps({
 const innerTab = ref('risk')     // 기본은 '위험 정보' 탭
 
 const weatherData = ref(null)    // 시간별/일별 날씨 리스트
-const dangerData  = ref([])    // 파고·이안류·수온 등 위험 정보
+const dangerData  = ref([])      // 파고·수온 등 위험 정보
 
-// ================== API 호출 함수 ==================
+// ================== 위험 정보 관련 computed ==================
+// ✅ 네가 기존에 쓰던 latestDanger 여기서 교체 + 추가
+
+// 🔹 최신 위험 정보 (지금 이후 시각 우선)
 const latestDanger = computed(() => {
-  if (!Array.isArray(dangerData.value) || dangerData.value.length === 0) return null
-  return dangerData.value[0]   // 필요하면 정렬해서 제일 최신 걸로 바꿀 수도 있음
+  const list = dangerData.value
+  if (!Array.isArray(list) || list.length === 0) return null
+
+  const sorted = list
+    .filter(item => item && item.forecastTime)
+    .slice()
+    .sort((a, b) => new Date(a.forecastTime) - new Date(b.forecastTime))
+
+  if (sorted.length === 0) return null
+
+  const now = new Date()
+  const future = sorted.find(item => new Date(item.forecastTime) >= now)
+
+  return future || sorted[sorted.length - 1]
 })
+
+// 🔹 현재 파고 / 수온 (카드 텍스트 + 차트에서 사용)
+const currentWaveHeight = computed(() => {
+  const d = latestDanger.value
+  return d && typeof d.waveHeight === 'number' ? d.waveHeight : null
+})
+
+const currentTemp = computed(() => {
+  const d = latestDanger.value
+  return d && typeof d.seaSurfaceTemperature === 'number'
+    ? d.seaSurfaceTemperature
+    : null
+})
+
+// ================== 날씨 관련 ==================
 const dayNames = ['일', '월', '화', '수', '목', '금', '토']
 
 const toggleDays = computed(() => {
@@ -194,32 +283,30 @@ const toggleDays = computed(() => {
     )
   ).sort()
 
-  // 앞에서 3개만 사용 (오늘+내일+모레 느낌)
-  return uniqueDates.slice(0, 3).map((dateStr, idx) => {
+  // 앞에서 2개만 사용 (내일, 모레)
+  return uniqueDates.slice(0, 2).map((dateStr, idx) => {
     const d = new Date(dateStr)
     const dow = dayNames[d.getDay()]
 
     let label = ''
-    if (idx === 0) label = '오늘'
-    else if (idx === 1) label = '내일'
-    else label = '모레'
+    if (idx === 1) label = '모레'
+    else label = '내일'
 
     return {
       dateStr,      // '2025-11-21'
-      label,        // '오늘' / '내일' / '모레'
-      dayOfWeek: dow, // '금' 같은 요일 한 글자
+      label,        // '내일' / '모레'
+      dayOfWeek: dow,
     }
   })
 })
 
-
+// ================== API 호출 함수 ==================
 async function requestWeatherData(beachNumber) {
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_BASE_URL}/api/beach/detail/${beachNumber}/weather`
     )
 
-    // 백엔드에서 data.result 로 내려오고 있어서 그대로 사용
     weatherData.value = response.data.data.result
 
     if (weatherData.value && weatherData.value.length > 0) {
@@ -229,7 +316,6 @@ async function requestWeatherData(beachNumber) {
       console.log(' -> rainProbability:', current.rainProbability)
       console.log(' -> rain:', current.rain)
 
-      // 기본 선택 날짜 = 내일
       selectedDay.value = getLocalDateString(
         new Date(Date.now() + 24 * 60 * 60 * 1000)
       )
@@ -252,14 +338,9 @@ async function requestDangerData(beachNumber) {
 
     console.log('[WeatherPanel] /danger 응답 원본:', response.data)
 
-    // BeachController 에서 body(Map.of("data", result)) 로 내려보내니까
     const outer = response.data?.data
-
-    // 서비스에서 result 키를 썼다면 그 안의 값 꺼내고,
-    // 아니라면 data 자체를 그대로 리스트로 간주
     const list = outer?.result ?? outer
 
-    // 항상 배열 형태로 맞춰두기
     dangerData.value = Array.isArray(list)
       ? list
       : (list ? [list] : [])
@@ -271,14 +352,28 @@ async function requestDangerData(beachNumber) {
   }
 }
 
-
 // 처음 마운트될 때 호출
 onMounted(() => {
   if (props.beachNumber) {
-    requestWeatherData(props.beachNumber)
-    requestDangerData(props.beachNumber)
+    const loadAll = () => {
+      requestWeatherData(props.beachNumber)
+      requestDangerData(props.beachNumber)
+    }
+
+    // 처음 한 번 로드
+    loadAll()
+
+    // 🔁 주기적으로 다시 로드 (실시간 느낌)
+    refreshTimer.value = setInterval(loadAll, REFRESH_MS)
   }
 })
+
+onBeforeUnmount(() => {
+  if (refreshTimer.value) {
+    clearInterval(refreshTimer.value)
+  }
+})
+
 
 // beachNumber가 바뀌면 다시 호출
 watch(
@@ -292,7 +387,6 @@ watch(
 )
 
 // =============== computed & helpers ================
-
 const selectedDay = ref(null)
 
 function selectDay(dateStr) {
@@ -311,7 +405,7 @@ const hourlyForecastSlice = computed(() => {
   return weatherData.value.slice(0, 6)
 })
 
-// 4. 선택된 날짜의 시간별 예보 (3시간 간격)
+// 3. 선택된 날짜의 시간별 예보 (3시간 간격)
 const selectedDayHourlyForecast = computed(() => {
   if (!Array.isArray(weatherData.value) || weatherData.value.length === 0 || !selectedDay.value) {
     return []
@@ -339,8 +433,105 @@ const selectedDayHourlyForecast = computed(() => {
   return uniqueResult
 })
 
-// ================= Helpers =================
+// 🔹 여기! → 위험 경보 밑에 들어갈 차트 옵션
+const waveChartOption = computed(() => {
+  const list = Array.isArray(dangerData.value) ? dangerData.value : []
 
+  if (list.length === 0) {
+    return {
+      xAxis: { type: 'category', data: [] },
+      yAxis: { type: 'value' },
+      series: []
+    }
+  }
+
+  const sliced = list.slice(0, 24) // 최대 24개만 사용 (24시간)
+
+const xLabels = sliced.map((_, idx) => `${idx}시`)   // 0시, 1시, 2시 ...
+
+
+
+  const yValues = sliced.map(item =>
+    typeof item.waveHeight === 'number' ? item.waveHeight : null
+  )
+
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 45, right: 10 },
+    xAxis: {
+      type: 'category',
+      data: xLabels,
+      boundaryGap: false,
+      axisLabel: { fontSize: 10 }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: '{value} m' },
+      min: 0
+    },
+    series: [
+      {
+        type: 'line',
+        data: yValues,
+        smooth: true,
+        showSymbol: false
+      }
+    ]
+  }
+})
+const seaSurfaceTemperatureChartOption = computed(() => {
+  const list = Array.isArray(dangerData.value) ? dangerData.value : []
+
+  if (list.length === 0) {
+    return {
+      xAxis: { type: 'category', data: [] },
+      yAxis: { type: 'value' },
+      series: []
+    }
+  }
+
+  const sliced = list.slice(0, 24)
+
+const xLabels = sliced.map((_, idx) => `${idx}시`)
+
+
+
+  const yValues = sliced.map(item => {
+    const v = item.seaSurfaceTemperature
+    const n = Number(v)           // 문자열이어도 숫자로 변환
+    return Number.isFinite(n) ? n : null
+  })
+
+  console.log('[TempChart] xLabels:', xLabels)
+  console.log('[TempChart] yValues:', yValues)
+
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 45, right: 10 },
+    xAxis: {
+      type: 'category',
+      data: xLabels,
+      boundaryGap: false,
+      axisLabel: { fontSize: 10 }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: '{value} °C' }
+    },
+    series: [
+      {
+        type: 'line',
+        data: yValues,
+        smooth: true,
+        showSymbol: false
+      }
+    ]
+  }
+})
+
+
+
+// ================= Helpers =================
 function getLocalDateString(date) {
   const year = date.getFullYear()
   const month = (date.getMonth() + 1).toString().padStart(2, '0')
@@ -373,6 +564,7 @@ function getWeatherIcon(item) {
   return 'fas fa-cloud'
 }
 </script>
+
 
 <style scoped>
 .btn {
