@@ -38,6 +38,9 @@ public class ControlTowerTaskListDTO {
     // w.watch_count AS count
     private Integer count;
 
+    // t.user_number AS userNumber
+    private Integer userNumber;
+
     // m.manager_number AS managerNumber
     private Integer managerNumber;
 

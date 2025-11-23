@@ -45,8 +45,21 @@
 
           <div class="col-md-8 pe-3 map-col">
             <div class="mb-3 text-secondary ps-2">신고자 위치</div>
-            <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
-              <span class="text-muted">지도에 신고자 위치 (API 연동 필요)</span>
+              <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
+              <div
+                v-if="!hasValidMapPosition"
+                class="text-muted small text-center px-3"
+              >
+                신고자의 위치 정보가 없거나<br />
+                지도 API 준비 중입니다.
+              </div>
+
+              <!-- 좌표 있으면 지도 렌더링 -->
+              <div
+                v-else
+                ref="mapEl"
+                style="width: 100%; height: 100%;"
+              ></div>
             </div>
           </div>
 
@@ -134,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/utils/useApi.js';
 
@@ -146,6 +159,9 @@ const loadError = ref(null);
 const activityLogs = ref([]);
 const logsLoading = ref(false);
 const logsError = ref(null);
+const mapEl = ref(null);
+
+let map = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -482,6 +498,39 @@ const getAlertColor = (level) => {
     default: return 'text-safety-custom';
   }
 };
+
+/** 현재 선택된 신고에 지도에 찍을 수 있는 좌표가 있는지 여부 */
+const hasValidMapPosition = computed(() => {
+  const r = selectedReport.value;
+  if (!r) return false;
+  return isValidCoordinatePair(r.mapLat, r.mapLon);
+});
+
+/**
+ * 선택된 신고가 바뀌거나 좌표가 바뀔 때마다
+ * 네이버 지도 초기화 또는 위치 업데이트
+ */
+watchEffect(() => {
+  // 좌표 없으면 지도 안 띄움
+  if (!hasValidMapPosition.value) return;
+  // DOM 아직 안 잡혔으면 리턴
+  if (!mapEl.value) return;
+  // 네이버 지도 스크립트 안 올라와 있으면 리턴
+  if (!window.naver?.maps) return;
+
+  const { mapLat, mapLon } = selectedReport.value;
+  const pos = new window.naver.maps.LatLng(mapLat, mapLon);
+
+  // 최초 1회: 지도 생성
+  if (!map) {
+    map = new window.naver.maps.Map(mapEl.value, {
+      center: pos,
+      zoom: 16
+    });
+  } else {
+    map.setCenter(pos);
+  }
+});
 </script>
 
 <style scoped>

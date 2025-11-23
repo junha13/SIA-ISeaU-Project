@@ -159,6 +159,7 @@
           w.occurred_at    AS dateAndTime,
           u.birth_date     AS birthDateForAge,
           u.gender         AS gender,
+          t.user_number    AS userNumber,
           t.type           AS type,
           -- user 테이블 위치
           ST_X(u.location::geometry)        AS userLon,
