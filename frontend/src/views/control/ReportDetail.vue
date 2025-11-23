@@ -92,7 +92,15 @@
 
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
-                      <div class="fs-2 info-value fw-bold text-truncate">{{ selectedReport.location }}</div>
+                      <div class="fs-2 info-value fw-bold text-truncate">
+                        {{ selectedReport.location }}
+                        <small
+                          v-if="selectedReport.coordinateLabel"
+                          class="text-muted ms-2 fs-6 coordinate-tag"
+                        >
+                          {{ selectedReport.coordinateLabel }}
+                        </small>
+                      </div>
                     </div>
 
                     <div class="col-12 d-flex align-items-center">
@@ -107,11 +115,11 @@
 
                   <button
                     class="btn btn-sm"
-                    :class="selectedReport.processed === 1 ? 'btn-processed-disabled' : 'btn-processed'"
-                    :disabled="selectedReport.processed === 1"
-                    @click="markProcessed(selectedReport)"
+                    :class="isReportProcessed(selectedReport) ? 'btn-processed-disabled' : 'btn-processed'"
+                    :disabled="isReportProcessed(selectedReport)"
+                    @click="handleRescueRequest(selectedReport)"
                   >
-                    {{ selectedReport.processed === 1 ? '구조 요청 처리됨' : '구조 요청' }}
+                    {{ isReportProcessed(selectedReport) ? '구조 요청 처리됨' : '구조 요청' }}
                   </button>
 
               </div>
@@ -144,10 +152,72 @@
 
     </div>
   </div>
+
+  <div
+    v-if="showRescueModal && selectedReport"
+    class="rescue-modal-backdrop"
+    @click.self="closeRescueModal"
+  >
+    <div class="rescue-modal-card">
+      <div class="rescue-modal-header d-flex justify-content-between align-items-start">
+        <div>
+          <h5 class="mb-1">구조 요청 전송</h5>
+          <p class="text-muted small mb-0">다음과 같은 내용을 구조요원에게 전달합니다</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-link text-muted p-0"
+          @click="closeRescueModal"
+        >
+          <i class="bi bi-x-lg fs-5"></i>
+        </button>
+      </div>
+
+      <div class="rescue-modal-body">
+        <div class="modal-map-wrapper mb-3">
+          <div
+            v-if="hasValidMapPosition"
+            ref="modalMapEl"
+            class="modal-map"
+          ></div>
+          <div v-else class="modal-map-placeholder text-muted small">
+            위치 정보가 없어 지도를 표시할 수 없습니다.
+          </div>
+        </div>
+
+        <div class="modal-info-grid">
+          <div class="modal-info-row">
+            <span class="label">위경도</span>
+            <span class="value">{{ selectedReport.coordinateLabel ?? '정보 없음' }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">만나이</span>
+            <span class="value">{{ selectedReport.ageLabel }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">성별</span>
+            <span class="value">{{ selectedReport.genderLabel }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">심박수</span>
+            <span class="value">{{ prettyHr(selectedReport.hr) }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">해수욕장</span>
+            <span class="value">{{ selectedReport.location }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rescue-modal-footer d-flex justify-content-end">
+        <button class="btn btn-secondary btn-sm" @click="closeRescueModal">닫기</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/utils/useApi.js';
 
@@ -160,8 +230,14 @@ const activityLogs = ref([]);
 const logsLoading = ref(false);
 const logsError = ref(null);
 const mapEl = ref(null);
+const processedReportIds = ref(new Set());
+const showRescueModal = ref(false);
+const modalMapEl = ref(null);
 
 let map = null;
+let watchMarker = null;
+let modalMap = null;
+let modalWatchMarker = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -329,16 +405,26 @@ const determineTypeAndLocation = (task) => {
   return { type: resolvedType, mapLat: null, mapLon: null };
 };
 
+const formatCoordinateLabel = (lat, lon) => {
+  const latNum = toFiniteNumber(lat);
+  const lonNum = toFiniteNumber(lon);
+  if (latNum === null || lonNum === null) return null;
+  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`;
+};
+
 const toReportViewModel = (task) => {
+  const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
   const { date, time } = parseDateTime(task?.dateAndTime);
   const age = computeInternationalAge(task?.birthDateForAge);
   const genderLabel = mapGender(task?.gender);
   const hr = toFiniteNumber(task?.hr);
   const count = toFiniteNumber(task?.count);
   const { type, mapLat, mapLon } = determineTypeAndLocation(task);
+  const backendProcessed = task?.taskProcessed === 1;
+  const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
   return {
-    id: task?.id ?? task?.taskNumber ?? null,
+    id,
     type,
     level: determineLevel(count),
     date,
@@ -351,7 +437,8 @@ const toReportViewModel = (task) => {
     location: task?.beachName ?? '위치 정보 없음',
     mapLat,
     mapLon,
-    processed: task?.taskProcessed === 1 ? 1 : 0,
+    coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
+    processed: backendProcessed || locallyProcessed ? 1 : 0,
     count,
     userNumber: task?.userNumber ?? task?.user_number ?? null,
     raw: task
@@ -371,6 +458,15 @@ const fetchReports = async ({ silent = false } = {}) => {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
     loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
+    const nextProcessed = new Set(processedReportIds.value);
+    list.forEach((task) => {
+      const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
+      if (task?.taskProcessed === 1 && id !== null) {
+        nextProcessed.add(id);
+      }
+    });
+    processedReportIds.value = nextProcessed;
+
     const mapped = list.map(toReportViewModel);
 
     activeReports.value = mapped;
@@ -463,13 +559,48 @@ const formatLogHr = (hr) => {
   return `${numeric}bpm`;
 };
 
+const isReportProcessed = (report) => {
+  if (!report) return false;
+  if (report.processed === 1) return true;
+  const id = report?.id ?? null;
+  if (id === null) return false;
+  return processedReportIds.value.has(id);
+};
+
 const markProcessed = (report) => {
-  if (!report || report.processed === 1) return;
-  report.processed = 1;
-  if (selectedReport.value?.id === report.id) {
-    selectedReport.value.processed = 1;
+  const id = report?.id ?? null;
+  if (id === null) return;
+  if (processedReportIds.value.has(id)) return;
+
+  const next = new Set(processedReportIds.value);
+  next.add(id);
+  processedReportIds.value = next;
+
+  if (selectedReport.value?.id === id) {
+    selectedReport.value = { ...selectedReport.value, processed: 1 };
   }
+
+  activeReports.value = activeReports.value.map((item) =>
+    item.id === id ? { ...item, processed: 1 } : item
+  );
+
   // TODO: 필요 시 백엔드 API 호출로 persisted 처리
+};
+
+const handleRescueRequest = async (report) => {
+  if (!report) return;
+  if (!isReportProcessed(report)) {
+    markProcessed(report);
+  }
+  showRescueModal.value = true;
+  await nextTick();
+  if (modalMap && hasNaverMaps()) {
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  }
+};
+
+const closeRescueModal = () => {
+  showRescueModal.value = false;
 };
 
 const getBadgeClass = (level) => {
@@ -499,6 +630,33 @@ const getAlertColor = (level) => {
   }
 };
 
+const getLevelBorderColor = (level) => {
+  switch (level) {
+    case 'warning':
+      return '#FFB354';
+    case 'danger':
+      return '#EB725B';
+    case 'emergency':
+      return '#B93F67';
+    default:
+      return '#7EEC85';
+  }
+};
+
+const buildMarkerHtml = (borderColor) => `
+  <div style="
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid ${borderColor};
+    background: rgba(0,146,186,0.20);
+    box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+    box-sizing: border-box;
+  "></div>
+`;
+
+const hasNaverMaps = () => typeof window !== 'undefined' && window.naver && window.naver.maps;
+
 /** 현재 선택된 신고에 지도에 찍을 수 있는 좌표가 있는지 여부 */
 const hasValidMapPosition = computed(() => {
   const r = selectedReport.value;
@@ -516,16 +674,12 @@ watchEffect(() => {
   // DOM 아직 안 잡혔으면 리턴
   if (!mapEl.value) return;
   // 네이버 지도 스크립트 안 올라와 있으면 리턴
-  if (!window.naver?.maps) return;
+  if (!hasNaverMaps()) return;
 
   const { mapLat, mapLon, level } = selectedReport.value;
   const pos = new window.naver.maps.LatLng(mapLat, mapLon);
 
-  // 🔵 레벨별 색상 (워치 위치 동그라미 테두리 색)
-  let borderColor = '#7EEC85'; // safety 기본
-  if (level === 'warning') borderColor = '#FFB354';
-  else if (level === 'danger') borderColor = '#EB725B';
-  else if (level === 'emergency') borderColor = '#B93F67';
+  const borderColor = getLevelBorderColor(level);
 
   // 1) 지도 최초 생성
   if (!map) {
@@ -542,17 +696,7 @@ watchEffect(() => {
   }
 
   // 3) 워치 위치 마커 생성 또는 위치 업데이트
-  const markerHtml = `
-    <div style="
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 3px solid ${borderColor};
-      background: rgba(0,146,186,0.20);
-      box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
-      box-sizing: border-box;
-    "></div>
-  `;
+  const markerHtml = buildMarkerHtml(borderColor);
 
   if (!watchMarker) {
     watchMarker = new window.naver.maps.Marker({
@@ -567,6 +711,59 @@ watchEffect(() => {
     watchMarker.setPosition(pos);
     // 레벨이 바뀔 수도 있으니 아이콘도 같이 업데이트
     watchMarker.setIcon({
+      content: markerHtml,
+      anchor: new window.naver.maps.Point(11, 11)
+    });
+  }
+});
+
+watch(showRescueModal, (visible) => {
+  if (!visible) {
+    if (modalMap && typeof modalMap.destroy === 'function') {
+      modalMap.destroy();
+    }
+    modalMap = null;
+    modalWatchMarker = null;
+    modalMapEl.value = null;
+  }
+});
+
+watchEffect(() => {
+  if (!showRescueModal.value) return;
+  if (!hasValidMapPosition.value) return;
+  if (!modalMapEl.value) return;
+  if (!hasNaverMaps()) return;
+  const report = selectedReport.value;
+  if (!report) return;
+
+  const { mapLat, mapLon, level } = report;
+  const pos = new window.naver.maps.LatLng(mapLat, mapLon);
+  const borderColor = getLevelBorderColor(level);
+  const markerHtml = buildMarkerHtml(borderColor);
+
+  if (!modalMap) {
+    modalMap = new window.naver.maps.Map(modalMapEl.value, {
+      center: pos,
+      zoom: 17
+    });
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  } else {
+    modalMap.setCenter(pos);
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  }
+
+  if (!modalWatchMarker) {
+    modalWatchMarker = new window.naver.maps.Marker({
+      position: pos,
+      map: modalMap,
+      icon: {
+        content: markerHtml,
+        anchor: new window.naver.maps.Point(11, 11)
+      }
+    });
+  } else {
+    modalWatchMarker.setPosition(pos);
+    modalWatchMarker.setIcon({
       content: markerHtml,
       anchor: new window.naver.maps.Point(11, 11)
     });
@@ -734,6 +931,10 @@ watchEffect(() => {
 .info-grid .info-label { color: #6c757d; }
 .info-grid .info-value { color: #212529; }
 
+.coordinate-tag {
+  font-weight: 500;
+}
+
 .log-item { font-size: 0.9rem; }
 .log-time { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Noto Sans Mono', monospace; margin-right: 6px; }
 
@@ -771,5 +972,102 @@ watchEffect(() => {
 @media (max-width: 992px) {
   /* tablet and below: let detail full width under map */
   .detail-inner { max-width: 100%; padding-left: 0; }
+}
+
+.rescue-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1050;
+}
+
+.rescue-modal-card {
+  width: min(520px, 90vw);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rescue-modal-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid #EAECEF;
+}
+
+.rescue-modal-header h5 {
+  font-weight: 700;
+}
+
+.rescue-modal-body {
+  padding: 16px 24px 4px;
+  overflow-y: auto;
+}
+
+.rescue-modal-footer {
+  padding: 12px 24px 20px;
+  border-top: 1px solid #EAECEF;
+}
+
+.modal-map-wrapper {
+  border: 1px solid #E6EEF5;
+  border-radius: 12px;
+  background-color: #F8FAFC;
+  overflow: hidden;
+}
+
+.modal-map {
+  width: 100%;
+  height: 220px;
+}
+
+.modal-map-placeholder {
+  width: 100%;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: #F8FAFC;
+  border: 1px dashed #CED4DA;
+}
+
+.modal-info-grid {
+  display: grid;
+  row-gap: 10px;
+}
+
+.modal-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.modal-info-row .label {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.modal-info-row .value {
+  color: #212529;
+  font-weight: 500;
+  text-align: right;
+  margin-left: 16px;
+}
+
+.rescue-modal-card .btn-link {
+  color: inherit;
+}
+
+.rescue-modal-card .btn-link:hover {
+  color: #212529;
+  text-decoration: none;
 }
 </style>
