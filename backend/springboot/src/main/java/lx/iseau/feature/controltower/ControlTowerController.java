@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lx.iseau.feature.voice.VoiceWebSocketHandler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +18,17 @@ import org.springframework.web.bind.annotation.*;
 public class ControlTowerController {
 
     private final ControlTowerService service;
+    private final TtsService ttsService;
+	private final VoiceWebSocketHandler voiceWebSocketHandler;
 
-    // ============ 로그 데이터 조회(지서) ============
-    @GetMapping("/task/log")
-    public ResponseEntity<?> getTaskLogByUserNumber(@RequestParam int userNumber) {
-        List<TaskLogDTO> result = service.getTaskLogByUserNumber(userNumber);
-        return ResponseEntity
-                .ok()
-                .body(Map.of("result", result));
-    }
+//    // ============ 로그 데이터 조회(지서) ============
+//    @GetMapping("/task/log")
+//    public ResponseEntity<?> getTaskLogByUserNumber(@RequestParam int userNumber) {
+//        List<TaskLogDTO> result = service.getTaskLogByUserNumber(userNumber);
+//        return ResponseEntity
+//                .ok()
+//                .body(Map.of("result", result));
+//    }
 
     // ============ 관제센터의 처리 리스트(지서) ============
     @GetMapping("/task/list/controltower")
@@ -137,4 +140,41 @@ public class ControlTowerController {
                 .ok()
                 .body(Map.of("result", Map.of("updated", updated)));
     }
+    
+    @PostMapping("/tts")
+    public ResponseEntity<?> sendTtsBroadcast(@RequestBody TtsBroadcastRequest req) {
+	    try {
+	        System.out.println("[TTS 방송 요청] beachNumber=" + req.getBeachNumber()
+	                + ", cctvName=" + req.getCctvName()
+	                + ", message=" + req.getMessage());
+
+	        // 🔹 실제 TTS 호출 → Base64 MP3 생성
+	        String audioBase64 = ttsService.synthesizeToBase64(req.getMessage());
+
+	        // 🔊🔊🔊 여기 추가: WebSocket으로 /voice 접속한 단말들에게 뿌리기
+	        voiceWebSocketHandler.broadcastTts(
+	                req.getCctvName(),   // 어떤 CCTV에서 나온 방송인지
+	                req.getMessage(),    // 안내 문구
+	                audioBase64          // Base64 MP3 데이터
+	        );
+
+	        // 🔁 원래대로 프론트(관제 화면)에도 응답 리턴
+	        return ResponseEntity.ok().body(
+	                Map.of(
+	                        "success", true,
+	                        "audioContent", audioBase64
+	                )
+	        );
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.internalServerError().body(
+	                Map.of(
+	                        "success", false,
+	                        "message", "TTS 처리 중 오류가 발생했습니다.",
+	                        "detail", e.getMessage()
+	                )
+	        );
+	    }
+	}
+    
 }
