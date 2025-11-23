@@ -30,7 +30,7 @@ public class ControlTowerController {
     // ============ 관제센터의 처리 리스트(지서) ============
     @GetMapping("/task/list/controltower")
     public ResponseEntity<?> getTaskListByControlTowerNumber(@RequestParam int controlTowerNumber) {
-        List<TaskListDTO> result = service.getTaskListByControlTowerNumber(controlTowerNumber);
+        List<ControlTowerTaskListDTO> result = service.getTaskListByControlTowerNumber(controlTowerNumber);
         return ResponseEntity
                 .ok()
                 .body(Map.of("result", result));

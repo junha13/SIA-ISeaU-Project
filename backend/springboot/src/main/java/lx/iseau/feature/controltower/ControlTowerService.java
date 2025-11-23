@@ -30,7 +30,7 @@ public class ControlTowerService {
     }
 
     // ============ 관제센터의 처리 리스트(지서) ============
-    public List<TaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
+    public List<ControlTowerTaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
         return dao.getTaskListByControlTowerNumber(controlTowerNumber);
     }
 
