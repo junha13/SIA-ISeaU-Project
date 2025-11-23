@@ -24,7 +24,7 @@
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
           <UseStreams
-            :ws-url="`${import.meta.env.VITE_PYTHON_API_BASE_URL}/ws/stream`"
+            :ws-url="`${CCTV_LOG_Stream_API_URL}/ws/stream`"
             :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
             :key="controlView"  
           />
@@ -94,29 +94,47 @@
     <!-- 알림 리스트 -->
     <div class="flex-grow-1 overflow-auto px-2" style="height: 90%;">
       <div
-        v-for="item in filteredAlerts"
-        :key="item.id"
-        class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
-        :class="item.read ? 'bg-read' : 'bg-unread'"
-        @click="markAsRead(item.id)"
-      >
-        <div class="small">
-          <div class="fw-semibold">
-            {{ item.label }}에서 위험 구역 진입
-            <span class="badge bg-danger ms-1">{{ item.danger }}명</span>
-          </div>
-          <div class="text-muted" style="font-size: 0.75rem;">
-            {{ item.timeText }}
-          </div>
-        </div>
-
-        <span
-          class="badge rounded-pill"
-          :class="item.read ? 'bg-secondary-subtle text-secondary' : 'bg-primary text-white'"
-        >
-          {{ item.read ? '읽음' : '신규' }}
+  v-for="item in filteredAlerts"
+  :key="item.id"
+  class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
+  :class="item.read ? 'bg-read' : 'bg-unread'"
+  @click="markAsRead(item.id)"
+>
+  <div class="small w-100">
+    <!-- 🔹 첫 줄: 왼쪽 텍스트 / 오른쪽 배지 묶음 -->
+    <div class="d-flex">
+      <!-- 왼쪽: 텍스트 (자동 줄바꿈) -->
+      <div class="fw-bold flex-grow-1 text-truncate fs-5">
+        [ {{ item.label }} ]
+        <span class="fw-semibold fs-6">
+          위험 구역 진입
         </span>
       </div>
+
+      <!-- 오른쪽: 인원 배지 (항상 우측 정렬) -->
+      <div class="d-flex flex-column align-items-end flex-shrink-0">
+        <span class="badge bg-danger mb-1">
+          +{{ item.added }}명
+        </span>
+      </div>
+    </div>
+
+    <!-- 둘째 줄: 시간 -->
+    <div class="text-muted d-flex justify-content-between" style="font-size: 0.75rem;">
+      <div>
+      {{ item.timeText }}
+      </div>
+      <div>
+        <span
+          v-if="item.danger != null"
+          class="badge bg-secondary"
+        >
+          현재 {{ item.danger }}명
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 
@@ -184,7 +202,7 @@
       <thead class="table-light">
         <tr>
           <th scope="col" style="width: 40%;">CCTV</th>
-          <th scope="col" class="text-end">최근 10분 위험 진입 횟수</th>
+          <th scope="col" class="text-end">최근 10분 위험 진입 인원</th>
         </tr>
       </thead>
       <tbody>
@@ -200,7 +218,7 @@
               class="badge"
               :class="(danger10min[id] ?? 0) > 0 ? 'bg-danger text-white' : 'bg-light text-muted'"
             >
-              {{ danger10min[id] ?? 0 }} 회
+              {{ danger10min[id] ?? 0 }} 명
             </span>
           </td>
         </tr>
@@ -220,7 +238,7 @@
       <thead class="table-light">
         <tr>
           <th scope="col" style="width: 40%;">CCTV</th>
-          <th scope="col" class="text-end">금일 누적 위험 진입 횟수</th>
+          <th scope="col" class="text-end">금일 누적 위험 인원</th>
         </tr>
       </thead>
       <tbody>
@@ -235,7 +253,7 @@
               class="badge"
               :class="(dangerToday[id] ?? 0) > 0 ? 'bg-danger text-white' : 'bg-light text-muted'"
             >
-              {{ dangerToday[id] ?? 0 }} 회
+              {{ dangerToday[id] ?? 0 }} 명
             </span>
           </td>
         </tr>
@@ -365,6 +383,7 @@ import axios from 'axios'
 
 const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const CCTV_LOG_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/cctv/logList` // ★추가: 위험 로그 조회 API
+const CCTV_LOG_Stream_API_URL = import.meta.env.VITE_PYTHON_API_BASE_URL
 
 const store = useStore()
 const { controlView, cctvName } = storeToRefs(store)
@@ -512,15 +531,19 @@ const fetchDangerLogs = async () => {
 
       const read = log.read
 
+       const added = log.dangerAdded 
+
+
+      // ★ 추가: 해당 시점 위험구역 총 인원
+      const dangerTotal = log.dangerCount
       // 10분 이내 로그만 카운트
       if (!Number.isNaN(diffMin) && diffMin <= 10) {
-        // "횟수" 기준 → 로그 1개 = 1회
-        new10[camId] += 1
+        new10[camId] += added
       }
 
       // 금일 누적
       if (isSameDay) {
-        newToday[camId] += 1
+        newToday[camId] += added
       }
 
       const viewKey = camId <= 4 ? 'beach' : 'harbor'
@@ -546,7 +569,8 @@ const fetchDangerLogs = async () => {
         camId,
         streamId: `CAM ${camId}`,
         label,
-        danger,
+        danger: dangerTotal,
+        added,
         timeText,
         read,
         createdAt,
