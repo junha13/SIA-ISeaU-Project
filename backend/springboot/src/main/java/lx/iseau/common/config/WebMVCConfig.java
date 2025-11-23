@@ -23,7 +23,6 @@ public class WebMVCConfig implements WebMvcConfigurer {
                 .setViewName("forward:/index.html");
 
         // 3. 2단계 이상 깊은 경로 (예: /control/cctv, /beach/1, /sos/first-aid/cases 등)
-        // 이 부분이 없어서 404 에러가 났던 것입니다.
         registry.addViewController("/**/{path:[^\\.]*}")
                 .setViewName("forward:/index.html");
     }

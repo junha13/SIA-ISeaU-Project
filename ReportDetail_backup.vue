@@ -45,7 +45,7 @@
 
           <div class="col-md-8 pe-3 map-col">
             <div class="mb-3 text-secondary ps-2">신고자 위치</div>
-            <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
+              <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
               <div
                 v-if="!hasValidMapPosition"
                 class="text-muted small text-center px-3"
@@ -173,6 +173,7 @@ const controlTowerNumber = computed(() => {
 });
 
 const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+const { execute: fetchTaskLog } = useApi('get', '/api/controltower/task/log');
 const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
@@ -572,6 +573,7 @@ watchEffect(() => {
     });
   }
 });
+
 </script>
 
 <style scoped>
