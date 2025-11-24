@@ -1,5 +1,6 @@
 package lx.iseau.feature.group;
 
+import lx.iseau.feature.controltower.TaskListDTO;
 import lx.iseau.feature.group.RequestGroupDTO;
 import lx.iseau.feature.group.RequestGroupInviteDTO;
 import lx.iseau.feature.group.ResponseGroupListItemDTO;
@@ -78,5 +79,7 @@ public interface GroupsDAO {
 	// 17. PENDING 상태인 초대 목록 조회 (초대자 정보 포함)
 	List<Map<String, Object>> findPendingInvitationsByMember(@Param("userNumber") int userNumber);
 	
+	
+	List<TaskListDTO> getAllTaskListByManagerNumber(@Param("managerNumber") int managerNumber);
 	
 }

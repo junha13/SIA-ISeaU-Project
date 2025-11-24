@@ -2,7 +2,6 @@
   <div class="report-detail container-fluid p-3" style="background-color: #F8F9FA;">
     <div class="row">
 
-      <!-- Left: Active reports list -->
       <div class="col-lg-4 mb-4 mb-lg-0">
         <h4 class="mb-3 text-secondary">신고 리스트</h4>
         <div class="list-group" style="height: 700px; overflow-y: auto;">
@@ -38,7 +37,6 @@
         </div>
       </div>
 
-      <!-- Right: Detail panel (narrower for better balance) -->
       <div class="col-lg-8" v-if="selectedReport">
         <h4 class="mb-3 text-secondary">신고 상세정보</h4>
         <div class="row g-3">
@@ -70,7 +68,9 @@
                 <div class="card-header border-0 pb-0" style="background-color: #FFFFFF; border-color: #EAECEF !important;">
                   <div class="d-flex w-100 justify-content-between align-items-start">
                     <div class="pt-5">
-                      <h class="card-title fw-bold mb-1 fs-1" :class="getAlertColor(selectedReport.level)">{{ selectedReport.type }}</h>
+                      <h class="card-title fw-bold mb-1 fs-1" :class="getAlertColor(selectedReport.level)">
+                        {{ mapReportType(selectedReport.type) }}
+                      </h>
                       <div class="report-datetime-box mt-2">
                         <div class="d-flex align-items-center">
                           <i class="bi bi-clock-fill me-2 text-info-custom fs-5"></i>
@@ -79,15 +79,13 @@
                       </div>
                     </div>
                   </div>
-                    
-                  </div>
-                  
-                  <!-- Updated 신고 정보 영역 -->
-                  <div class="card-body text-dark">
-                    <div class="info-grid row gy-3">
-                      <div class="col-12 d-flex align-items-center">
-                      <i class="fs-1 bi bi-person-fill info-icon text-muted me-2" title="신고인"></i>
-                      <div class="info-value fw-bold fs-2">{{ selectedReport.ageLabel }} · {{ selectedReport.genderLabel }}</div>
+                </div>
+                
+                <div class="card-body text-dark">
+                  <div class="info-grid row gy-3">
+                    <div class="col-12 d-flex align-items-center">
+                    <i class="fs-1 bi bi-person-fill info-icon text-muted me-2" title="신고인"></i>
+                    <div class="info-value fw-bold fs-2">{{ selectedReport.ageLabel }} · {{ selectedReport.genderLabel }}</div>
                     </div>
 
                     <div class="col-12 d-flex align-items-center">
@@ -427,18 +425,43 @@ const determineLevel = (count) => {
   return 'warning';
 };
 
+const mapReportType = (typeCode) => {
+    // 🚨 수동 신고 Type Code를 한글 이름으로 매핑
+    const codeMap = {
+        'DROWNING': '물에 빠짐',
+        'INJURY': '부상',
+        'COLLAPSE': '쓰러짐',
+        'MISSING': '일행 이탈/실종',
+        'OTHERS': '수동 호출 (기타)',
+        'WATCH': '심박수 이상',
+        '라이프가드 호출': '라이프가드 호출', // 기존 기본값
+    };
+    // DTO에서 받은 typeCode가 map에 있으면 반환, 없으면 기본값
+    return codeMap[String(typeCode).toUpperCase()] || String(typeCode) || '라이프가드 호출';
+}
+
+
 const determineTypeAndLocation = (task) => {
   const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
   const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
-  const userLat = toFiniteNumber(task?.userLat);
+  const userLat = toFiniteNumber(task?.userLat); // User의 기본 위치
   const userLon = toFiniteNumber(task?.userLon);
+  
+  let type = task?.type ?? '라이프가드 호출'; // DTO의 type을 우선 사용
 
+  // 1. Task Location (수동 신고 위치)이 있는지 확인 (최우선)
+  if (isValidCoordinatePair(taskLat, taskLon)) {
+      return { type, mapLat: taskLat, mapLon: taskLon };
+  }
+  
+  // 2. Watch Location (자동 신고 위치)이 있는지 확인
   if (isValidCoordinatePair(watchLat, watchLon)) {
     return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
   }
 
+  // 3. User Location (기본 위치)이 있는지 확인
   if (isValidCoordinatePair(userLat, userLon)) {
     return { type: resolvedType, mapLat: userLat, mapLon: userLon };
   }
@@ -464,6 +487,9 @@ const toReportViewModel = (task) => {
   const backendProcessed = task?.taskProcessed === 1;
   const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
+  // 🚨 [수정 1] Type Code를 한글 Label로 변환
+  const typeLabel = mapReportType(type);
+
   return {
     id,
     type,
@@ -475,7 +501,8 @@ const toReportViewModel = (task) => {
     genderLabel,
     hr,
     spo2: toFiniteNumber(task?.spo2),
-    location: task?.beachName ?? '위치 정보 없음',
+    // 🚨 [수정 2] location 필드 재정의: GPS 좌표가 있을 때만 좌표 문자열 표시
+    location: task?.beachName ?? (mapLat ? `위치 (${mapLat.toFixed(4)}, ${mapLon.toFixed(4)})` : '위치 정보 없음'),
     mapLat,
     mapLon,
     coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
@@ -804,7 +831,6 @@ watchEffect(() => {
   }
 });
 </script>
-
 <style scoped>
 /* --- NEW COLOR PALETTE MAPPING --- */
 /* Palette: #0092BA (Primary), #7EEC85 (Safety), #FFB354 (Warning/주의), #EB725B (Danger/경고), #B93F67 (Emergency/위험), #8482FF (Info/보조파랑) */
@@ -833,35 +859,34 @@ watchEffect(() => {
 .border-emergency-custom { border-color: #B93F67 !important; }
 .btn-emergency-custom { background-color: #B93F67; border-color: #B93F67; color: white; }
 
-/* --- Secondary Blue Accent (모두 검은색으로 통일) --- */
-.text-info-custom { color: #212529 !important; } /* 파랑 계열 -> 검정 */
-.text-secondary-default { color: #212529 !important; } /* 주 컬러/Secondary -> 검정 */
+/* Secondary Blue Accent (모두 검은색으로 통일) */
+.text-info-custom { color: #212529 !important; }
+.text-secondary-default { color: #212529 !important; }
 
 /* Primary Accent */
 .bg-primary-light-active {
-    /* Selected item background: Primary color + 10% opacity */
-    background-color: rgba(0, 146, 186, 0.1) !important;
+  background-color: rgba(0, 146, 186, 0.1) !important;
 }
 .border-primary-light {
-    border-color: #0092BA !important;
+  border-color: #0092BA !important;
 }
 .bg-light-card {
-    background-color: #FFFFFF !important;
-    border-color: #EAECEF !important;
+  background-color: #FFFFFF !important;
+  border-color: #EAECEF !important;
 }
 .list-group-item:hover {
   cursor: pointer;
   background-color: #F8F9FA !important;
 }
 
-/* 리스트 항목 내부: 유형을 우측 하단의 버튼 스타일로 배치 */
+/* 리스트 항목 내부 */
 .report-list-item { position: relative; }
 .report-type-badge {
   position: absolute;
   right: 12px;
   bottom: 10px;
-  background: #F1F3F5; /* 연한 회색 배경 */
-  color: #212529;      /* 짙은 텍스트 */
+  background: #F1F3F5;
+  color: #212529;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -869,45 +894,38 @@ watchEffect(() => {
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   border: 1px solid #E6E9EE;
 }
-.report-type-badge:hover { background: #E9ECEF; transform: translateY(-1px); }
+.report-type-badge:hover {
+  background: #E9ECEF;
+  transform: translateY(-1px);
+}
 
 /* LAYOUT AND UTILITY */
 .report-detail {
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 .list-group-item {
-    transition: all 0.2s;
+  transition: all 0.2s;
 }
 .map-placeholder {
   font-size: 0.9rem;
   color: #6c757d;
 }
 .video-placeholder-small {
-    height: 180px; 
-    font-size: 0.85rem;
+  height: 180px;
+  font-size: 0.85rem;
 }
 .text-dark {
-    color: #212529 !important; 
-}
-
-.report-datetime-box {
-  background-color: #F8FAFC;
-  border: 1px solid #E6EEF5;
-  padding: 8px 12px;
-  border-radius: 8px;
-  min-width: 140px;
-}
-.mono-time {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Noto Sans Mono', monospace;
+  color: #212529 !important;
 }
 
 .detail-card .small.text-muted {
   color: #6c757d !important;
 }
+.detail-card .fw-bold {
+  font-size: 0.98rem;
+}
 
-.detail-card .fw-bold { font-size: 0.98rem; }
-
-/* 상세 영역 선택 시 잠깐 반짝이는 하이라이트 */
+/* Flash highlight animation */
 .flash-highlight {
   animation: flash-highlight 0.7s ease-in-out;
 }
@@ -918,11 +936,7 @@ watchEffect(() => {
   100% { background-color: #ffffff; }
 }
 
-/* Button styles for workflow:
-   1) 신고 접수: 활성(파란색), 비활성시 흐리게
-   2) 출동 확인: 기본적으로 비활성, 활성 시 레벨 기반 클래스 사용
-   3) 출동 확인이 완료되면 '처리완료' 텍스트로 비활성화
-*/
+/* Workflow Buttons */
 .btn-receive {
   background-color: #0092BA;
   color: #fff;
@@ -939,15 +953,15 @@ watchEffect(() => {
   color: #6c757d;
   border-color: #E6E9EE;
 }
+.btn-dispatch-disabled:hover {
+  transform: none;
+}
 
 .btn-disabled {
   opacity: 0.65;
   pointer-events: none;
 }
 
-.btn-dispatch-disabled:hover { transform: none; }
-
-/* Processed button styles */
 .btn-processed {
   background-color: #0092BA;
   color: #fff;
@@ -961,7 +975,7 @@ watchEffect(() => {
   pointer-events: none;
 }
 
-/* Info grid and status badge */
+/* Info grid */
 .info-grid .info-label { color: #6c757d; }
 .info-grid .info-value { color: #212529; }
 
@@ -970,18 +984,37 @@ watchEffect(() => {
 }
 
 .log-item { font-size: 0.9rem; }
-.log-time { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Noto Sans Mono', monospace; margin-right: 6px; }
+.log-time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Noto Sans Mono', monospace;
+  margin-right: 6px;
+}
 
-/* Iconized labels for compact readability */
-.info-icon { font-size: 1.4rem; width: 40px; text-align: center; color: #6c757d; }
+/* Icon labels */
+.info-icon {
+  font-size: 1.4rem;
+  width: 40px;
+  text-align: center;
+  color: #6c757d;
+}
 .info-grid .d-flex > .info-value { min-width: 0; }
-.info-grid .info-value.text-truncate { max-width: calc(100% - 44px); }
+.info-grid .info-value.text-truncate {
+  max-width: calc(100% - 44px);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .info-icon { font-size: 1.2rem; width: 34px; }
-  .info-grid .info-value.text-truncate { max-width: calc(100% - 38px); }
+  .info-icon {
+    font-size: 1.2rem;
+    width: 34px;
+  }
+  .info-grid .info-value.text-truncate {
+    max-width: calc(100% - 38px);
+  }
 }
 
 .card-header { position: relative; }
+
+/* Datetime Box - 공백 완전 정리본 */
 .report-datetime-box {
   position: absolute;
   right: 16px;
@@ -993,19 +1026,26 @@ watchEffect(() => {
   border: 1px solid #E6EEF5;
   padding: 6px 10px;
   border-radius: 8px;
-  width: auto; /* size to content */
+  width: auto;
   min-width: 0;
 }
 .mono-time { white-space: nowrap; }
 
-/* Narrow wrapper for the detail section to improve readability */
-.detail-inner { max-width: 380px; padding-left: 8px; }
-.detail-inner .detail-card { width: 100%; }
-.detail-inner { display: block; }
+/* Detail Width */
+.detail-inner {
+  max-width: 380px;
+  padding-left: 8px;
+  display: block;
+}
+.detail-inner .detail-card {
+  width: 100%;
+}
 
 @media (max-width: 992px) {
-  /* tablet and below: let detail full width under map */
-  .detail-inner { max-width: 100%; padding-left: 0; }
+  .detail-inner {
+    max-width: 100%;
+    padding-left: 0;
+  }
 }
 
 .rescue-modal-backdrop {
