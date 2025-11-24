@@ -158,7 +158,7 @@
       <div class="rescue-modal-header d-flex justify-content-between align-items-start">
         <div>
           <h5 class="mb-1">구조 요청 전송</h5>
-          <p class="text-muted small mb-0">다음과 같은 내용을 구조요원에게 전달합니다</p>
+          <p class="text-muted small mb-0">다음과 같은 내용을 119 센터에 전달합니다</p>
         </div>
         <button
           type="button"
