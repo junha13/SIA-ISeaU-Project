@@ -10,10 +10,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import androidx.core.app.NotificationCompat
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.MeasureCallback
@@ -45,12 +41,6 @@ class HeartRateUploadService : Service() {
         // 응급상황(이상치) 임계값만 사용
         private const val EMERGENCY_LOW_HR = 50   // 이 값 이하 → 너무 느림
         private const val EMERGENCY_HIGH_HR = 55 // 이 값 이상 → 너무 빠름
-
-        // --- 압력(수심) 판정을 위한 상수 ---
-        private const val PRESSURE_BASELINE_SAMPLES = 20          // 처음 N개 샘플로 수면 기준 잡기
-        private const val WATER_DEPTH_THRESHOLD_M = 0.3f          // 30cm 이상 잠기면 "물속"으로 간주
-        private const val HPA_PER_METER_WATER = 98.0f             // 물 1m당 기압 증가(대략 98 hPa 근사값)
-
 
         fun start(context: Context) {
             val intent = Intent(context, HeartRateUploadService::class.java)
