@@ -199,5 +199,19 @@ public class BeachController {
                      .body(Map.of("error", "즐겨찾기 제거 중 오류 발생: " + e.getMessage()));
         }
     }
-
+	@PutMapping("/user/select-beach/{beachNumber}")
+	public ResponseEntity<?> updateUserBeachSelection(
+	        @PathVariable int beachNumber,
+	        @RequestBody Map<String, Integer> body // 🚨 body에서 userNumber 받기
+	) {
+	    // body에서 userNumber가 있으면 쓰고, 없으면 1(기본값) 사용
+	    int userNumber = body.getOrDefault("userNumber", 1);
+	    
+	    try {
+	        service.saveUserBeach(userNumber, beachNumber);
+	        return ResponseEntity.ok(Map.of("success", true, "userNumber", userNumber));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(500).body(Map.of("error", "오류 발생"));
+	    }
+	}
 } // 클래스 끝

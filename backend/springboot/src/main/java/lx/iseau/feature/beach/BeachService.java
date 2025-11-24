@@ -260,6 +260,19 @@ public class BeachService  {
         res.put("sort", sort);
         return res;
     }
-       
+    @Transactional
+    public void saveUserBeach(int userNumber, int beachNumber) {
+        // 1. (선택 사항) 즐겨찾기 저장 또는 위치 기록 등의 다른 로직 실행
+        // ... (필요 시 로직 추가) ...
+        
+        // 2. 🚨 [핵심] tb_user 테이블의 beach_number 필드 업데이트
+        int updatedRows = dao.updateUserBeachSelection(userNumber, beachNumber);
+        
+        if (updatedRows > 0) {
+            System.out.println("✅ User " + userNumber + " updated beach_number to " + beachNumber);
+        } else {
+            System.err.println("⚠️ User " + userNumber + " beach_number update failed (User not found or no change).");
+        }
+    }
     
 }

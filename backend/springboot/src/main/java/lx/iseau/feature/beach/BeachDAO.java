@@ -42,4 +42,6 @@ public interface BeachDAO {
     List<ResponseBeachCommentDTO> getMyBeachComments(@Param("userNumber") int userNumber, @Param("sort") String sort);
 	
 	//public ResponseBeachPestDTO getBeachDetailPest(int beachNumber);
+    
+    int updateUserBeachSelection(@Param("userNumber") int userNumber, @Param("beachNumber") int beachNumber);
 }
