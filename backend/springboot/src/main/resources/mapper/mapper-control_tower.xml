@@ -54,7 +54,7 @@
         VALUES (#{managerNumber}, #{userNumber}, 0)
     </insert>
     
-    <insert id="insertTaskOnManualReport">
+      <insert id="insertTaskOnManualReport">
     INSERT INTO tb_task (
         manager_number,
         user_number,
