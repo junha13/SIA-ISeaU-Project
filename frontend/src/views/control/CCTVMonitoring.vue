@@ -68,11 +68,11 @@
           </div>
 
   <!-- 카드 본문 영역 -->
-<div class="p-3 " style="overflow-y: auto;">
+<div class="p-3 h-270px" style="overflow-y: auto;">
   <!-- 진입 알림 탭 -->
   <div
     v-if="rightPanelTab === 'overview'"
-    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    class="map-placeholder-base border rounded d-flex flex-column h-75"
     style="background-color: #F0F2F5;"
   >
     <!-- 상단: 제목 + 모두 읽음 버튼 -->
