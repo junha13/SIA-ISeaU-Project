@@ -345,9 +345,17 @@ public class GroupsService {
 
     // --- 11. [수정] 거리 이탈 알림 발송 ---
     public void sendDistanceAlert(int senderUserNumber, String alertType, String message) {
+
+        // [디버그 1] 요청이 들어왔는지 확인
+        log.info("👉 서비스 진입 확인! 요청자: {}", senderUserNumber);
+
         // 1. 그룹 조회
         Integer groupId = dao.findGroupIdByUser(senderUserNumber);
-        if (groupId == null) return;
+        // [디버그 2]
+        if (groupId == null) {
+            log.warn("⛔ [중단] 유저({})는 현재 DB상 그룹이 없습니다. 알림을 보낼 수 없습니다.", senderUserNumber);
+            return;
+        }
 
         // 2. 그룹 멤버 조회
         ResponseGroupMemberLocationDTO searchDto = new ResponseGroupMemberLocationDTO();

@@ -84,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
         webview.addJavascriptInterface(new AndroidBridge(this), "AndroidBridge");
 
         // 페이지 띄우기
-        webview.loadUrl("https://iseau.kr");
-        //webview.loadUrl("https://hellokiyo.ngrok.io");
+        //webview.loadUrl("https://iseau.kr");
+            webview.loadUrl("https://hellokiyo.ngrok.io");
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());

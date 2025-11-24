@@ -38,12 +38,12 @@ public class NotificationService {
         Message message = Message.builder()
                 .setToken(registrationToken) 
                 
-                // --- 🚨 [핵심] 프론트엔드 트리거 및 SW 백그라운드 처리용 Data Payload ---
+                // --- 프론트엔드 트리거 및 SW 백그라운드 처리용 Data Payload ---
                 .putData("type", "GROUP_INVITE_PENDING") // Foreground onMessage 트리거용
                 .putData("group_id", String.valueOf(groupId))
                 .putData("inviter_name", inviterName)
                 
-                // 🚨 [추가됨] 수락/거절 API 호출에 필요한 초대장 ID
+                // 수락/거절 API 호출에 필요한 초대장 ID
                 .putData("id", String.valueOf(invitationId != null ? invitationId : 0)) 
                 
                 // SW가 알림을 띄울 때 사용할 제목/본문
