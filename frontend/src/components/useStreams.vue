@@ -85,7 +85,14 @@ const props = defineProps({
 const state = reactive({});
 
 // URL 조합: /ws/stream/{sid}
-const buildWsUrl = (id) => `${props.wsUrl}/${id}`;
+const buildWsUrl = (id) => {
+    // 🚨 [수정된 내용으로 교체]
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    
+    // 최종 주소: ws://localhost:5173/fastapi/ws/stream/{id}
+    return `${protocol}//${host}${props.wsUrl}/${id}`;
+};
 
 // 아직 프레임이 없을 때 보여줄 더미 이미지
 const placeholder = (id) =>

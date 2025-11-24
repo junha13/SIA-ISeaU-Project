@@ -24,7 +24,7 @@
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
           <UseStreams
-            :ws-url="`${CCTV_LOG_Stream_API_URL}/ws/stream`"
+            :ws-url="`/fastapi/ws/stream`"
             :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
             :key="controlView"  
           />

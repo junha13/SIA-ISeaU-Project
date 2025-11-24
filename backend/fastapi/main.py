@@ -32,7 +32,7 @@ FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 
 
 MIN_STABLE_FRAMES = 6      # 몇 프레임 평균을 보고 "진짜 증가"라고 인정할지
 LOG_COOLDOWN_SEC = 3       # 같은 CAM에서 로그 연속 전송 최소 간격(초)
-SPRING_BASE_URL = "http://host.docker.internal:8080"  # ★여기 스프링 서버 주소 맞게 수정하기
+SPRING_BASE_URL = "https://iseau.kr"  # ★여기 스프링 서버 주소 맞게 수정하기
 
 YOUTUBE_URL_TO_FETCH = ""
 

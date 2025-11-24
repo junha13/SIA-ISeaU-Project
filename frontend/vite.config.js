@@ -77,6 +77,12 @@ export default defineConfig({
                 target: 'http://localhost:8080',
                 target: 'https://hellokiyo.ngrok.io',
                 changeOrigin: true
+            },
+            '/fastapi': { // Vue가 이 경로로 호출하면
+              target: 'http://70.29.218.211:42567', // Vast.ai로 연결
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/fastapi/, ''), // '/vastai-proxy'는 삭제하고 전달
+              ws: true, // 웹소켓 터널링 활성화 (필수!)
             }
         }
     },
