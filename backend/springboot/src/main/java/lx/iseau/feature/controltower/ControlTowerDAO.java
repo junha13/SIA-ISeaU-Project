@@ -10,8 +10,11 @@ import java.util.List;
  */
 @Mapper
 public interface ControlTowerDAO {
+    // 로그 데이터 조회(지서)
+    List<TaskLogDTO> getTaskLogByUserNumber(@Param("userNumber") int userNumber);
+    
     // 관제센터의 처리 리스트(지서)
-    List<TaskListDTO> getTaskListByControlTowerNumber(@Param("controlTowerNumber") int controlTowerNumber);
+    List<ControlTowerTaskListDTO> getTaskListByControlTowerNumber(@Param("controlTowerNumber") int controlTowerNumber);
 
     // 매니저 기본정보 조회
     ManagerInfoDTO selectManagerInfoByManagerNumber(@Param("managerNumber") int managerNumber);

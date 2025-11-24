@@ -24,8 +24,13 @@ public class ControlTowerService {
 
     private final int DEFAULT_MANAGER_NUMBER = 1; // 임시 매니저 번호
 
+    // ============ 로그 데이터 조회(지서) ============
+    public List<TaskLogDTO> getTaskLogByUserNumber(int userNumber) {
+        return dao.getTaskLogByUserNumber(userNumber);
+    }
+
     // ============ 관제센터의 처리 리스트(지서) ============
-    public List<TaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
+    public List<ControlTowerTaskListDTO> getTaskListByControlTowerNumber(int controlTowerNumber) {
         return dao.getTaskListByControlTowerNumber(controlTowerNumber);
     }
 

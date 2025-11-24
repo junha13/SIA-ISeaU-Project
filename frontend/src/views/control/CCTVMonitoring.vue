@@ -392,7 +392,6 @@ import TtsPlayer from "@/components/TtsPlayer.vue";
 const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const CCTV_LOG_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/cctv/logList` // ★추가: 위험 로그 조회 API
 const CCTV_LOG_Stream_API_URL = import.meta.env.VITE_PYTHON_API_BASE_URL
-
 const store = useStore()
 const { controlView, cctvName } = storeToRefs(store)
 const { camLabelMap, dangerTemplate, cctvLocation } = store
