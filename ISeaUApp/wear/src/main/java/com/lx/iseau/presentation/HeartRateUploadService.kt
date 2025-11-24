@@ -43,8 +43,8 @@ class HeartRateUploadService : Service() {
         private const val NOTI_ID = 212
 
         // 응급상황(이상치) 임계값만 사용
-        private const val EMERGENCY_LOW_HR = 60   // 이 값 이하 → 너무 느림
-        private const val EMERGENCY_HIGH_HR = 90 // 이 값 이상 → 너무 빠름
+        private const val EMERGENCY_LOW_HR = 50   // 이 값 이하 → 너무 느림
+        private const val EMERGENCY_HIGH_HR = 55 // 이 값 이상 → 너무 빠름
 
         // --- 압력(수심) 판정을 위한 상수 ---
         private const val PRESSURE_BASELINE_SAMPLES = 20          // 처음 N개 샘플로 수면 기준 잡기

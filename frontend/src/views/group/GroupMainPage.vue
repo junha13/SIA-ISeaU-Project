@@ -13,7 +13,7 @@
           >
             <i class="fas fa-bell me-1"></i> 알림
           </button>
-
+          
           <div class="d-flex gap-2">
             <button
               class="btn fw-bold text-white rounded-pill shadow-sm action-button"
@@ -90,9 +90,10 @@
               <span
                 v-if="member.status === 'online'"
                 class="text-success small fw-bold"
-                style="font-size: 18px;"
+                style="font-size: 18px; cursor: pointer;"
+                @click="handleManualReport(member)"
               >
-              🚨
+                🚨
               </span>
               <span
                 v-if="member.status === 'online'"
@@ -101,7 +102,7 @@
               >
                 (등록완료)
               </span>
-               
+              
               <span
                 v-else-if="member.status === 'pending'"
                 class="text-muted small fw-bold"
@@ -137,6 +138,14 @@
         </div>
       </template>
     </div>
+    
+    <GroupReportModal
+        v-if="showReportModal && reportTarget"
+        v-model:isVisible="showReportModal"
+        :report-data="reportTarget"
+        @update:isVisible="handleReportModalClose"
+    />
+
 
     <GroupInviteModal
       v-if="hasGroup && activeGroupId != null"
@@ -156,13 +165,6 @@
       @settings-updated="handleSettingsUpdated"
       @settings-synced="handleSettingsSynced" />
 
-    <!-- 
-       🚨 GroupMainPage 내부의 모달은 제거하는 것이 좋습니다.
-       (App.vue에서 전역으로 관리하기 때문입니다. 중복 실행 방지)
-       하지만 필요하다면 유지하셔도 됩니다. 여기서는 주석 처리 추천.
-       <GroupInviteConfirmModal ... /> 
-    -->
-
   </div>
 
   <div v-if="alertDialog.visible" class="ga-backdrop">
@@ -177,8 +179,8 @@
       <div class="ga-footer">
         <button class="ga-btn" @click="closeAlert">확인</button>
       </div>
-      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -188,6 +190,8 @@ import GroupInviteModal from '@/components/GroupInviteModal.vue'
 import GroupCreateModal from '@/components/GroupCreateModal.vue'
 import GroupAlertSettingsModal from '@/components/GroupAlertSettingsModal.vue'
 import GroupInviteConfirmModal from '@/components/GroupInviteConfirmModal.vue'
+// 🚨 [추가] GroupReportModal 컴포넌트 임포트
+import GroupReportModal from '@/components/GroupReportModal.vue' 
 import { useStore } from '@/stores/store.js'
 import { useGroupStore } from '@/stores/groupStore'
 import { storeToRefs } from 'pinia' // 🚨 필수 추가
@@ -218,6 +222,8 @@ const activeGroupLocations = ref([])
 const showAlertModal = ref(false)
 const showInviteModal = ref(false)
 const showCreateGroupModal = ref(false)
+const showReportModal = ref(false) // 🚨 [추가] GroupReportModal 표시 상태
+const reportTarget = ref(null)      // 🚨 [추가] 신고 대상 멤버 데이터
 const latitude = ref(null)
 const longitude = ref(null)
 const bootLoading = ref(true)
@@ -250,6 +256,7 @@ const groupLocations = computed(() => {
     const d = m.distance != null ? Number(m.distance) : null
     const lat = m.lat ?? m.latitude ?? null
     const lng = m.lng ?? m.longitude ?? null
+    // member 객체에 age, gender 등 서버에서 내려오는 모든 필드가 포함됩니다.
     mapObj[m.id] = { ...(mapObj[m.id] || {}), ...m, distance: d, lat, lng }
   })
   return Object.values(mapObj).sort((a, b) => {
@@ -261,24 +268,12 @@ const groupLocations = computed(() => {
   })
 })
 
-/* ===== [핵심 추가] Store 변경 감지 -> 화면 갱신 ===== */
-// App.vue에서 수락이 완료되면 groupStore의 목록이 바뀝니다.
-// 이 watch가 그것을 감지하고 즉시 이 페이지의 데이터를 갱신합니다.
+/* ===== Store 변경 감지 -> 화면 갱신 ===== */
 watch(globalGroupList, async (newList) => {
     console.log('🔄 [GroupMainPage] Store 그룹 목록 변경 감지 -> 화면 갱신');
     
-    // 1. 로컬 데이터 동기화
     myGroupList.value = newList;
 
-    // 2. 새 그룹이 생겼다면 활성화
-    if (newList.length > 0 && !activeGroupId.value) {
-        // activeGroupId는 computed지만, 초기값 설정을 위해 여기서 로직이 필요할 수 있음
-        // (하지만 computed가 myGroupList를 바라보고 있으므로 자동 반영될 수 있음)
-    }
-    
-    // 3. 지도 및 위치 정보 즉시 갱신
-    // (activeGroupId가 computed로 갱신된 직후 실행되도록 nextTick이나 watchEffect 활용 가능하지만,
-    //  여기서는 직접 호출하여 강제 갱신)
     if (myGroupList.value.length > 0) {
         const newId = myGroupList.value[0].id;
         alertSettingsArr.value = await fetchAlertSettings(newId);
@@ -286,7 +281,7 @@ watch(globalGroupList, async (newList) => {
         await pingBoundaryAndLocations();
         restartGeoLoop();
     } else {
-        activeGroupLocations.value = []; // 그룹 없으면 비우기
+        activeGroupLocations.value = [];
     }
 }, { deep: true });
 
@@ -339,7 +334,7 @@ const fetchAlertSettings = async (groupId) => {
     console.error('알림 설정 로드 실패 (Sync):', e)
   }
   return [
-    { id: 1, label: '3m 이탈 알림', radius: 3, enabled: true, levelField: 'groupLeaveLevel1' },
+    { id: 1, label: '100m 이탈 알림', radius: 10, enabled: true, levelField: 'groupLeaveLevel1' },
     { id: 2, label: '200m 이탈 알림', radius: 200, enabled: false, levelField: 'groupLeaveLevel2' },
     { id: 3, label: '해안선 알림', radius: 0, enabled: true, levelField: 'tide' },
   ]
@@ -575,8 +570,8 @@ const loadBoundariesDeferred = async () => {
 
 const drawRings = (rings, color) => {
   rings.forEach((ring) => {
-    const path = ring.map(([lon, lat]) => new naver.maps.LatLng(lat, lon))
-    new naver.maps.Polyline({
+    const path = ring.map(([lon, lat]) => new window.naver.maps.LatLng(lat, lon))
+    new window.naver.maps.Polyline({
       map,
       path,
       strokeColor: color,
@@ -587,9 +582,9 @@ const drawRings = (rings, color) => {
 }
 
 const fitRings = (rings) => {
-  const bounds = new naver.maps.LatLngBounds()
+  const bounds = new window.naver.maps.LatLngBounds()
   rings.forEach((ring) =>
-    ring.forEach(([lon, lat]) => bounds.extend(new naver.maps.LatLng(lat, lon))),
+    ring.forEach(([lon, lat]) => bounds.extend(new window.naver.maps.LatLng(lat, lon))),
   )
   if (!bounds.isEmpty?.() && Object.prototype.hasOwnProperty.call(bounds, 'extend')) {
     map.fitBounds(bounds)
@@ -629,241 +624,317 @@ watch(
   { deep: true },
 )
 
+/* ===== 함수: 나이 계산 (YYYY-MM-DD 형식의 birthDate 필요) ===== */
+const calculateAge = (birthDate) => {
+    if (!birthDate) return '미상';
+    
+    // YYYY-MM-DD 형식이라고 가정
+    const birth = new Date(birthDate);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    // 생일이 지나지 않았으면 -1
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age; // 만 나이 반환
+};
+
+
+/* ===== 함수: 수동 신고 모달 열기/닫기 (🚨 클릭) ===== */
+const handleManualReport = (member) => {
+    // 🚨 member 객체에서 age, gender, id(userNumber) 등의 필드를 가져와야 합니다.
+    
+    const memberId = member.id; // userNumber로 사용
+    
+  // 🚨 [핵심] DB에서 가져온 원본 lat/lng 값
+    const memberLat = Number(member.lat); 
+    const memberLng = Number(member.lng);
+    
+    // 🚨 [BPM Fix] 수동 신고 시 BPM 정보는 없으므로 NULL로 설정
+    const memberBpm = null;
+    
+    // 🚨 [수정] 나이 계산 로직 적용 (member.birthDate 필드가 서버에서 내려와야 함)
+    const memberAge = calculateAge(member.birthDate); 
+    const memberGender = member.gender || 'N/A';
+    
+    const manualLog = `관리자 수동 호출 시작 (${member.name} 위치 기준)`;
+
+  // 필수 유효성 검사 (isFinite로 숫자이면서 NaN/Infinity가 아님을 확인)
+    if (!memberId || !Number.isFinite(memberLat) || !Number.isFinite(memberLng)) {
+        // 🚨 [디버깅] 유효성 검사 실패 시, 어떤 값이 문제인지 명시적으로 출력
+        console.error("❌ 위치 값 오류:", { lat: member.lat, lng: member.lng, isNumLat: Number.isFinite(memberLat) });
+        alert('필수 위치/사용자 정보가 유효하지 않습니다. (ID, 위도, 경도 확인 필요)');
+        return;
+    }
+
+    // reportTarget 객체 구성
+    reportTarget.value = {
+        memberName: member.name,
+        age: memberAge, // 🚨 계산된 나이 적용
+        gender: memberGender,
+        bpm: memberBpm, // 🚨 NULL 전달
+        userNumber: memberId, // GroupReportModal에 전달할 userNumber
+        latitude: memberLat, 
+        longitude: memberLng, // 🚨 Number 타입으로 전달
+        timestamp: Date.now(),
+        log: manualLog,
+    };
+    
+    // 🚨 [추가] 최종 전달 Props 확인 로그
+   console.log('✅ [Report Props] Lat/Lng:', reportTarget.value.latitude, reportTarget.value.longitude);
+    // ...
+
+    showReportModal.value = true;
+    
+    // 선택된 멤버의 위치로 지도를 중앙 이동 (시각적 강조)
+    if (map) {
+        const reportPos = new window.naver.maps.LatLng(memberLat, memberLng);
+        map.setCenter(reportPos);
+        map.setZoom(18); 
+    }
+};
+
 /* ===== 알림 ===== */
 const prevMemberDistances = ref({})
 const prevMemberSwim = ref({})
 const alertDialog = ref({ visible: false, message: '' })
 
 const pushAlert = async (_type, msg) => {
-  // 1. 화면에 모달 띄우기 (사용자에게 보여줌)
-  alertDialog.value.visible = true
-  alertDialog.value.message = msg
+  // 1. 화면에 모달 띄우기 (사용자에게 보여줌)
+  alertDialog.value.visible = true
+  alertDialog.value.message = msg
 
-  // 2. 서버로 FCM 알림 요청 전송
-  try {
-    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/send-alert`;
+  // 2. 서버로 FCM 알림 요청 전송
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/groups/send-alert`;
 
-    await axios.post(url, {
-      type: _type,   // 'radius', 'radius_2', 'swim' 등
-      message: msg
-    }, { withCredentials: true });
+    await axios.post(url, {
+      type: _type,    // 'radius', 'radius_2', 'swim' 등
+      message: msg
+    }, { withCredentials: true });
 
-    console.log('🚀 FCM 알림 요청 전송 완료:', msg);
+    console.log('🚀 FCM 알림 요청 전송 완료:', msg);
 
-  } catch (e) {
-    console.error('❌ FCM 알림 요청 실패:', e);
-  }
+  } catch (e) {
+    console.error('❌ FCM 알림 요청 실패:', e);
+  }
 }
 
 const closeAlert = () => {
-  alertDialog.value.visible = false
+  alertDialog.value.visible = false
 }
 
 watch(
-  [groupLocations, alertSettingsArr],
-  ([list, settings]) => {
-    if (!settings || settings.length === 0) {
-        return; 
-    }
-    
-    if (list.length <= 1) {
-        return; 
-    }
-    
-    list.forEach((m) => {
-      if (!m.id) return
-      if (m.status !== 'online') return
+  [groupLocations, alertSettingsArr],
+  ([list, settings]) => {
+    if (!settings || settings.length === 0) {
+        return; 
+    }
+    
+    if (list.length <= 1) {
+        return; 
+    }
+    
+    list.forEach((m) => {
+      if (!m.id) return
+      if (m.status !== 'online') return
 
-      const isMe = Number(m.distance) <= 0.3
-      if (isMe) return
+      const isMe = Number(m.distance) <= 0.3
+      if (isMe) return
 
-      const now = Number(m.distance)
-      if (!Number.isFinite(now)) return
+      const now = Number(m.distance)
+      if (!Number.isFinite(now)) return
 
-      const prev = prevMemberDistances.value[m.id]
-      
-      const distanceSettings = settings.find((l) => l.levelField === 'groupLeaveLevel1');
-      const distanceEnabled = distanceSettings?.enabled;
-      const threshold = distanceSettings?.radius || 10; 
-      
-      const isTransition = (prev != null && prev < threshold && now >= threshold);
-      const isInitialBreach = (prev == null && now >= threshold);
-      
-      if (distanceEnabled && (isTransition || isInitialBreach)) {
-        pushAlert('radius', `🚨 ${m.name}님이 설정 거리 ${threshold}m을 이탈했습니다. (${now.toFixed(1)}m)`);
-      }
-      
-      prevMemberDistances.value[m.id] = now
+      const prev = prevMemberDistances.value[m.id]
+      
+      const distanceSettings = settings.find((l) => l.levelField === 'groupLeaveLevel1');
+      const distanceEnabled = distanceSettings?.enabled;
+      const threshold = distanceSettings?.radius || 10; 
+      
+      const isTransition = (prev != null && prev < threshold && now >= threshold);
+      const isInitialBreach = (prev == null && now >= threshold);
+      
+      if (distanceEnabled && (isTransition || isInitialBreach)) {
+        pushAlert('radius', `🚨 ${m.name}님이 설정 거리 ${threshold}m을 이탈했습니다. (${now.toFixed(1)}m)`);
+      }
+      
+      prevMemberDistances.value[m.id] = now
 
-      const nowSwim = m.userStatus === 'false'
-      const prevSwim = prevMemberSwim.value[m.id]
-      if (prevSwim !== undefined && prevSwim === false && nowSwim === true) {
-        pushAlert('swim', `🌊 ${m.name}님이 수영 중으로 바뀌었어요.`)
-      }
-      prevMemberSwim.value[m.id] = nowSwim
-    })
-  },
-  { deep: true ,immediate: true },
+      const nowSwim = m.userStatus === 'false'
+      const prevSwim = prevMemberSwim.value[m.id]
+      if (prevSwim !== undefined && prevSwim === false && nowSwim === true) {
+        pushAlert('swim', `🌊 ${m.name}님이 수영 중으로 바뀌었어요.`)
+      }
+      prevMemberSwim.value[m.id] = nowSwim
+    })
+  },
+  { deep: true ,immediate: true },
 )
 
 /* ===== 라이프사이클 ===== */
 onMounted(async () => {
-  await Promise.allSettled([
-    (async () => startGeoWatch())(),
-    fetchGroups(),
-  ])
+  await Promise.allSettled([
+    (async () => startGeoWatch())(),
+    fetchGroups(),
+  ])
 
-  header.value = groupName.value || '그룹 화면'
+  header.value = groupName.value || '그룹 화면'
 
-  checkPendingInvitations()
+  checkPendingInvitations()
 })
 
 onUnmounted(() => {
-  stopGeoWatch()
-  if (geoTimer) clearInterval(geoTimer)
+  stopGeoWatch()
+  if (geoTimer) clearInterval(geoTimer)
 })
 
 watch(groupLocations, (members) => {
-  members.forEach((m) => {
-    if (!m?.id) return
-    const s = normStatus(m.userStatus)
-    if (s == null) return
-    if (lastStatus.value[m.id] === s) {
-      stableStatus.value[m.id] = s
-    }
-    lastStatus.value[m.id] = s
-  })
+  members.forEach((m) => {
+    if (!m?.id) return
+    const s = normStatus(m.userStatus)
+    if (s == null) return
+    if (lastStatus.value[m.id] === s) {
+      stableStatus.value[m.id] = s
+    }
+    lastStatus.value[m.id] = s
+  })
 })
 </script>
-
-<style scoped>
+ <style scoped>
 /* --------------------------------- */
 /* 🎨 디자인 (CSS) */
 /* --------------------------------- */
 .group-main-page {
- min-height: calc(100vh - 55px - 60px);
+  min-height: calc(100vh - 55px - 60px);
 }
 
 .map-overlay-buttons button:first-child {
- background-color: rgba(255, 255, 255, 0.8);
- color: v-bind(darkColor);
- font-size: 0.8rem;
- padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: v-bind(darkColor);
+  font-size: 0.8rem;
+  padding: 5px 10px;
 }
 
 .map-overlay-buttons button:last-child {
- background-color: v-bind(mainColor) !important;
- color: white !important;
+  background-color: v-bind(mainColor) !important;
+  color: white !important;
 }
 
 .empty-group-card {
-border-width: 1px !important;
-border-radius: 0.5rem;
-width: 100%;
-max-width: 400px;
+  border-width: 1px !important;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 400px;
 }
 
 .group-actions {
-position: relative;
-padding-top: 1rem;
+  position: relative;
+  padding-top: 1rem;
 }
 
 .action-button {
-font-size: 0.9rem;
-padding: 8px 12px;
-height: 42px;
-text-align: center;
-border-width: 1px;
-min-width: 90px;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  height: 42px;
+  text-align: center;
+  border-width: 1px;
+  min-width: 90px;
 }
 
 .notification-button {
-color: v-bind(darkColor);
-border: 1px solid #dee2e6;
-background-color: #e9ecef;
+  color: v-bind(darkColor);
+  border: 1px solid #dee2e6;
+  background-color: #e9ecef;
 }
 
 .btn-outline-danger {
-border-color: #dc3545;
-color: #dc3545;
-background-color: white;
+  border-color: #dc3545;
+  color: #dc3545;
+  background-color: white;
 }
 
 .btn-outline-danger:hover {
-background-color: #dc3545;
-color: white;
+  background-color: #dc3545;
+  color: white;
 }
 
 /* 모달 */
 .ga-backdrop {
-position: fixed;
-inset: 0;
-background: rgba(0, 0, 0, 0.7);
-display: flex;
-align-items: center;
-justify-content: center;
-z-index: 3000;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
 }
 
 .ga-modal {
-width: 280px;
-background: #ffffff; 
-border-radius: 12px;
-overflow: hidden;
-border: 1px solid v-bind(darkColor); 
+  width: 280px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid v-bind(darkColor);
 }
 
 .ga-header {
-background-color: v-bind(darkColor); 
-color: white;
-padding: 12px 14px 12px;
-display: flex;
-justify-content: space-between;
-align-items: center;
+  background-color: v-bind(darkColor);
+  color: white;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
 .ga-header h5 {
-margin: 0;
-font-weight: 800;
-font-size: 16px;
-color: white; 
+  margin: 0;
+  font-weight: 800;
+  font-size: 16px;
+  color: white;
 }
+
 .ga-close {
-color: white; 
-background: transparent;
-border: none;
-font-size: 18px;
-cursor: pointer;
-line-height: 1; 
+  color: white;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .ga-body {
-padding: 20px 18px;  
-font-size: 16px;
-font-weight: 600; 
-color: #333333;
-line-height: 1.4;
-text-align: center; 
+  padding: 20px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .ga-footer {
-padding: 10px 14px 14px; 
-display: flex;
-justify-content: center; 
+  padding: 10px 14px 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .ga-btn {
-background: v-bind(darkColor); 
-border: none;
-color: #fff;
-padding: 8px 24px;
-border-radius: 20px; 
-font-size: 14px;
-font-weight: 600;
-cursor: pointer;
-transition: background-color 0.2s;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); 
+  background: v-bind(darkColor);
+  border: none;
+  color: #fff;
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
+
 .ga-btn:hover {
-background: v-bind(mainColor); 
+  background: v-bind(mainColor);
 }
 </style>

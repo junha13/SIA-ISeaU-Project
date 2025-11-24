@@ -45,7 +45,7 @@
 
           <div class="col-md-8 pe-3 map-col">
             <div class="mb-3 text-secondary ps-2">신고자 위치</div>
-            <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
+              <div class="map-placeholder bg-light rounded d-flex align-items-center justify-content-center border" style="height: 400px; border-color: #EAECEF !important;">
               <div
                 v-if="!hasValidMapPosition"
                 class="text-muted small text-center px-3"
@@ -92,7 +92,15 @@
 
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
-                      <div class="fs-2 info-value fw-bold text-truncate">{{ selectedReport.location }}</div>
+                      <div class="fs-2 info-value fw-bold text-truncate">
+                        {{ selectedReport.location }}
+                        <small
+                          v-if="selectedReport.coordinateLabel"
+                          class="text-muted ms-2 fs-6 coordinate-tag"
+                        >
+                          {{ selectedReport.coordinateLabel }}
+                        </small>
+                      </div>
                     </div>
 
                     <div class="col-12 d-flex align-items-center">
@@ -107,11 +115,11 @@
 
                   <button
                     class="btn btn-sm"
-                    :class="selectedReport.processed === 1 ? 'btn-processed-disabled' : 'btn-processed'"
-                    :disabled="selectedReport.processed === 1"
-                    @click="markProcessed(selectedReport)"
+                    :class="isReportProcessed(selectedReport) ? 'btn-processed-disabled' : 'btn-processed'"
+                    :disabled="isReportProcessed(selectedReport)"
+                    @click="handleRescueRequest(selectedReport)"
                   >
-                    {{ selectedReport.processed === 1 ? '구조 요청 처리됨' : '구조 요청' }}
+                    {{ isReportProcessed(selectedReport) ? '구조 요청 처리됨' : '구조 요청' }}
                   </button>
 
               </div>
@@ -122,10 +130,19 @@
             <div class="card p-3 border-0" style="background-color: #FFFFFF;">
               <h6 class="fw-bold text-secondary-default mb-3"><i class="bi bi-journal-text me-2"></i>상황 기록 로그</h6>
               <div class="log-area small" style="height: 150px; overflow-y: auto; background-color: #F8F9FA; padding: 10px; border-radius: 6px; border: 1px solid #EAECEF;">
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="fw-semibold text-dark">신고 접수 완료 (레벨: {{ selectedReport.level.toUpperCase() }})</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-muted">심박수 {{ prettyHr(selectedReport.hr) }}, 산소포화도 {{ prettySpo2(selectedReport.spo2) }} 기록</span></div>
-                <div class="log-item mb-1"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span class="text-dark">최단거리 출동 경로 탐색 완료</span></div>
-                <div class="log-item"><span class="log-time text-muted">[{{ selectedReport.time }}]</span> <span :class="getAlertColor(selectedReport.level)">**{{ selectedReport.type }}** 발생 확인. 위치: {{ selectedReport.location }}</span></div>
+                <div v-if="logsLoading" class="text-muted text-center py-2">상황 기록을 불러오는 중입니다...</div>
+                <div v-else-if="logsError" class="text-danger text-center py-2">상황 기록을 가져오지 못했습니다.</div>
+                <div v-else-if="!activityLogs.length" class="text-muted text-center py-2">기록이 없습니다.</div>
+                <div v-else>
+                  <div
+                    class="log-item mb-1"
+                    v-for="log in activityLogs"
+                    :key="`${log.forTime ?? ''}-${log.hr ?? ''}`"
+                  >
+                    <span class="log-time text-muted">[{{ formatLogTime(log.forTime) }}]</span>
+                    <span class="text-dark">심박수 : {{ formatLogHr(log.hr) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -135,10 +152,72 @@
 
     </div>
   </div>
+
+  <div
+    v-if="showRescueModal && selectedReport"
+    class="rescue-modal-backdrop"
+    @click.self="closeRescueModal"
+  >
+    <div class="rescue-modal-card">
+      <div class="rescue-modal-header d-flex justify-content-between align-items-start">
+        <div>
+          <h5 class="mb-1">구조 요청 전송</h5>
+          <p class="text-muted small mb-0">다음과 같은 내용을 구조요원에게 전달합니다</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-link text-muted p-0"
+          @click="closeRescueModal"
+        >
+          <i class="bi bi-x-lg fs-5"></i>
+        </button>
+      </div>
+
+      <div class="rescue-modal-body">
+        <div class="modal-map-wrapper mb-3">
+          <div
+            v-if="hasValidMapPosition"
+            ref="modalMapEl"
+            class="modal-map"
+          ></div>
+          <div v-else class="modal-map-placeholder text-muted small">
+            위치 정보가 없어 지도를 표시할 수 없습니다.
+          </div>
+        </div>
+
+        <div class="modal-info-grid">
+          <div class="modal-info-row">
+            <span class="label">신고 유형</span>
+            <span class="value">{{ selectedReport.type }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">만나이</span>
+            <span class="value">{{ selectedReport.ageLabel }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">성별</span>
+            <span class="value">{{ selectedReport.genderLabel }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">심박수</span>
+            <span class="value">{{ prettyHr(selectedReport.hr) }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="label">해수욕장</span>
+            <span class="value">{{ selectedReport.location }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rescue-modal-footer d-flex justify-content-end">
+        <button class="btn btn-secondary btn-sm" @click="closeRescueModal">닫기</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount, watchEffect, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/utils/useApi.js';
 
@@ -147,10 +226,18 @@ const selectedReport = ref(null);
 const highlight = ref(false);
 const isLoading = ref(false);
 const loadError = ref(null);
+const activityLogs = ref([]);
+const logsLoading = ref(false);
+const logsError = ref(null);
 const mapEl = ref(null);
+const processedReportIds = ref(new Set());
+const showRescueModal = ref(false);
+const modalMapEl = ref(null);
 
 let map = null;
 let watchMarker = null;
+let modalMap = null;
+let modalWatchMarker = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -161,6 +248,7 @@ const controlTowerNumber = computed(() => {
 });
 
 const { execute: fetchTaskList } = useApi('get', '/api/controltower/task/list/controltower');
+const { execute: fetchTaskLog } = useApi('get', '/api/controltower/task/log');
 const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
@@ -193,12 +281,54 @@ const setSelectedReport = (report, shouldHighlight = false) => {
   if (!report) {
     highlight.value = false;
     clearHighlightTimer();
+    activityLogs.value = [];
+    logsLoading.value = false;
+    logsError.value = null;
   }
 };
 
 const selectReport = (report) => {
   if (!report) return;
   setSelectedReport(report, true);
+  loadReportLogs(report).catch(() => {});
+};
+
+const loadReportLogs = async (report, { silent = false } = {}) => {
+  const userNumber = report?.userNumber
+    ?? report?.raw?.userNumber
+    ?? report?.raw?.user_number
+    ?? null;
+  if (!userNumber) {
+    if (!silent) {
+      activityLogs.value = [];
+      logsError.value = null;
+      logsLoading.value = false;
+    }
+    return;
+  }
+
+  if (!silent) {
+    logsLoading.value = true;
+    logsError.value = null;
+  }
+
+  try {
+    const response = await fetchTaskLog({ userNumber });
+    const list = Array.isArray(response?.result) ? response.result : [];
+    activityLogs.value = list;
+    if (!silent) {
+      logsError.value = null;
+    }
+  } catch (error) {
+    if (!silent) {
+      logsError.value = error;
+      activityLogs.value = [];
+    }
+  } finally {
+    if (!silent) {
+      logsLoading.value = false;
+    }
+  }
 };
 
 const toFiniteNumber = (value) => {
@@ -212,18 +342,60 @@ const isValidCoordinatePair = (lat, lon) => {
   return !(lat === 0 && lon === 0);
 };
 
-const parseDateTime = (value) => {
-  if (!value) return { date: '-', time: '--:--:--' };
-  const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
-  const parsed = new Date(normalized);
-  if (!Number.isNaN(parsed.getTime())) {
-    return {
-      date: parsed.toISOString().slice(0, 10),
-      time: parsed.toLocaleTimeString('ko-KR', { hour12: false })
-    };
+const padTwoDigits = (value) => String(value).padStart(2, '0');
+
+const formatKoreanTimeParts = (hour, minute, second) => `${hour}시${minute}분${second}초`;
+
+const formatKoreanTimeDisplay = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return formatKoreanTimeParts(
+      padTwoDigits(value.getHours()),
+      padTwoDigits(value.getMinutes()),
+      padTwoDigits(value.getSeconds())
+    );
   }
-  const [datePart, timePart] = String(value).split(' ');
-  return { date: datePart ?? '-', time: timePart ?? '--:--:--' };
+
+  const str = String(value ?? '').trim();
+  if (!str) return '--시--분--초';
+
+  const timeMatch = str.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    const [, hour, minute, second] = timeMatch;
+    return formatKoreanTimeParts(
+      padTwoDigits(hour),
+      padTwoDigits(minute),
+      padTwoDigits(second)
+    );
+  }
+
+  return '--시--분--초';
+};
+
+const normalizeDateTimeString = (value) => {
+  if (!value) return '';
+  let normalized = String(value).trim();
+  if (!normalized.includes('T') && normalized.includes(' ')) {
+    normalized = normalized.replace(' ', 'T');
+  }
+  normalized = normalized.replace(/([+-]\d{2})(?!:)/, '$1:00');
+  return normalized;
+};
+
+const parseDateTime = (value) => {
+  if (!value) return { date: '-', time: '--시--분--초' };
+  const str = String(value).trim();
+  const normalized = normalizeDateTimeString(str);
+  const parsed = new Date(normalized);
+  const hasValidDate = !Number.isNaN(parsed.getTime());
+  const datePart = hasValidDate
+    ? parsed.toISOString().slice(0, 10)
+    : (str.split(' ')[0] ?? '-');
+
+  const timePart = hasValidDate
+    ? formatKoreanTimeDisplay(parsed)
+    : formatKoreanTimeDisplay(str);
+
+  return { date: datePart, time: timePart };
 };
 
 const computeInternationalAge = (birthDate) => {
@@ -251,38 +423,50 @@ const mapGender = (gender) => {
 const determineLevel = (count) => {
   const numeric = Number(count);
   if (!Number.isFinite(numeric)) return 'warning';
-  if (numeric >= 10) return 'emergency';
-  if (numeric >= 5) return 'danger';
+  if (numeric >= 20) return 'emergency';
+  if (numeric >= 10) return 'danger';
   return 'warning';
 };
 
 const determineTypeAndLocation = (task) => {
+  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
+  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
   const userLat = toFiniteNumber(task?.userLat);
   const userLon = toFiniteNumber(task?.userLon);
 
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: '심박수 이상', mapLat: watchLat, mapLon: watchLon };
+    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
   }
 
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: '라이프가드 호출', mapLat: userLat, mapLon: userLon };
+    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: '라이프가드 호출', mapLat: null, mapLon: null };
+  return { type: resolvedType, mapLat: null, mapLon: null };
+};
+
+const formatCoordinateLabel = (lat, lon) => {
+  const latNum = toFiniteNumber(lat);
+  const lonNum = toFiniteNumber(lon);
+  if (latNum === null || lonNum === null) return null;
+  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`;
 };
 
 const toReportViewModel = (task) => {
+  const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
   const { date, time } = parseDateTime(task?.dateAndTime);
   const age = computeInternationalAge(task?.birthDateForAge);
   const genderLabel = mapGender(task?.gender);
   const hr = toFiniteNumber(task?.hr);
   const count = toFiniteNumber(task?.count);
   const { type, mapLat, mapLon } = determineTypeAndLocation(task);
+  const backendProcessed = task?.taskProcessed === 1;
+  const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
   return {
-    id: task?.id ?? task?.taskNumber ?? null,
+    id,
     type,
     level: determineLevel(count),
     date,
@@ -295,8 +479,10 @@ const toReportViewModel = (task) => {
     location: task?.beachName ?? '위치 정보 없음',
     mapLat,
     mapLon,
-    processed: task?.taskProcessed === 1 ? 1 : 0,
+    coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
+    processed: backendProcessed || locallyProcessed ? 1 : 0,
     count,
+    userNumber: task?.userNumber ?? task?.user_number ?? null,
     raw: task
   };
 };
@@ -314,12 +500,26 @@ const fetchReports = async ({ silent = false } = {}) => {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
     loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
+    const nextProcessed = new Set(processedReportIds.value);
+    list.forEach((task) => {
+      const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
+      if (task?.taskProcessed === 1 && id !== null) {
+        nextProcessed.add(id);
+      }
+    });
+    processedReportIds.value = nextProcessed;
+
     const mapped = list.map(toReportViewModel);
 
     activeReports.value = mapped;
 
     if (!mapped.length) {
       setSelectedReport(null);
+      activityLogs.value = [];
+      if (!silent) {
+        logsError.value = null;
+        logsLoading.value = false;
+      }
       return;
     }
 
@@ -327,12 +527,14 @@ const fetchReports = async ({ silent = false } = {}) => {
     const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
     const shouldFlash = previousId !== nextSelected?.id;
     setSelectedReport(nextSelected, shouldFlash);
+    loadReportLogs(nextSelected, { silent }).catch(() => {});
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
     if (!silent) {
       loadError.value = error;
       activeReports.value = [];
       setSelectedReport(null);
+      activityLogs.value = [];
     }
   } finally {
     if (!silent) {
@@ -382,13 +584,58 @@ const prettySpo2 = (spo2) => {
   return `${numeric}%`;
 };
 
+const formatLogTime = (value) => {
+  return formatKoreanTimeDisplay(value);
+};
+
+const formatLogHr = (hr) => {
+  const numeric = toFiniteNumber(hr);
+  if (numeric === null) return '정보 없음';
+  return `${numeric}bpm`;
+};
+
+const isReportProcessed = (report) => {
+  if (!report) return false;
+  if (report.processed === 1) return true;
+  const id = report?.id ?? null;
+  if (id === null) return false;
+  return processedReportIds.value.has(id);
+};
+
 const markProcessed = (report) => {
-  if (!report || report.processed === 1) return;
-  report.processed = 1;
-  if (selectedReport.value?.id === report.id) {
-    selectedReport.value.processed = 1;
+  const id = report?.id ?? null;
+  if (id === null) return;
+  if (processedReportIds.value.has(id)) return;
+
+  const next = new Set(processedReportIds.value);
+  next.add(id);
+  processedReportIds.value = next;
+
+  if (selectedReport.value?.id === id) {
+    selectedReport.value = { ...selectedReport.value, processed: 1 };
   }
+
+  activeReports.value = activeReports.value.map((item) =>
+    item.id === id ? { ...item, processed: 1 } : item
+  );
+
   // TODO: 필요 시 백엔드 API 호출로 persisted 처리
+};
+
+const handleRescueRequest = async (report) => {
+  if (!report) return;
+  if (!isReportProcessed(report)) {
+    markProcessed(report);
+  }
+  showRescueModal.value = true;
+  await nextTick();
+  if (modalMap && hasNaverMaps()) {
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  }
+};
+
+const closeRescueModal = () => {
+  showRescueModal.value = false;
 };
 
 const getBadgeClass = (level) => {
@@ -418,6 +665,33 @@ const getAlertColor = (level) => {
   }
 };
 
+const getLevelBorderColor = (level) => {
+  switch (level) {
+    case 'warning':
+      return '#FFB354';
+    case 'danger':
+      return '#EB725B';
+    case 'emergency':
+      return '#B93F67';
+    default:
+      return '#7EEC85';
+  }
+};
+
+const buildMarkerHtml = (borderColor) => `
+  <div style="
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid ${borderColor};
+    background: rgba(0,146,186,0.20);
+    box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+    box-sizing: border-box;
+  "></div>
+`;
+
+const hasNaverMaps = () => typeof window !== 'undefined' && window.naver && window.naver.maps;
+
 /** 현재 선택된 신고에 지도에 찍을 수 있는 좌표가 있는지 여부 */
 const hasValidMapPosition = computed(() => {
   const r = selectedReport.value;
@@ -435,16 +709,12 @@ watchEffect(() => {
   // DOM 아직 안 잡혔으면 리턴
   if (!mapEl.value) return;
   // 네이버 지도 스크립트 안 올라와 있으면 리턴
-  if (!window.naver?.maps) return;
+  if (!hasNaverMaps()) return;
 
   const { mapLat, mapLon, level } = selectedReport.value;
   const pos = new window.naver.maps.LatLng(mapLat, mapLon);
 
-  // 🔵 레벨별 색상 (워치 위치 동그라미 테두리 색)
-  let borderColor = '#7EEC85'; // safety 기본
-  if (level === 'warning') borderColor = '#FFB354';
-  else if (level === 'danger') borderColor = '#EB725B';
-  else if (level === 'emergency') borderColor = '#B93F67';
+  const borderColor = getLevelBorderColor(level);
 
   // 1) 지도 최초 생성
   if (!map) {
@@ -461,17 +731,7 @@ watchEffect(() => {
   }
 
   // 3) 워치 위치 마커 생성 또는 위치 업데이트
-  const markerHtml = `
-    <div style="
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 3px solid ${borderColor};
-      background: rgba(0,146,186,0.20);
-      box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
-      box-sizing: border-box;
-    "></div>
-  `;
+  const markerHtml = buildMarkerHtml(borderColor);
 
   if (!watchMarker) {
     watchMarker = new window.naver.maps.Marker({
@@ -492,6 +752,58 @@ watchEffect(() => {
   }
 });
 
+watch(showRescueModal, (visible) => {
+  if (!visible) {
+    if (modalMap && typeof modalMap.destroy === 'function') {
+      modalMap.destroy();
+    }
+    modalMap = null;
+    modalWatchMarker = null;
+    modalMapEl.value = null;
+  }
+});
+
+watchEffect(() => {
+  if (!showRescueModal.value) return;
+  if (!hasValidMapPosition.value) return;
+  if (!modalMapEl.value) return;
+  if (!hasNaverMaps()) return;
+  const report = selectedReport.value;
+  if (!report) return;
+
+  const { mapLat, mapLon, level } = report;
+  const pos = new window.naver.maps.LatLng(mapLat, mapLon);
+  const borderColor = getLevelBorderColor(level);
+  const markerHtml = buildMarkerHtml(borderColor);
+
+  if (!modalMap) {
+    modalMap = new window.naver.maps.Map(modalMapEl.value, {
+      center: pos,
+      zoom: 17
+    });
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  } else {
+    modalMap.setCenter(pos);
+    window.naver.maps.Event.trigger(modalMap, 'resize');
+  }
+
+  if (!modalWatchMarker) {
+    modalWatchMarker = new window.naver.maps.Marker({
+      position: pos,
+      map: modalMap,
+      icon: {
+        content: markerHtml,
+        anchor: new window.naver.maps.Point(11, 11)
+      }
+    });
+  } else {
+    modalWatchMarker.setPosition(pos);
+    modalWatchMarker.setIcon({
+      content: markerHtml,
+      anchor: new window.naver.maps.Point(11, 11)
+    });
+  }
+});
 </script>
 
 <style scoped>
@@ -654,6 +966,10 @@ watchEffect(() => {
 .info-grid .info-label { color: #6c757d; }
 .info-grid .info-value { color: #212529; }
 
+.coordinate-tag {
+  font-weight: 500;
+}
+
 .log-item { font-size: 0.9rem; }
 .log-time { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Noto Sans Mono', monospace; margin-right: 6px; }
 
@@ -691,5 +1007,102 @@ watchEffect(() => {
 @media (max-width: 992px) {
   /* tablet and below: let detail full width under map */
   .detail-inner { max-width: 100%; padding-left: 0; }
+}
+
+.rescue-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1050;
+}
+
+.rescue-modal-card {
+  width: min(520px, 90vw);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rescue-modal-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid #EAECEF;
+}
+
+.rescue-modal-header h5 {
+  font-weight: 700;
+}
+
+.rescue-modal-body {
+  padding: 16px 24px 4px;
+  overflow-y: auto;
+}
+
+.rescue-modal-footer {
+  padding: 12px 24px 20px;
+  border-top: 1px solid #EAECEF;
+}
+
+.modal-map-wrapper {
+  border: 1px solid #E6EEF5;
+  border-radius: 12px;
+  background-color: #F8FAFC;
+  overflow: hidden;
+}
+
+.modal-map {
+  width: 100%;
+  height: 220px;
+}
+
+.modal-map-placeholder {
+  width: 100%;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: #F8FAFC;
+  border: 1px dashed #CED4DA;
+}
+
+.modal-info-grid {
+  display: grid;
+  row-gap: 10px;
+}
+
+.modal-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.modal-info-row .label {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.modal-info-row .value {
+  color: #212529;
+  font-weight: 500;
+  text-align: right;
+  margin-left: 16px;
+}
+
+.rescue-modal-card .btn-link {
+  color: inherit;
+}
+
+.rescue-modal-card .btn-link:hover {
+  color: #212529;
+  text-decoration: none;
 }
 </style>

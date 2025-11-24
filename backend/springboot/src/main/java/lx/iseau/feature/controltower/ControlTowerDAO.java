@@ -10,8 +10,11 @@ import java.util.List;
  */
 @Mapper
 public interface ControlTowerDAO {
+    // 로그 데이터 조회(지서)
+    List<TaskLogDTO> getTaskLogByUserNumber(@Param("userNumber") int userNumber);
+    
     // 관제센터의 처리 리스트(지서)
-    List<TaskListDTO> getTaskListByControlTowerNumber(@Param("controlTowerNumber") int controlTowerNumber);
+    List<ControlTowerTaskListDTO> getTaskListByControlTowerNumber(@Param("controlTowerNumber") int controlTowerNumber);
 
     // 매니저 기본정보 조회
     ManagerInfoDTO selectManagerInfoByManagerNumber(@Param("managerNumber") int managerNumber);
@@ -35,4 +38,13 @@ public interface ControlTowerDAO {
     // 처리완료 플래그 업데이트
     int updateTaskProcessed(@Param("taskNumber") int taskNumber,
                             @Param("taskProcessed") int taskProcessed);
+ // 🚨 [수정 및 재정렬] 수동 신고 목록 조회 메서드
+    List<TaskListDTO> getTaskManualListByManagerNumber(@Param("managerNumber") int managerNumber);
+
+    // 🚨 [수정 및 재정렬] 수동 신고 INSERT 메서드 (Service에서 호출)
+    int insertTaskOnManualReport(@Param("managerNumber") int managerNumber,
+            @Param("userNumber") Integer userNumber,
+            @Param("latitude") Double latitude,
+            @Param("longitude") Double longitude,
+            @Param("reportType") String reportType);
 }
