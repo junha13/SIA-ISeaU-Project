@@ -182,6 +182,11 @@ const sendReportAndCall = async () => {
         });
 
         alert('✅ 긴급 신고가 관제소에 성공적으로 접수되었습니다. 119 전화를 연결합니다.');
+        
+        // 5. 119 전화 연결
+        if (confirm('119에 긴급 신고 전화를 연결하시겠습니까?')) {
+            window.location.href = 'tel:119';
+        }
 
         close();
 
