@@ -24,7 +24,7 @@
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
           <UseStreams
-            :ws-url="`${import.meta.env.VITE_PYTHON_API_BASE_URL}/ws/stream`"
+            :ws-url="`${CCTV_LOG_Stream_API_URL}/ws/stream`"
             :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
             :key="controlView"  
           />
@@ -53,13 +53,13 @@
         <div class="card p-0 border-0 shadow-sm flex-grow-1 h-300px" style="flex-grow: 2;">
           <!-- 탭 바 (카드 헤더처럼) -->
           <div
-            class="tab-segment-group w-100 rounded-1 h-30px"
+            class="tab-segment-group w-100 rounded-1 h-30px" style="z-index: 1;"
           >
           <button
             v-for="tab in rightTabs"
             :key="tab.key"
             type="button"
-            class="tab-segment flex-fill"
+            class="tab-segment flex-fill h-100"
             :class="{ active: rightPanelTab === tab.key }"
             @click="rightPanelTab = tab.key"
           >
@@ -68,7 +68,7 @@
           </div>
 
   <!-- 카드 본문 영역 -->
-<div class="p-3 h-300px" style="overflow-y: auto;">
+<div class="p-3 " style="overflow-y: auto;">
   <!-- 진입 알림 탭 -->
   <div
     v-if="rightPanelTab === 'overview'"
@@ -94,48 +94,68 @@
     <!-- 알림 리스트 -->
     <div class="flex-grow-1 overflow-auto px-2" style="height: 90%;">
       <div
-        v-for="item in filteredAlerts"
-        :key="item.id"
-        class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
-        :class="item.read ? 'bg-read' : 'bg-unread'"
-        @click="markAsRead(item.id)"
-      >
-        <div class="small">
-          <div class="fw-semibold">
-            {{ item.label }}에서 위험 구역 진입
-            <span class="badge bg-danger ms-1">{{ item.danger }}명</span>
-          </div>
-          <div class="text-muted" style="font-size: 0.75rem;">
-            {{ item.timeText }}
-          </div>
-        </div>
-
-        <span
-          class="badge rounded-pill"
-          :class="item.read ? 'bg-secondary-subtle text-secondary' : 'bg-primary text-white'"
-        >
-          {{ item.read ? '읽음' : '신규' }}
+  v-for="item in filteredAlerts"
+  :key="item.id"
+  class="alert-item d-flex justify-content-between align-items-center py-2 px-2 rounded-3 mb-1"
+  :class="item.read ? 'bg-read' : 'bg-unread'"
+  @click="markAsRead(item.id)"
+>
+  <div class="small w-100">
+    <!-- 🔹 첫 줄: 왼쪽 텍스트 / 오른쪽 배지 묶음 -->
+    <div class="d-flex">
+      <!-- 왼쪽: 텍스트 (자동 줄바꿈) -->
+      <div class="fw-bold flex-grow-1 text-truncate fs-5">
+        [ {{ item.label }} ]
+        <span class="fw-semibold fs-6">
+          위험 구역 진입
         </span>
       </div>
+
+      <!-- 오른쪽: 인원 배지 (항상 우측 정렬) -->
+      <div class="d-flex flex-column align-items-end flex-shrink-0">
+        <span class="badge bg-danger mb-1">
+          +{{ item.added }}명
+        </span>
+      </div>
+    </div>
+
+    <!-- 둘째 줄: 시간 -->
+    <div class="text-muted d-flex justify-content-between" style="font-size: 0.75rem;">
+      <div>
+      {{ item.timeText }}
+      </div>
+      <div>
+        <span
+          v-if="item.danger != null"
+          class="badge bg-secondary"
+        >
+          현재 {{ item.danger }}명
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 
   <!-- 기상 정보 탭 -->
   <div
     v-else-if="rightPanelTab === 'detail'"
-    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    class="map-placeholder-base border rounded d-flex flex-column"
     style="background-color: #F0F2F5;"
   >
+  <div class="flex-grow-1">
     <WeatherPanel :beach-number="beachNumber" />
+  </div>
   </div>
 
   <!-- CCTV 정보 탭 -->
   <div
     v-else-if="rightPanelTab === 'cctv'"
-    class="map-placeholder-base border rounded d-flex flex-column h-100"
+    class="map-placeholder-base border rounded d-flex flex-column"
     style="background-color: #F0F2F5;"
   >
-    <div class="flex-grow-1 h-100">
+    <div class="flex-grow-1">
       <div
         ref="beachMap"
         class="naver-map-box"
@@ -184,7 +204,7 @@
       <thead class="table-light">
         <tr>
           <th scope="col" style="width: 40%;">CCTV</th>
-          <th scope="col" class="text-end">최근 10분 위험 진입 횟수</th>
+          <th scope="col" class="text-end">최근 10분 위험 진입 인원</th>
         </tr>
       </thead>
       <tbody>
@@ -200,7 +220,7 @@
               class="badge"
               :class="(danger10min[id] ?? 0) > 0 ? 'bg-danger text-white' : 'bg-light text-muted'"
             >
-              {{ danger10min[id] ?? 0 }} 회
+              {{ danger10min[id] ?? 0 }} 명
             </span>
           </td>
         </tr>
@@ -220,7 +240,7 @@
       <thead class="table-light">
         <tr>
           <th scope="col" style="width: 40%;">CCTV</th>
-          <th scope="col" class="text-end">금일 누적 위험 진입 횟수</th>
+          <th scope="col" class="text-end">금일 누적 위험 인원</th>
         </tr>
       </thead>
       <tbody>
@@ -235,7 +255,7 @@
               class="badge"
               :class="(dangerToday[id] ?? 0) > 0 ? 'bg-danger text-white' : 'bg-light text-muted'"
             >
-              {{ dangerToday[id] ?? 0 }} 회
+              {{ dangerToday[id] ?? 0 }} 명
             </span>
           </td>
         </tr>
@@ -282,6 +302,9 @@
         placeholder="관제센터에서 송출할 방송 문구를 입력하세요. "
         style="height: 120px; resize: none;"
       ></textarea>
+      <div class="mt-2">
+    <TtsPlayer :audio-content="ttsAudioBase64" />
+  </div>
     </div>
 
     <!-- 푸터 -->
@@ -362,9 +385,13 @@ import WeatherPanel from '@/components/WeatherPanel.vue'
 import { useStore } from '@/stores/store.js'
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
+import TtsPlayer from "@/components/TtsPlayer.vue";
+
+
 
 const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const CCTV_LOG_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/cctv/logList` // ★추가: 위험 로그 조회 API
+const CCTV_LOG_Stream_API_URL = import.meta.env.VITE_PYTHON_API_BASE_URL
 
 const store = useStore()
 const { controlView, cctvName } = storeToRefs(store)
@@ -377,7 +404,12 @@ const dangerToday = ref({ ...dangerTemplate })
 const rightPanelTab = ref('overview')
 const beachNumberMap = ref({}) // { '이호테우': 6, '중문': 2, ... }
 
-// 기상 패널용 beachNumber
+// 🔊 TTS 관련 상태는 여기 “위쪽 전역”에 둔다
+const cctvAlert = ref(false)
+const alertMessage = ref('')
+const ttsAudioBase64 = ref(null)
+
+// 해수욕장 번호 계산만 담당
 const beachNumber = computed(() => {
   const key = cctvName.value?.trim()
 
@@ -395,6 +427,21 @@ const beachNumber = computed(() => {
   })
   return num ?? 0
 })
+
+// 안내방송 모달이 열릴 때마다 옛날 오디오는 초기화
+watch(
+  () => cctvAlert.value,
+  (visible) => {
+    if (visible) {
+      ttsAudioBase64.value = null
+      // 필요하면 문구도 여기서 같이 초기화
+      // alertMessage.value = ''
+    }
+  }
+)
+
+
+
 const rightTabs = [
   { key: 'overview', label: '진입 알림' },
   { key: 'detail', label: '기상 정보' },
@@ -512,15 +559,19 @@ const fetchDangerLogs = async () => {
 
       const read = log.read
 
+       const added = log.dangerAdded 
+
+
+      // ★ 추가: 해당 시점 위험구역 총 인원
+      const dangerTotal = log.dangerCount
       // 10분 이내 로그만 카운트
       if (!Number.isNaN(diffMin) && diffMin <= 10) {
-        // "횟수" 기준 → 로그 1개 = 1회
-        new10[camId] += 1
+        new10[camId] += added
       }
 
       // 금일 누적
       if (isSameDay) {
-        newToday[camId] += 1
+        newToday[camId] += added
       }
 
       const viewKey = camId <= 4 ? 'beach' : 'harbor'
@@ -546,7 +597,8 @@ const fetchDangerLogs = async () => {
         camId,
         streamId: `CAM ${camId}`,
         label,
-        danger,
+        danger: dangerTotal,
+        added,
         timeText,
         read,
         createdAt,
@@ -678,9 +730,68 @@ watch(
           })
           markers.push(marker)
         })
+        focusSelectedCctvOnMap()
     })
+    
   },
 )
+const focusSelectedCctvOnMap = () => {
+  // CCTV 탭 아닐 땐 아무 것도 안 함
+  if (rightPanelTab.value !== 'cctv') return
+  if (!map || !window.naver?.maps) return
+  if (!cctvName.value) return
+
+  const currentType =
+    controlView.value === '해수욕장' ? '해수욕장' : '항구'
+
+  const target = cctvLocation.find(
+    (loc) => loc.type === currentType && loc.label === cctvName.value,
+  )
+
+  if (!target) return
+
+  const { latitude: lat, longitude: lng, direction, fov, range } = target
+
+  const center = new window.naver.maps.LatLng(lat, lng)
+
+  // 🔍 선택된 CCTV 위치로 포커스
+  map.setCenter(center)
+  map.setZoom(18)
+
+  // 이전 FOV 폴리곤 제거
+  if (fovPolygon) {
+    fovPolygon.setMap(null)
+    fovPolygon = null
+  }
+
+  // 🔺 FOV(시야) 쐐기 폴리곤 다시 그리기
+  const toRad = (deg) => (deg * Math.PI) / 180
+  const dist = range / 111000 // m → 위도/경도 대략 환산
+
+  const makePoint = (baseLat, baseLng, angleDeg) => {
+    const rad = toRad(angleDeg)
+    const dLat = Math.cos(rad) * dist
+    const dLng = Math.sin(rad) * dist
+    return new window.naver.maps.LatLng(baseLat + dLat, baseLng + dLng)
+  }
+
+  const startAngle = direction - fov / 2
+  const endAngle = direction + fov / 2
+
+  const p1 = makePoint(lat, lng, startAngle)
+  const p2 = makePoint(lat, lng, endAngle)
+  const path = [center, p1, p2, center]
+
+  fovPolygon = new window.naver.maps.Polygon({
+    map,
+    paths: path,
+    fillColor: 'rgba(51, 51, 51, 1)',
+    fillOpacity: 0.18,
+    strokeColor: '#4f4f4f',
+    strokeOpacity: 0.9,
+    strokeWeight: 1,
+  })
+}
 
 watch(
   [() => cctvName.value, () => controlView.value, () => rightPanelTab.value],
@@ -738,23 +849,40 @@ watch(
   },
 )
 
-/**
- *  안내 방송 모달
- */
-const cctvAlert = ref(false)
-const alertMessage = ref('')
 
-const sendAlertMessage = () => {
-  if (!alertMessage.value.trim()) return
+const sendAlertMessage = async () => {
+  const msg = alertMessage.value?.trim()
+  if (!msg) return
 
-  console.log('🔔 알림 발송:', {
-    cctv: cctvName.value,
-    message: alertMessage.value,
-  })
+  try {
+    const payload = {
+      beachNumber: beachNumber.value,
+      cctvName: cctvName.value,
+      message: msg,
+    }
 
-  alertMessage.value = ''
-  cctvAlert.value = false
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/controltower/tts`,
+      payload
+    )
+
+    // 🔊 여기서 새 TTS를 플레이어로 보냄
+    ttsAudioBase64.value =
+      res.data.audioContent ||
+      res.data.result?.audioContent ||
+      null
+
+    console.log('✅ TTS 요청 결과:', res.data)
+
+    // 🔵 일단 모달은 열어둬야 오디오를 들을 수 있음
+    // alertMessage.value = ''   // 필요하면 나중에만 비우기
+    // cctvAlert.value = false   // ❌ 이 줄 지우기/주석 처리
+  } catch (e) {
+    console.error('❌ TTS 요청 실패:', e)
+    alert('안내 방송 요청 중 오류가 발생했습니다.')
+  }
 }
+
 
 /**
  *  구조 요청 모달
