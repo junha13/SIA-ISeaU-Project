@@ -43,4 +43,5 @@ public class ControlTowerTaskListDTO {
 
     // b.beach_name AS beachName
     private String beachName;
+    private String type;
 }

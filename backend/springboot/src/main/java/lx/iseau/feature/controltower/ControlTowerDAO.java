@@ -35,4 +35,13 @@ public interface ControlTowerDAO {
     // 처리완료 플래그 업데이트
     int updateTaskProcessed(@Param("taskNumber") int taskNumber,
                             @Param("taskProcessed") int taskProcessed);
+ // 🚨 [수정 및 재정렬] 수동 신고 목록 조회 메서드
+    List<TaskListDTO> getTaskManualListByManagerNumber(@Param("managerNumber") int managerNumber);
+
+    // 🚨 [수정 및 재정렬] 수동 신고 INSERT 메서드 (Service에서 호출)
+    int insertTaskOnManualReport(@Param("managerNumber") int managerNumber,
+            @Param("userNumber") Integer userNumber,
+            @Param("latitude") Double latitude,
+            @Param("longitude") Double longitude,
+            @Param("reportType") String reportType);
 }

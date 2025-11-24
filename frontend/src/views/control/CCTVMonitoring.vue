@@ -24,7 +24,7 @@
       <div class="col-lg-8 d-flex flex-column" style="gap: 1.5rem;">
         <!-- CCTV 2x2 스트림 -->
           <UseStreams
-            :ws-url="`${import.meta.env.VITE_PYTHON_API_BASE_URL}/ws/stream`"
+            :ws-url="`${CCTV_LOG_Stream_API_URL}/ws/stream`"
             :cam-ids="controlView === '해수욕장' ? [1, 2, 3, 4] : [5, 6, 7, 8]"
             :key="controlView"  
           />
@@ -365,7 +365,7 @@ import axios from 'axios'
 
 const BEACH_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/beach/beaches`
 const CCTV_LOG_LIST_API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/cctv/logList` // ★추가: 위험 로그 조회 API
-
+const CCTV_LOG_Stream_API_URL = import.meta.env.VITE_PYTHON_API_BASE_URL
 const store = useStore()
 const { controlView, cctvName } = storeToRefs(store)
 const { camLabelMap, dangerTemplate, cctvLocation } = store

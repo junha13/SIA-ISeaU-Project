@@ -67,7 +67,53 @@ public class ControlTowerController {
                     ));
         }
     }
+ // ============= 🚨 [추가] 수동 신고 데이터 수신 및 Task 생성 ===============//
+    	@PostMapping("/manual-report")
+        public ResponseEntity<?> handleManualReport(@RequestBody ManualReportRequest request) {
+            log.info("📥 /api/controltower/manual-report 요청 수신: {}", request);
 
+            try {
+                // 1) 필수 유효성 검사
+                if (request.getUserNumber() == null || request.getUserNumber() <= 0 || 
+                    request.getLatitude() == null || request.getLongitude() == null) {
+                     return ResponseEntity.badRequest().body(
+                             Map.of("success", false, "message", "User/Location data is required for manual report.")
+                     );
+                }
+
+                // 2) DB 저장 및 Task 생성/FCM 알림 발송
+                service.handleManualReport(request);
+
+                log.info("✅ 수동 신고 처리 완료: {}", request.getUserNumber());
+
+                return ResponseEntity.ok(Map.of("success", true, "message", "긴급 신고가 관제소에 접수되었습니다."));
+
+            } catch (Exception e) {
+                log.error("❌ 수동 신고 처리 중 에러 발생", e);
+                return ResponseEntity
+                        .status(500)
+                        .body(Map.of(
+                                "success", false,
+                                "message", "Server processing error during manual report.",
+                                "detail", e.getClass().getSimpleName() + ": " + e.getMessage()
+                        ));
+            }
+        }
+    	// =========================
+        // 🚨 [추가] 수동 신고 전용 목록 조회
+        // Endpoint: GET /api/controltower/task/manual-list
+        // =========================
+        @GetMapping("/task/manual-list")
+        public ResponseEntity<?> getTaskManualList(@RequestParam int managerNumber) {
+           
+            
+            // Service의 새로운 전용 메서드 호출 (수동 신고 Task만 조회)
+            List<TaskListDTO> result = service.getTaskManualListByManagerNumber(managerNumber);
+            
+            return ResponseEntity
+                    .ok()
+                    .body(Map.of("result", result));
+        }
     // =========================
     // 매니저 기본정보 조회 
     // =========================
@@ -83,16 +129,17 @@ public class ControlTowerController {
     // =========================
     // 매니저 기본정보 수정 (이름, 전화, 이메일)
     // =========================
-    @RequestMapping("/manager/info/update")
+ // 🚨 [수정]: 경로에 managerNumber를 포함하고 @PutMapping을 사용합니다.
+    @PutMapping("/manager/info/{managerNumber}") 
     public ResponseEntity<?> updateManagerInfo(@PathVariable int managerNumber,
     		@RequestBody ManagerInfoDTO dto) {
-    	dto.setManagerNumber(managerNumber);
+        // ... (기존 로직 유지)
+        dto.setManagerNumber(managerNumber);
     	Map<String, Object> result = service.updateManagerInfoByManagerNumber(dto);
         return ResponseEntity
                 .ok()
                 .body(Map.of("result", result));
     }
-
     // =========================
     // 매니저 처리 리스트 (간단 목록)
     // =========================
