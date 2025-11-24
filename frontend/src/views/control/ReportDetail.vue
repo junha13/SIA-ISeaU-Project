@@ -218,10 +218,6 @@
             <span class="label">심박수</span>
             <span class="value">{{ prettyHr(selectedReport.hr) }}</span>
           </div>
-          <div class="modal-info-row">
-            <span class="label">해수욕장</span>
-            <span class="value">{{ selectedReport.location }}</span>
-          </div>
           <!-- 🔄 해수욕장 / 좌표 → 하나의 '위치' 행으로 통합 -->
           <div class="modal-info-row">
             <span class="label">위치</span>
@@ -555,6 +551,7 @@ const fetchReports = async ({ silent = false } = {}) => {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
     loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
+    
     const nextProcessed = new Set(processedReportIds.value);
     list.forEach((task) => {
       const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
@@ -568,6 +565,9 @@ const fetchReports = async ({ silent = false } = {}) => {
 
     activeReports.value = mapped;
 
+    const hadReports = activeReports.value.length;
+    const hasNewReports = mapped.length > hadReports;
+
     if (!mapped.length) {
       setSelectedReport(null);
       activityLogs.value = [];
@@ -578,11 +578,20 @@ const fetchReports = async ({ silent = false } = {}) => {
       return;
     }
 
-    const previousId = selectedReport.value?.id;
-    const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
-    const shouldFlash = previousId !== nextSelected?.id;
-    setSelectedReport(nextSelected, shouldFlash);
-    loadReportLogs(nextSelected, { silent }).catch(() => {});
+    // 새 신고가 추가된 경우 → 자동으로 첫 번째 신고 선택
+    if (hasNewReports) {
+      const newestReport = mapped[0];
+      setSelectedReport(newestReport, true);
+      loadReportLogs(newestReport, { silent }).catch(() => {});
+    } else {
+      // 기존 유지 로직
+      const previousId = selectedReport.value?.id;
+      const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
+      const shouldFlash = previousId !== nextSelected?.id;
+      setSelectedReport(nextSelected, shouldFlash);
+      loadReportLogs(nextSelected, { silent }).catch(() => {});
+    }
+
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
     if (!silent) {
@@ -735,12 +744,11 @@ const getLevelBorderColor = (level) => {
 
 const buildMarkerHtml = (borderColor) => `
   <div style="
-    width: 22px;
-    height: 22px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     border: 3px solid ${borderColor};
-    background: rgba(0,146,186,0.20);
-    box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+    background: ${borderColor};
     box-sizing: border-box;
   "></div>
 `;
@@ -794,7 +802,7 @@ watchEffect(() => {
       map,
       icon: {
         content: markerHtml,
-        anchor: new window.naver.maps.Point(11, 11) // 동그라미 중심 기준
+        anchor: new window.naver.maps.Point(5, 5) // 동그라미 중심 기준
       }
     });
   } else {
@@ -802,7 +810,7 @@ watchEffect(() => {
     // 레벨이 바뀔 수도 있으니 아이콘도 같이 업데이트
     watchMarker.setIcon({
       content: markerHtml,
-      anchor: new window.naver.maps.Point(11, 11)
+      anchor: new window.naver.maps.Point(5, 5)
     });
   }
   // 워치 위치 기준 20m 오차 원(반경 표시)
@@ -874,14 +882,14 @@ watchEffect(() => {
       map: modalMap,
       icon: {
         content: markerHtml,
-        anchor: new window.naver.maps.Point(11, 11)
+        anchor: new window.naver.maps.Point(5, 5)
       }
     });
   } else {
     modalWatchMarker.setPosition(pos);
     modalWatchMarker.setIcon({
       content: markerHtml,
-      anchor: new window.naver.maps.Point(11, 11)
+      anchor: new window.naver.maps.Point(5, 5)
     });
   }
   // 모달 지도에서도 동일한 20m 오차 반경 표시
