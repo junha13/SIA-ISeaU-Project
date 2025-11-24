@@ -75,9 +75,9 @@ export default defineConfig({
         proxy: {
             // Vue에서 '/api/'로 시작하는 모든 요청을 Spring Boot 서버 (8080)로 전달
             '/api': {
-                target: 'http://localhost:8080',
-                target: 'https://hellokiyo.ngrok.io',
-                target: 'https://uneffusing-bowen-noninteractive.ngrok-free.dev',
+                //target: 'http://localhost:8080',
+                //target: 'https://hellokiyo.ngrok.io',
+                //target: 'https://uneffusing-bowen-noninteractive.ngrok-free.dev',
                 target: 'https://ongoing-dierdre-consonantly.ngrok-free.dev',
                 changeOrigin: true
             }
