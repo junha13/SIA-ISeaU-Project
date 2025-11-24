@@ -252,8 +252,9 @@ const { execute: fetchTaskLog } = useApi('get', '/api/controltower/task/log');
 const POLL_INTERVAL_MS = 1000;
 
 let highlightTimer = null;
-let pollTimer = null;
 let isFetching = false;
+let pollTimer = null;
+
 
 const clearHighlightTimer = () => {
   if (!highlightTimer) return;
@@ -291,44 +292,6 @@ const selectReport = (report) => {
   if (!report) return;
   setSelectedReport(report, true);
   loadReportLogs(report).catch(() => {});
-};
-
-const loadReportLogs = async (report, { silent = false } = {}) => {
-  const userNumber = report?.userNumber
-    ?? report?.raw?.userNumber
-    ?? report?.raw?.user_number
-    ?? null;
-  if (!userNumber) {
-    if (!silent) {
-      activityLogs.value = [];
-      logsError.value = null;
-      logsLoading.value = false;
-    }
-    return;
-  }
-
-  if (!silent) {
-    logsLoading.value = true;
-    logsError.value = null;
-  }
-
-  try {
-    const response = await fetchTaskLog({ userNumber });
-    const list = Array.isArray(response?.result) ? response.result : [];
-    activityLogs.value = list;
-    if (!silent) {
-      logsError.value = null;
-    }
-  } catch (error) {
-    if (!silent) {
-      logsError.value = error;
-      activityLogs.value = [];
-    }
-  } finally {
-    if (!silent) {
-      logsLoading.value = false;
-    }
-  }
 };
 
 const toFiniteNumber = (value) => {
@@ -428,46 +391,67 @@ const determineLevel = (count) => {
   return 'warning';
 };
 
+const mapReportType = (typeCode) => {
+    // 🚨 수동 신고 Type Code를 한글 이름으로 매핑
+    const codeMap = {
+        'DROWNING': '물에 빠짐',
+        'INJURY': '부상',
+        'COLLAPSE': '쓰러짐',
+        'MISSING': '일행 이탈/실종',
+        'OTHERS': '수동 호출 (기타)',
+        'WATCH': '심박수 이상',
+        '라이프가드 호출': '라이프가드 호출', // 기존 기본값
+    };
+    // DTO에서 받은 typeCode가 map에 있으면 반환, 없으면 기본값
+    return codeMap[String(typeCode).toUpperCase()] || String(typeCode) || '라이프가드 호출';
+}
+
+
 const determineTypeAndLocation = (task) => {
-  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
-  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
+  // 🚨 [필드 확인] Task DTO에 taskLat/taskLon이 추가되었다고 가정하고 가져옴
+  const taskLat = toFiniteNumber(task?.taskLat); // DTO는 userLon/userLat으로 넘어옴
+  const taskLon = toFiniteNumber(task?.userLon);
+  
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
-  const userLat = toFiniteNumber(task?.userLat);
+  const userLat = toFiniteNumber(task?.userLat); // User의 기본 위치
   const userLon = toFiniteNumber(task?.userLon);
+  
+  let type = task?.type ?? '라이프가드 호출'; // DTO의 type을 우선 사용
 
+  // 1. Task Location (수동 신고 위치)이 있는지 확인 (최우선)
+  if (isValidCoordinatePair(taskLat, taskLon)) {
+      return { type, mapLat: taskLat, mapLon: taskLon };
+  }
+  
+  // 2. Watch Location (자동 신고 위치)이 있는지 확인
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
+    // 자동 신고일 경우 type 조정 (task.type이 WATCH일 수 있음)
+    return { type: type === '라이프가드 호출' ? '심박수 이상' : type, mapLat: watchLat, mapLon: watchLon };
   }
 
+  // 3. User Location (기본 위치)이 있는지 확인
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
+    return { type, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: resolvedType, mapLat: null, mapLon: null };
-};
-
-const formatCoordinateLabel = (lat, lon) => {
-  const latNum = toFiniteNumber(lat);
-  const lonNum = toFiniteNumber(lon);
-  if (latNum === null || lonNum === null) return null;
-  return `${latNum.toFixed(5)}, ${lonNum.toFixed(5)}`;
+  return { type, mapLat: null, mapLon: null };
 };
 
 const toReportViewModel = (task) => {
-  const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
   const { date, time } = parseDateTime(task?.dateAndTime);
   const age = computeInternationalAge(task?.birthDateForAge);
   const genderLabel = mapGender(task?.gender);
   const hr = toFiniteNumber(task?.hr);
   const count = toFiniteNumber(task?.count);
   const { type, mapLat, mapLon } = determineTypeAndLocation(task);
-  const backendProcessed = task?.taskProcessed === 1;
-  const locallyProcessed = id !== null && processedReportIds.value.has(id);
+
+  // 🚨 [수정 1] Type Code를 한글 Label로 변환
+  const typeLabel = mapReportType(type);
 
   return {
-    id,
-    type,
+    id: task?.id ?? task?.taskNumber ?? null,
+    type: typeLabel, // 🚨 Type Code 대신 한글 Label 사용
     level: determineLevel(count),
     date,
     time,
@@ -476,11 +460,12 @@ const toReportViewModel = (task) => {
     genderLabel,
     hr,
     spo2: toFiniteNumber(task?.spo2),
-    location: task?.beachName ?? '위치 정보 없음',
+    // 🚨 [수정 2] location 필드 재정의: GPS 좌표가 있을 때만 좌표 문자열 표시
+    location: task?.beachName ?? (mapLat ? `위치 (${mapLat.toFixed(4)}, ${mapLon.toFixed(4)})` : '위치 정보 없음'),
     mapLat,
     mapLon,
-    coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
-    processed: backendProcessed || locallyProcessed ? 1 : 0,
+    coordinateLabel: mapLat ? `${mapLat.toFixed(5)}, ${mapLon.toFixed(5)}` : '위치 정보 없음',
+    processed: task?.taskProcessed === 1 ? 1 : 0,
     count,
     userNumber: task?.userNumber ?? task?.user_number ?? null,
     raw: task
@@ -793,7 +778,7 @@ watchEffect(() => {
       map: modalMap,
       icon: {
         content: markerHtml,
-        anchor: new window.naver.maps.Point(11, 11)
+        anchor: new window.naver.maps.Point(11, 11) // 동그라미 중심 기준
       }
     });
   } else {
@@ -805,7 +790,6 @@ watchEffect(() => {
   }
 });
 </script>
-
 <style scoped>
 /* --- NEW COLOR PALETTE MAPPING --- */
 /* Palette: #0092BA (Primary), #7EEC85 (Safety), #FFB354 (Warning/주의), #EB725B (Danger/경고), #B93F67 (Emergency/위험), #8482FF (Info/보조파랑) */
@@ -1083,6 +1067,7 @@ watchEffect(() => {
   justify-content: space-between;
   align-items: center;
   font-size: 0.95rem;
+
 }
 
 .modal-info-row .label {

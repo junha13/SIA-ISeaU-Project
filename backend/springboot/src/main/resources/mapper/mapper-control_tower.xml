@@ -35,18 +35,18 @@
     
     <!-- 추후에 워치 최신순 조회
     <select id="selectLatestWatchByUser" parameterType="int" resultType="map">
-	    SELECT
-	        watch_nubmer,
-	        user_number,
-	        heart_rate,
-	        occurred_at,
-	        ST_Y(w.watch_location::geometry) AS latitude,
-    		ST_X(w.watch_location::geometry) AS longitude
-	    FROM tb_watch
-	    WHERE user_number = #{userNumber}
-	    ORDER BY occurred_at DESC
-	</select>
- 	-->
+       SELECT
+           watch_nubmer,
+           user_number,
+           heart_rate,
+           occurred_at,
+           ST_Y(w.watch_location::geometry) AS latitude,
+          ST_X(w.watch_location::geometry) AS longitude
+       FROM tb_watch
+       WHERE user_number = #{userNumber}
+       ORDER BY occurred_at DESC
+   </select>
+    -->
    
 
     <insert id="insertTaskOnEmergency">
@@ -82,7 +82,7 @@
     )
 </insert>
 
-	
+   
     <!-- =========================
          매니저 기본정보 조회
          ========================= -->
@@ -108,7 +108,7 @@
                email     = COALESCE(#{email}, u.email)
           FROM tb_manager m
          WHERE u.user_number = m.manager_number
-         	AND m.manager_number = #{managerNumber}
+            AND m.manager_number = #{managerNumber}
     </update>
 
     <!-- =========================
@@ -116,22 +116,22 @@
          - tb_task + tb_watch + tb_user(피처) + tb_manager + tb_user(매니저)
          ========================= -->
     <select id="getTaskListByManagerNumber"
-	        resultType="TaskListDTO">
-	  SELECT
-	    t.task_number    AS taskNumber,
-	    t.task_processed AS taskProcessed,
-	    w.occurred_at    AS occurredAt,
-	    u.birth_date     AS birthDate,
-	    u.gender         AS gender
-	  FROM tb_task t
-	  JOIN tb_watch   w ON w.user_number   = t.user_number
-	  JOIN tb_user    u ON u.user_number    = w.user_number
-	  JOIN tb_manager m ON m.manager_number = t.manager_number
-	  WHERE m.manager_number = #{managerNumber}
-	  ORDER BY w.occurred_at DESC
-	</select>
-	  <!--  =========수동신고 호출된거 읽기========= -->
-	<select id="getTaskManualListByManagerNumber" resultType="TaskListDTO">
+           resultType="TaskListDTO">
+     SELECT
+       t.task_number    AS taskNumber,
+       t.task_processed AS taskProcessed,
+       w.occurred_at    AS occurredAt,
+       u.birth_date     AS birthDate,
+       u.gender         AS gender
+     FROM tb_task t
+     JOIN tb_watch   w ON w.user_number   = t.user_number
+     JOIN tb_user    u ON u.user_number    = w.user_number
+     JOIN tb_manager m ON m.manager_number = t.manager_number
+     WHERE m.manager_number = #{managerNumber}
+     ORDER BY w.occurred_at DESC
+   </select>
+     <!--  =========수동신고 호출된거 읽기========= -->
+   <select id="getTaskManualListByManagerNumber" resultType="TaskListDTO">
     SELECT
         t.task_number    AS taskNumber,
         t.task_processed AS taskProcessed,
@@ -155,7 +155,7 @@
     ORDER BY t.occurred_at DESC
 </select>
 
-	
+   
 
     <!-- =========================
          처리 상세 (taskNumber)
@@ -226,54 +226,57 @@
          관제센터 처리 리스트 (합치기)
          - tb_task + tb_watch + tb_user(피처) + tb_manager + tb_user(매니저) + tb_control_tower
          ========================= -->
-    <select id="getTaskListByControlTowerNumber"
-	        resultType="ControlTowerTaskListDTO"
-	        parameterType="int">
+   <select id="getTaskListByControlTowerNumber"
+        resultType="ControlTowerTaskListDTO"
+        parameterType="int">
 
-	    SELECT *
-	    FROM (
-	      SELECT
-	        t.task_number    AS id,
-	        t.user_number    AS userNumber,
-	        t.task_processed AS taskProcessed,
-	        w.occurred_at    AS dateAndTime,
-	        u.birth_date     AS birthDateForAge,
-	        u.gender         AS gender,
-	        t.type           AS type,
-	        -- user 위치
-	        ST_X(u.location::geometry)        AS userLon,
-	        ST_Y(u.location::geometry)        AS userLat,
-	        -- watch 위치
-	        ST_X(w.watch_location::geometry)  AS watchLon,
-	        ST_Y(w.watch_location::geometry)  AS watchLat,
-	        w.heart_rate     AS hr,
-	        w.watch_count    AS count,
-	        m.manager_number AS managerNumber,
-	        b.beach_name     AS beachName,
-	        ROW_NUMBER() OVER (
-	          PARTITION BY t.user_number
-	          ORDER BY w.occurred_at DESC
-	        ) AS rn
-	      FROM tb_task t
-	      JOIN tb_manager m ON m.manager_number = t.manager_number
-	      JOIN tb_control_tower c ON c.control_tower_number = m.control_tower_number
-	      JOIN tb_user u ON u.user_number = t.user_number
-	      LEFT JOIN tb_beach b ON b.beach_number = u.beach_number
-	      JOIN (
-	        SELECT user_number,
-	               occurred_at,
-	               heart_rate,
-	               watch_location,
-	               COUNT(*) OVER (PARTITION BY user_number) AS watch_count
-	        FROM tb_watch
-	      ) w ON w.user_number = t.user_number
-	      WHERE c.control_tower_number = #{controlTowerNumber}
-	    ) sub
-	    WHERE sub.rn = 1
-	    ORDER BY sub.dateAndTime DESC;
+    SELECT *
+    FROM (
+      SELECT
+        t.task_number    AS id,
+        t.user_number    AS userNumber,
+        t.task_processed AS taskProcessed,
+        t.type           AS type,
+        u.birth_date     AS birthDateForAge,
+        u.gender         AS gender,
+        
+        -- 시간/위치 통합 로직 (COALESCE 사용)
+        COALESCE(t.occurred_at, w.occurred_at) AS dateAndTime, 
+        ST_X(u.location::geometry) AS userLon,
+        ST_Y(u.location::geometry) AS userLat,
+        ST_X(w.watch_location::geometry) AS watchLon,
+        ST_Y(w.watch_location::geometry) AS watchLat,
+        w.heart_rate     AS hr,
+        w.watch_count    AS count,
+        m.manager_number AS managerNumber,
+        b.beach_name     AS beachName,
+        
+        -- 🚨 [핵심 수정] Task를 user_number 기준으로 최신 1건만 가져오기 위한 RN
+        ROW_NUMBER() OVER (
+          PARTITION BY t.user_number 
+          ORDER BY COALESCE(t.occurred_at, w.occurred_at) DESC
+        ) AS rn 
+        
+      FROM tb_task t
+      JOIN tb_manager m ON m.manager_number = t.manager_number
+      JOIN tb_control_tower c ON c.control_tower_number = m.control_tower_number
+      JOIN tb_user u ON u.user_number = t.user_number
+      LEFT JOIN tb_beach b ON b.beach_number = u.beach_number
+      
+      -- Watch 기록이 없어도 Task가 보이도록 LEFT JOIN (최신 1건)
+      LEFT JOIN (
+        SELECT user_number, occurred_at, heart_rate, watch_location, COUNT(*) OVER (PARTITION BY user_number) AS watch_count,
+               ROW_NUMBER() OVER (PARTITION BY user_number ORDER BY occurred_at DESC) AS rn_watch
+        FROM tb_watch
+      ) w ON w.user_number = t.user_number AND w.rn_watch = 1 
+      
+      WHERE c.control_tower_number = #{controlTowerNumber}
+    ) sub
+    -- 🚨 [필터링 추가] rn=1인 Task만 남겨서 사용자당 최신 Task 1건만 표시
+    WHERE sub.rn = 1 
+    ORDER BY sub.dateAndTime DESC;
 
-	</select>
-
+</select>
     <!-- =========================
          처리완료 플래그 수정
          ========================= -->
