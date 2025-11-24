@@ -93,15 +93,31 @@
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
                       <div class="fs-2 info-value fw-bold text-truncate">
-                        {{ selectedReport.location }}
-                        <small
-                          v-if="selectedReport.coordinateLabel"
-                          class="text-muted ms-2 fs-6 coordinate-tag"
-                        >
-                          {{ selectedReport.coordinateLabel }}
-                        </small>
+                        <!-- 1순위: 해수욕장 이름 등 location이 있고, '위치 정보 없음'이 아닌 경우 -->
+                        <template v-if="selectedReport.location && selectedReport.location !== '위치 정보 없음'">
+                          {{ selectedReport.location }}
+                          <small
+                            v-if="selectedReport.coordinateLabel"
+                            class="text-muted ms-2 fs-6 coordinate-tag"
+                          >
+                            {{ selectedReport.coordinateLabel }}
+                          </small>
+                        </template>
+
+                        <!-- 2순위: 위치 이름은 없지만 좌표가 있는 경우 -->
+                        <template v-else-if="selectedReport.coordinateLabel">
+                          <small class="text-muted ms-2 fs-6 coordinate-tag">
+                            {{ selectedReport.coordinateLabel }}
+                          </small>
+                        </template>
+
+                        <!-- 3순위: 진짜 아무 정보도 없을 때만 -->
+                        <template v-else>
+                          위치 정보 없음
+                        </template>
                       </div>
                     </div>
+
 
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-heart-pulse info-icon text-muted me-2" title="심박수"></i>
@@ -206,6 +222,34 @@
             <span class="label">해수욕장</span>
             <span class="value">{{ selectedReport.location }}</span>
           </div>
+          <!-- 🔄 해수욕장 / 좌표 → 하나의 '위치' 행으로 통합 -->
+          <div class="modal-info-row">
+            <span class="label">위치</span>
+            <span class="value text-end">
+              <!-- 1순위: 위치 이름 + 좌표 태그 -->
+              <template v-if="selectedReport.location && selectedReport.location !== '위치 정보 없음'">
+                {{ selectedReport.location }}
+                <small
+                  v-if="selectedReport.coordinateLabel"
+                  class="text-muted ms-2 coordinate-tag"
+                >
+                  {{ selectedReport.coordinateLabel }}
+                </small>
+              </template>
+
+              <!-- 2순위: 위치 이름은 없지만 좌표만 있는 경우 -->
+              <template v-else-if="selectedReport.coordinateLabel">
+                <small class="text-muted coordinate-tag">
+                  {{ selectedReport.coordinateLabel }}
+                </small>
+              </template>
+
+              <!-- 3순위: 둘 다 없는 경우 -->
+              <template v-else>
+                위치 정보 없음
+              </template>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -233,6 +277,7 @@ const mapEl = ref(null);
 const processedReportIds = ref(new Set());
 const showRescueModal = ref(false);
 const modalMapEl = ref(null);
+const POSITION_ERROR_RADIUS_M = 20;
 
 let map = null;
 let watchMarker = null;
@@ -467,6 +512,14 @@ const toReportViewModel = (task) => {
   const backendProcessed = task?.taskProcessed === 1;
   const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
+ // 🔹 위치 라벨
+  // - beachName 이 있으면 그거 사용
+  // - 없으면 null (좌표는 coordinateLabel 로만 표현)
+  let locationLabel = null;
+  if (task?.beachName) {
+    locationLabel = task.beachName;
+  }
+
   return {
     id,
     type,
@@ -478,7 +531,7 @@ const toReportViewModel = (task) => {
     genderLabel,
     hr,
     spo2: toFiniteNumber(task?.spo2),
-    location: task?.beachName ?? '위치 정보 없음',
+    location: locationLabel,
     mapLat,
     mapLon,
     coordinateLabel: formatCoordinateLabel(mapLat, mapLon),

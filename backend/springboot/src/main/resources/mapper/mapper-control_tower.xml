@@ -210,7 +210,7 @@
           resultType="TaskLogDTO"
           parameterType="int">
 
-      SELECT
+      SELECT DISTINCT
           w.occurred_at AS forTime,
           w.heart_rate  AS hr
       FROM tb_task t
