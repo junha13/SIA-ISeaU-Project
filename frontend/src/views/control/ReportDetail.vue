@@ -2,7 +2,6 @@
   <div class="report-detail container-fluid p-3" style="background-color: #F8F9FA;">
     <div class="row">
 
-      <!-- Left: Active reports list -->
       <div class="col-lg-4 mb-4 mb-lg-0">
         <h4 class="mb-3 text-secondary">신고 리스트</h4>
         <div class="list-group" style="height: 700px; overflow-y: auto;">
@@ -38,7 +37,6 @@
         </div>
       </div>
 
-      <!-- Right: Detail panel (narrower for better balance) -->
       <div class="col-lg-8" v-if="selectedReport">
         <h4 class="mb-3 text-secondary">신고 상세정보</h4>
         <div class="row g-3">
@@ -54,7 +52,6 @@
                 지도 API 준비 중입니다.
               </div>
 
-              <!-- 좌표 있으면 지도 렌더링 -->
               <div
                 v-else
                 ref="mapEl"
@@ -82,7 +79,6 @@
                     
                   </div>
                   
-                  <!-- Updated 신고 정보 영역 -->
                   <div class="card-body text-dark">
                     <div class="info-grid row gy-3">
                       <div class="col-12 d-flex align-items-center">
@@ -93,28 +89,12 @@
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
                       <div class="fs-2 info-value fw-bold text-truncate">
-                        <!-- 1순위: 해수욕장 이름 등 location이 있고, '위치 정보 없음'이 아닌 경우 -->
-                        <template v-if="selectedReport.location && selectedReport.location !== '위치 정보 없음'">
-                          {{ selectedReport.location }}
-                          <small
-                            v-if="selectedReport.coordinateLabel"
+                        {{ selectedReport.location }}
+                        <small
+                            v-if="selectedReport.coordinateLabel && selectedReport.location !== selectedReport.coordinateLabel"
                             class="text-muted ms-2 fs-6 coordinate-tag"
                           >
-                            {{ selectedReport.coordinateLabel }}
                           </small>
-                        </template>
-
-                        <!-- 2순위: 위치 이름은 없지만 좌표가 있는 경우 -->
-                        <template v-else-if="selectedReport.coordinateLabel">
-                          <small class="text-muted ms-2 fs-6 coordinate-tag">
-                            {{ selectedReport.coordinateLabel }}
-                          </small>
-                        </template>
-
-                        <!-- 3순위: 진짜 아무 정보도 없을 때만 -->
-                        <template v-else>
-                          위치 정보 없음
-                        </template>
                       </div>
                     </div>
 
@@ -218,32 +198,10 @@
             <span class="label">심박수</span>
             <span class="value">{{ prettyHr(selectedReport.hr) }}</span>
           </div>
-          <!-- 🔄 해수욕장 / 좌표 → 하나의 '위치' 행으로 통합 -->
           <div class="modal-info-row">
             <span class="label">위치</span>
             <span class="value text-end">
-              <!-- 1순위: 위치 이름 + 좌표 태그 -->
-              <template v-if="selectedReport.location && selectedReport.location !== '위치 정보 없음'">
-                {{ selectedReport.location }}
-                <small
-                  v-if="selectedReport.coordinateLabel"
-                  class="text-muted ms-2 coordinate-tag"
-                >
-                  {{ selectedReport.coordinateLabel }}
-                </small>
-              </template>
-
-              <!-- 2순위: 위치 이름은 없지만 좌표만 있는 경우 -->
-              <template v-else-if="selectedReport.coordinateLabel">
-                <small class="text-muted coordinate-tag">
-                  {{ selectedReport.coordinateLabel }}
-                </small>
-              </template>
-
-              <!-- 3순위: 둘 다 없는 경우 -->
-              <template v-else>
-                위치 정보 없음
-              </template>
+              {{ selectedReport.location }}
             </span>
           </div>
         </div>
@@ -471,23 +429,56 @@ const determineLevel = (count) => {
   return 'warning';
 };
 
+// ------------------------------------------------------------------
+// [복원] 수동 신고 관련 로직 (Pre-merge Code에서 가져옴)
+// ------------------------------------------------------------------
+
+const mapReportType = (typeCode) => {
+    // 🚨 수동 신고 Type Code를 한글 이름으로 매핑
+    const codeMap = {
+        'DROWNING': '물에 빠짐',
+        'INJURY': '부상',
+        'COLLAPSE': '쓰러짐',
+        'MISSING': '일행 이탈/실종',
+        'OTHERS': '수동 호출 (기타)',
+        'WATCH': '심박수 이상',
+        '라이프가드 호출': '라이프가드 호출', // 기존 기본값
+    };
+    // DTO에서 받은 typeCode가 map에 있으면 반환, 없으면 기본값
+    return codeMap[String(typeCode).toUpperCase()] || String(typeCode) || '라이프가드 호출';
+}
+
 const determineTypeAndLocation = (task) => {
-  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
-  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
+  // 🚨 [필드 확인] Task DTO에 taskLat/taskLon이 추가되었다고 가정하고 가져옴
+  const taskLat = toFiniteNumber(task?.taskLat); 
+  // 원본 Pre-merge 코드 주석에 따르면 DTO 이슈가 있었던 것으로 보이나,
+  // taskLon 필드를 확인하는 것이 안전합니다. (userLon은 사용자 위치)
+  const taskLon = toFiniteNumber(task?.taskLon ?? task?.userLon); 
+  
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
-  const userLat = toFiniteNumber(task?.userLat);
+  const userLat = toFiniteNumber(task?.userLat); // User의 기본 위치
   const userLon = toFiniteNumber(task?.userLon);
+  
+  let type = task?.type ?? '라이프가드 호출'; // DTO의 type을 우선 사용
 
+  // 1. Task Location (수동 신고 위치)이 있는지 확인 (최우선)
+  if (isValidCoordinatePair(taskLat, taskLon)) {
+      return { type, mapLat: taskLat, mapLon: taskLon };
+  }
+  
+  // 2. Watch Location (자동 신고 위치)이 있는지 확인
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
+    // 자동 신고일 경우 type 조정 (task.type이 WATCH일 수 있음)
+    return { type: type === '라이프가드 호출' ? '심박수 이상' : type, mapLat: watchLat, mapLon: watchLon };
   }
 
+  // 3. User Location (기본 위치)이 있는지 확인
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
+    return { type, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: resolvedType, mapLat: null, mapLon: null };
+  return { type, mapLat: null, mapLon: null };
 };
 
 const formatCoordinateLabel = (lat, lon) => {
@@ -508,17 +499,15 @@ const toReportViewModel = (task) => {
   const backendProcessed = task?.taskProcessed === 1;
   const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
- // 🔹 위치 라벨
-  // - beachName 이 있으면 그거 사용
-  // - 없으면 null (좌표는 coordinateLabel 로만 표현)
-  let locationLabel = null;
-  if (task?.beachName) {
-    locationLabel = task.beachName;
-  }
+  // 🚨 [복원] Type Code를 한글 Label로 변환
+  const typeLabel = mapReportType(type);
+
+  // 🚨 [복원] location 필드 로직: beachName이 없으면 좌표 표시
+  const locationText = task?.beachName ?? (mapLat ? `위치 (${mapLat.toFixed(4)}, ${mapLon.toFixed(4)})` : '위치 정보 없음');
 
   return {
     id,
-    type,
+    type: typeLabel, // 한글 변환된 타입 사용
     level: determineLevel(count),
     date,
     time,
@@ -527,7 +516,7 @@ const toReportViewModel = (task) => {
     genderLabel,
     hr,
     spo2: toFiniteNumber(task?.spo2),
-    location: locationLabel,
+    location: locationText, // 복원된 위치 텍스트
     mapLat,
     mapLon,
     coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
@@ -537,6 +526,8 @@ const toReportViewModel = (task) => {
     raw: task
   };
 };
+
+// ------------------------------------------------------------------
 
 const fetchReports = async ({ silent = false } = {}) => {
   if (isFetching) {
