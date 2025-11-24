@@ -86,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
         // 페이지 띄우기
         //webview.loadUrl("https://iseau.kr");
         //webview.loadUrl("https://hellokiyo.ngrok.io");
-        webview.loadUrl("https://uneffusing-bowen-noninteractive.ngrok-free.dev");
-
+        //webview.loadUrl("https://uneffusing-bowen-noninteractive.ngrok-free.dev");
+        webview.loadUrl("https://ongoing-dierdre-consonantly.ngrok-free.dev");
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -148,7 +148,8 @@ public class MainActivity extends AppCompatActivity {
         private final Context appContext;
 
         //private static final String SERVER_URL = "https://hellokiyo.ngrok.io";
-        private static final String SERVER_URL = "https://uneffusing-bowen-noninteractive.ngrok-free.dev";
+        //private static final String SERVER_URL = "https://uneffusing-bowen-noninteractive.ngrok-free.dev";
+        private static final String SERVER_URL = "https://ongoing-dierdre-consonantly.ngrok-free.dev";
         private static final String SAVE_TOKEN_URL = SERVER_URL+"/api/fcm/save-token";
 
         public AndroidBridge(Context context) {
