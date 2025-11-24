@@ -94,12 +94,6 @@
                       <i class="fs-1 bi bi-geo-alt info-icon text-muted me-2" title="위치"></i>
                       <div class="fs-2 info-value fw-bold text-truncate">
                         {{ selectedReport.location }}
-                        <small
-                          v-if="selectedReport.coordinateLabel"
-                          class="text-muted ms-2 fs-6 coordinate-tag"
-                        >
-                          {{ selectedReport.coordinateLabel }}
-                        </small>
                       </div>
                     </div>
 
