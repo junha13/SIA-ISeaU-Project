@@ -42,6 +42,7 @@ class HeartRateUploadService : Service() {
         private const val EMERGENCY_LOW_HR = 50   // 이 값 이하 → 너무 느림
         private const val EMERGENCY_HIGH_HR = 55 // 이 값 이상 → 너무 빠름
 
+
         fun start(context: Context) {
             val intent = Intent(context, HeartRateUploadService::class.java)
             if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent)

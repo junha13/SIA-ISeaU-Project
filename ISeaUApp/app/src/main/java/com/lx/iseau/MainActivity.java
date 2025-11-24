@@ -85,8 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 페이지 띄우기
         //webview.loadUrl("https://iseau.kr");
-        webview.loadUrl("https://uneffusing-bowen-noninteractive.ngrok-free.dev");
         //webview.loadUrl("https://hellokiyo.ngrok.io");
+        webview.loadUrl("https://uneffusing-bowen-noninteractive.ngrok-free.dev");
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
