@@ -76,6 +76,7 @@ export default defineConfig({
             '/api': {
                 target: 'http://localhost:8080',
                 target: 'https://hellokiyo.ngrok.io',
+                target: 'https://uneffusing-bowen-noninteractive.ngrok-free.dev',
                 changeOrigin: true
             }
         }

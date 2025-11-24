@@ -236,8 +236,10 @@ const modalMapEl = ref(null);
 
 let map = null;
 let watchMarker = null;
+let watchCircle = null;
 let modalMap = null;
 let modalWatchMarker = null;
+let modalWatchCircle = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -750,6 +752,26 @@ watchEffect(() => {
       anchor: new window.naver.maps.Point(11, 11)
     });
   }
+  // 워치 위치 기준 20m 오차 원(반경 표시)
+  if (!watchCircle) {
+    watchCircle = new window.naver.maps.Circle({
+      map,
+      center: pos,
+      radius: POSITION_ERROR_RADIUS_M, // 20m
+      strokeColor: borderColor,
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      fillColor: borderColor,
+      fillOpacity: 0.15
+    });
+  } else {
+    watchCircle.setCenter(pos);
+    watchCircle.setRadius(POSITION_ERROR_RADIUS_M);
+    watchCircle.setOptions({
+      strokeColor: borderColor,
+      fillColor: borderColor
+    });
+  }
 });
 
 watch(showRescueModal, (visible) => {
@@ -759,6 +781,12 @@ watch(showRescueModal, (visible) => {
     }
     modalMap = null;
     modalWatchMarker = null;
+    // 반경 원도 제거
+    if (modalWatchCircle) {
+      modalWatchCircle.setMap(null);
+      modalWatchCircle = null;
+    }
+
     modalMapEl.value = null;
   }
 });
@@ -803,6 +831,27 @@ watchEffect(() => {
       anchor: new window.naver.maps.Point(11, 11)
     });
   }
+  // 모달 지도에서도 동일한 20m 오차 반경 표시
+  if (!modalWatchCircle) {
+    modalWatchCircle = new window.naver.maps.Circle({
+      map: modalMap,
+      center: pos,
+      radius: POSITION_ERROR_RADIUS_M,
+      strokeColor: borderColor,
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      fillColor: borderColor,
+      fillOpacity: 0.15
+    });
+  } else {
+    modalWatchCircle.setCenter(pos);
+    modalWatchCircle.setRadius(POSITION_ERROR_RADIUS_M);
+    modalWatchCircle.setOptions({
+      strokeColor: borderColor,
+      fillColor: borderColor
+    });
+  }
+
 });
 </script>
 
