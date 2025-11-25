@@ -95,14 +95,20 @@
         </if>
     </update>
 
-    <select id="findGroupMemberLocations" parameterType="ResponseGroupMemberLocationDTO" resultType="ResponseGroupMemberLocationDTO">
+ <select id="findGroupMemberLocations" parameterType="ResponseGroupMemberLocationDTO" resultType="ResponseGroupMemberLocationDTO">
     SELECT
         u.user_number AS id,
-        ST_Y(u.location::geometry) AS lat,
-        ST_X(u.location::geometry) AS lng,
+      COALESCE(ST_Y(u.location::geometry), 0.0) AS lat,
+        COALESCE(ST_X(u.location::geometry), 0.0) AS lng,
         u.user_name AS name,
         gm.marker_color AS color,
         
+        -- 🚨 [추가] 신고 제약 조건 확인을 위한 beachNumber
+        u.beach_number AS beachNumber, 
+        
+        u.birth_date AS birthDate, 
+        u.gender AS gender,
+
         -- 💡 [수정] DB 상태 ('Y'/'N')를 프론트엔드 상태 ('online'/'pending')로 변환
         CASE gm.group_accepted
             WHEN 'Y' THEN 'online'
@@ -118,11 +124,11 @@
         ) AS distance
     
     FROM tb_group_member gm
-    JOIN tb_user u ON gm.group_member_number = u.user_number WHERE
+    JOIN tb_user u ON gm.group_member_number = u.user_number 
+    WHERE
         gm.group_number = #{groupNumber}
         AND gm.group_accepted = 'Y'
 </select>
-
     <select id="findGroupByGroupNumber" resultType="ResponseGroupDTO" parameterType="int">
         SELECT 
             group_number,

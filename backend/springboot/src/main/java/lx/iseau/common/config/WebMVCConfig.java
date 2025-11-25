@@ -23,7 +23,6 @@ public class WebMVCConfig implements WebMvcConfigurer {
                 .setViewName("forward:/index.html");
 
         // 3. 2단계 이상 깊은 경로 (예: /control/cctv, /beach/1, /sos/first-aid/cases 등)
-        // 이 부분이 없어서 404 에러가 났던 것입니다.
         registry.addViewController("/**/{path:[^\\.]*}")
                 .setViewName("forward:/index.html");
     }
@@ -40,7 +39,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 // [수정] 5173을 프론트엔드 포트인 5174로 변경합니다.
-                .allowedOrigins("http://localhost:5173", "https://hellokiyo.ngrok.io","https://subterete-reedy-dillon.ngrok-free.dev", "https://iseau.kr")
+                .allowedOrigins("http://localhost:5173", "https://hellokiyo.ngrok.io","https://uneffusing-bowen-noninteractive.ngrok-free.dev", "https://ongoing-dierdre-consonantly.ngrok-free.dev", "https://iseau.kr")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);

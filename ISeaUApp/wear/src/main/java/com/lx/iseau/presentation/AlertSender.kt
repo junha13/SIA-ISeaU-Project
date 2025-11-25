@@ -6,7 +6,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
-
+import java.util.regex.Pattern
 
 /**
  * ✅ 서버 전송 전담 모듈 (워치 → 데이터 서버)
@@ -19,7 +19,10 @@ import java.util.concurrent.Executors
 object AlertSender {
     private const val TAG = "HrAlertSender"
 
-    private const val SERVER_URL = "https://iseau.kr"
+    // private const val SERVER_URL = "https://iseau.kr"
+    // private const val SERVER_URL = "https://uneffusing-bowen-noninteractive.ngrok-free.dev"
+    // private const val SERVER_URL = "https://ongoing-dierdre-consonantly.ngrok-free.dev"
+    private const val SERVER_URL = "https://hellokiyo.ngrok.io"
     private const val ENDPOINT = SERVER_URL+"/api/controltower/heart-rate"
 
     private val io = Executors.newFixedThreadPool(2)

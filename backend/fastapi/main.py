@@ -26,7 +26,7 @@ from contextlib import asynccontextmanager # ★추가: lifespan 사용을 위�
 OUT_W = 1024  # FFmpeg의 출력 프레임 너비 (픽셀). 분석 성능과 화질의 균형을 맞춥니다.
 OUT_H = 768   # FFmpeg의 출력 프레임 높이 (픽셀).
 YOLO_MODEL_PATH = "beach_yolo.pt" # Docker 컨테이너 내부의 YOLO 모델 파일 경로/이름.
-YOLO_CONF_THRESHOLD = 0.50   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
+YOLO_CONF_THRESHOLD = 0.40   # YOLO 탐지 결과의 최소 신뢰도 임계값. 0.0 ~ 1.0 사이 값.
 DET_EVERY_FRAMES = 1 # ★성능 최적화: YOLO 추론을 몇 프레임마다 실행할지 결정합니다. 
 FRAME_SIZE = OUT_W * OUT_H * 3 # FFmpeg으로부터 읽어올 RAW BGR (3채널) 프레임의 총 바이트 크기.
 
@@ -189,6 +189,10 @@ class AIStreamServer:
         self.last_log_time: Dict[str, float] = {
             cam_id: 0.0 for cam_id in CAMERA_CONFIG.keys()
         }
+        # ⭐ 프레임 단위 "직전 danger 값" 저장용 (WebSocket delta 계산)
+        self.prev_raw_danger: Dict[str, int] = {
+            cam_id: 0 for cam_id in CAMERA_CONFIG.keys()
+        }
 
     async def initialize(self): # 기본 정보 세팅
         """서버 시작 시 Streamlink 호출 및 모든 모델을 안전하게 로드합니다."""
@@ -281,9 +285,11 @@ class AIStreamServer:
                     cam_number = 0
 
                 if cam_number > 0:
+                    added = stable_val - prev
                     payload = {
                         "camNumber": cam_number,
                         "dangerCount": stable_val,
+                        "dangerAdded": added         # 이번에 추가로 들어온 인원
                         # beachNumber는 DB에서 camNumber로 찾게 설계했으니까 안 보내도 됨
                     }
                     asyncio.create_task(self.send_danger_log(payload))
@@ -496,6 +502,12 @@ class AIStreamServer:
                 # -----------------------------------------------------------------------
                 # 3-6. 인코딩 및 전송
                 # -----------------------------------------------------------------------
+
+                # 🔹 프레임 기준 "새로 추가된 위험 인원" 계산
+                prev_raw = self.prev_raw_danger.get(stream_id, 0)
+                # 이번 프레임에서 위험구역 인원이 늘어난 만큼만 계산 (줄어든 건 0 처리)
+                added_danger = max(danger_people_count - prev_raw, 0)
+                self.prev_raw_danger[stream_id] = danger_people_count
                 
                 ok, buf = cv2.imencode(".jpg", vis, [cv2.IMWRITE_JPEG_QUALITY, 60])  # JPEG 품질
                 if not ok: continue
@@ -507,7 +519,8 @@ class AIStreamServer:
                     "timestamp": int(time.time() * 1000), 
                     "people": people_count, 
                     "motion": motion_count, 
-                    "danger":danger_people_count
+                    "danger":danger_people_count,
+                    "dangerAdded": added_danger
                 }
                 try:
                     await asyncio.wait_for(websocket.send_bytes(jpg_chunk), timeout=SEND_TIMEOUT)           # 1) JPEG 프레임

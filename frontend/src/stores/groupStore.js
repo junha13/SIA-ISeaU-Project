@@ -149,11 +149,11 @@ export const useGroupStore = defineStore('group', () => {
 
           if (currentToken) {
               console.log(`[FCM] Token obtained for User ${currentUserNumber}`);
-              
-              await axios.post(FCM_TOKEN_SAVE_URL, { 
-                  userId: String(currentUserNumber), 
-                  token: currentToken
-              }, { withCredentials: true });
+             await axios.post(FCM_TOKEN_SAVE_URL, { 
+    // 🚨 [수정] userId 대신 userNumber 사용 (DTO 필드명 일치)
+    userNumber: currentUserNumber, // Integer 타입이므로 String() 제거
+    token: currentToken
+}, { withCredentials: true });
 
               console.log('[FCM] 토큰 서버 저장 완료');
           } else {

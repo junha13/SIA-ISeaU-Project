@@ -21,6 +21,7 @@ public class ResponseGroupMemberLocationDTO {
     private String userStatus;
     
     //--
+    private Integer beachNumber;
     private Integer id;
     private Double lat;
     private Double lng;
@@ -29,4 +30,8 @@ public class ResponseGroupMemberLocationDTO {
     private String status;
     private LocalDateTime lastUpdate;
     private Double distance; // 자신과 이 행(유저)과의 거리
+    private String birthDate;
+    
+    // 🚨 [추가] 성별 표시를 위한 필드
+    private String gender;
 }
