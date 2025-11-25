@@ -1,5 +1,5 @@
 <template>
-  <div v-if="weatherData && weatherData.length > 0" class="p-3">
+  <div class="p-3">
     <!-- 🔹 기상 정보 내부 탭 -->
     <div class="tab-segment-group mb-3">
       <button
@@ -19,10 +19,13 @@
         실시간 날씨
       </button>
     </div>
-
-    <!-- ================== ① 위험 정보 탭 ================== -->
-    <div v-if="innerTab === 'risk'">
-  <div class="card shadow-sm mb-3 p-3">
+    
+     <!-- ============ ① 위험 정보 탭 ============ -->
+    <div v-if="innerTab === 'risk'" class="tab-pane-block">
+      <div
+        v-if="dangerData && dangerData.length > 0"
+        class="card shadow-sm mb-3 p-3 risk-card"
+      >
     <h6 class="fw-bold mb-1">위험 정보</h6>
 
     <div v-if="!latestDanger">
@@ -60,18 +63,17 @@
       <h6 class="fw-bold mb-2">시간별 유의 파고</h6>
       <div class="border rounded p-2">
         <VChart
-          class="chart"
+          class="chart chart-sm"
           :option="waveChartOption"
-          style="width: 100%; height: 220px"
+
           autoresize
         />
       </div>
       <h6 class="fw-bold mt-3 mb-2">시간별 수온</h6>
       <div class="border rounded p-2">
         <VChart
-          class="chart"
+          class="chart chart-sm"
           :option="seaSurfaceTemperatureChartOption"
-          style="width: 100%; height: 220px"
           autoresize
         />
       </div>
@@ -83,7 +85,7 @@
 
 
     <!-- ================== ② 실시간 날씨 탭 ================== -->
-    <div v-else>
+    <div v-else class="tab-pane-block">
       <!-- 1. 실시간 날씨 -->
       <div class="card shadow-sm mb-3 p-3">
         <h6 class="fw-bold mb-1">실시간 날씨</h6>
@@ -183,9 +185,6 @@
     </div>
   </div>
 
-  <div v-else class="p-3 text-center text-muted">
-    <small>날씨 정보를 불러오는 중...</small>
-  </div>
 </template>
 
 
@@ -445,14 +444,17 @@ const tempSeries = computed(() => {
 // ======= 카드에 찍을 값: 그래프에서 그대로 가져오기 =======
 // 지금은 "첫 번째 시점(0시)" 값을 사용. 필요하면 max/마지막 값으로 바꿀 수 있음.
 const cardWaveHeight = computed(() => {
-  const ys = waveSeries.value.y
-  return ys.length ? ys[0] : null        // ys[ys.length - 1] 쓰면 23시 값
+  if (!latestDanger.value) return null
+  const n = Number(latestDanger.value.waveHeight)
+  return Number.isFinite(n) ? n : null
 })
 
 const cardSeaSurfaceTemp = computed(() => {
-  const ys = tempSeries.value.y
-  return ys.length ? ys[0] : null
+  if (!latestDanger.value) return null
+  const n = Number(latestDanger.value.seaSurfaceTemperature)
+  return Number.isFinite(n) ? n : null
 })
+
 
 // ======= 차트 옵션 =======
 const waveChartOption = computed(() => {
@@ -580,6 +582,7 @@ function getWeatherIcon(item) {
 .btn:focus {
   box-shadow: none !important;
 }
+
 .tab-segment-group {
   display: inline-flex;
   border-radius: 999px;
@@ -609,5 +612,33 @@ function getWeatherIcon(item) {
   background-color: var(--bs-primary);
   color: #40C4FF;
 }
+
+.risk-card > h6 {
+  margin-bottom: 0.75rem;
+}
+
+.risk-card .row.text-center {
+  margin-bottom: 0.75rem;
+}
+
+/* 차트가 너무 찌그러지지 않게 최소 높이 */
+.risk-card .chart {
+}
+.tab-pane-block {
+  min-height: 420px;      /* 둘 다 최소 이만큼은 차지하게 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 필요하면 전체 패널 높이도 살짝 보정 */
+.p-3 {
+  /* 너무 크면 숫자 줄여도 됨 */
+  /* min-height: 480px; */
+}
+.risk-card .chart-sm {
+  width: 100%;
+  height: 150px; 
+}
+
 
 </style>
