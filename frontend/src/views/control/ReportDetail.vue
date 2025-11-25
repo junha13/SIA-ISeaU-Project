@@ -14,7 +14,9 @@
                 class="list-group-item list-group-item-action py-3 border-start border-5 report-list-item"
                 :class="[
                   selectedReport && selectedReport.id === report.id ? 'bg-primary-light-active border-primary-light' : 'bg-light-card border-light-card-border',
-                  getListBorderClass(report.level)
+                  getListBorderClass(report.level),
+                  // 새 신고면 반짝이는 클래스 추가
+                  isNewReport(report.id) ? 'new-report-highlight' : ''
                 ]"
                 @click.prevent="selectReport(report)"
               >
@@ -231,6 +233,8 @@ const mapEl = ref(null);
 const processedReportIds = ref(new Set());
 const showRescueModal = ref(false);
 const modalMapEl = ref(null);
+// 새로 들어온 신고 ID들을 잠깐 저장하는 Set
+const newReportIds = ref(new Set());
 const POSITION_ERROR_RADIUS_M = 20;
 
 let map = null;
@@ -255,6 +259,29 @@ const POLL_INTERVAL_MS = 1000;
 let highlightTimer = null;
 let pollTimer = null;
 let isFetching = false;
+
+// newReportIds 안에 있으면 "새 신고"로 본다
+const isNewReport = (id) => {
+  if (id == null) return false;
+  return newReportIds.value.has(id);
+};
+
+// 특정 신고를 "새로 들어온 신고"로 표시하고, 몇 초 후 제거
+const markNewReport = (id, durationMs = 3000) => {
+  if (id == null) return;
+
+  // Set은 불변으로 교체해줘야 Vue가 반응한다
+  const next = new Set(newReportIds.value);
+  next.add(id);
+  newReportIds.value = next;
+
+  setTimeout(() => {
+    const after = new Set(newReportIds.value);
+    after.delete(id);
+    newReportIds.value = after;
+  }, durationMs);
+};
+
 
 const clearHighlightTimer = () => {
   if (!highlightTimer) return;
@@ -530,19 +557,24 @@ const toReportViewModel = (task) => {
 // ------------------------------------------------------------------
 
 const fetchReports = async ({ silent = false } = {}) => {
-  if (isFetching) {
-    return;
-  }
+  if (isFetching) return;
   isFetching = true;
+
   if (!silent) {
     isLoading.value = true;
     loadError.value = null;
   }
+
   try {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
     loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
-    
+
+    // ✅ 1) 이전 리스트 상태 저장
+    const previousReports = activeReports.value;
+    const prevIds = new Set(previousReports.map(r => r.id));
+
+    // ✅ 2) processed 세트 갱신 (기존 코드 유지)
     const nextProcessed = new Set(processedReportIds.value);
     list.forEach((task) => {
       const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
@@ -552,13 +584,21 @@ const fetchReports = async ({ silent = false } = {}) => {
     });
     processedReportIds.value = nextProcessed;
 
+    // ✅ 3) DTO → ViewModel 변환
     const mapped = list.map(toReportViewModel);
 
+    // ✅ 4) 새로 들어온 신고들만 골라서 하이라이트
+    mapped.forEach((report) => {
+      if (report.id != null && !prevIds.has(report.id)) {
+        // 이전 리스트에 없었던 id → 새 신고
+        markNewReport(report.id);
+      }
+    });
+
+    // 실제 리스트 교체
     activeReports.value = mapped;
 
-    const hadReports = activeReports.value.length;
-    const hasNewReports = mapped.length > hadReports;
-
+    // ✅ 5) 리스트가 비었을 때 처리
     if (!mapped.length) {
       setSelectedReport(null);
       activityLogs.value = [];
@@ -569,19 +609,15 @@ const fetchReports = async ({ silent = false } = {}) => {
       return;
     }
 
-    // 새 신고가 추가된 경우 → 자동으로 첫 번째 신고 선택
-    if (hasNewReports) {
-      const newestReport = mapped[0];
-      setSelectedReport(newestReport, true);
-      loadReportLogs(newestReport, { silent }).catch(() => {});
-    } else {
-      // 기존 유지 로직
-      const previousId = selectedReport.value?.id;
-      const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
-      const shouldFlash = previousId !== nextSelected?.id;
-      setSelectedReport(nextSelected, shouldFlash);
-      loadReportLogs(nextSelected, { silent }).catch(() => {});
-    }
+    // ✅ 6) 선택 유지 로직
+    const previousId = selectedReport.value?.id;
+    const nextSelected =
+        (previousId != null && mapped.find(r => r.id === previousId)) ||
+        mapped[0]; // 이전 선택이 사라졌으면 1번으로
+
+    const shouldFlash = previousId !== nextSelected?.id;
+    setSelectedReport(nextSelected, shouldFlash);
+    loadReportLogs(nextSelected, { silent }).catch(() => {});
 
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
@@ -1205,5 +1241,23 @@ watchEffect(() => {
 .rescue-modal-card .btn-link:hover {
   color: #212529;
   text-decoration: none;
+}
+
+/* 새로 들어온 신고 카드 하이라이트 */
+.new-report-highlight {
+  position: relative;
+  animation: new-report-pulse 1.2s ease-out 0s 2; /* 2번 정도만 반짝 */
+}
+
+@keyframes new-report-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 146, 186, 0.0);
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgba(0, 146, 186, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 146, 186, 0.0);
+  }
 }
 </style>

@@ -21,14 +21,14 @@ public class ControlTowerController {
     private final TtsService ttsService;
 	private final VoiceWebSocketHandler voiceWebSocketHandler;
 
-//    // ============ 로그 데이터 조회(지서) ============
-//    @GetMapping("/task/log")
-//    public ResponseEntity<?> getTaskLogByUserNumber(@RequestParam int userNumber) {
-//        List<TaskLogDTO> result = service.getTaskLogByUserNumber(userNumber);
-//        return ResponseEntity
-//                .ok()
-//                .body(Map.of("result", result));
-//    }
+    // ============ 로그 데이터 조회(지서) ============
+    @GetMapping("/task/log")
+    public ResponseEntity<?> getTaskLogByUserNumber(@RequestParam int userNumber) {
+        List<TaskLogDTO> result = service.getTaskLogByUserNumber(userNumber);
+        return ResponseEntity
+                .ok()
+                .body(Map.of("result", result));
+    }
 
     // ============ 관제센터의 처리 리스트(지서) ============
     @GetMapping("/task/list/controltower")
