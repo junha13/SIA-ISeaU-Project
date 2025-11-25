@@ -646,57 +646,68 @@ const calculateAge = (birthDate) => {
 
 /* ===== 함수: 수동 신고 모달 열기/닫기 (🚨 클릭) ===== */
 const handleManualReport = (member) => {
-    // 🚨 member 객체에서 age, gender, id(userNumber) 등의 필드를 가져와야 합니다.
-    
-    const memberId = member.id; // userNumber로 사용
-    
-  // 🚨 [핵심] DB에서 가져온 원본 lat/lng 값
-    const memberLat = Number(member.lat); 
-    const memberLng = Number(member.lng);
-    
-    // 🚨 [BPM Fix] 수동 신고 시 BPM 정보는 없으므로 NULL로 설정
-    const memberBpm = null;
-    
-    // 🚨 [수정] 나이 계산 로직 적용 (member.birthDate 필드가 서버에서 내려와야 함)
-    const memberAge = calculateAge(member.birthDate); 
-    const memberGender = member.gender || 'N/A';
-    
-    const manualLog = `관리자 수동 호출 시작 (${member.name} 위치 기준)`;
+    // 🚨 member 객체에서 age, gender, id(userNumber) 등의 필드를 가져와야 합니다.
+    console.log('--- HANDLE REPORT DEBUG ---');
+    console.log('Member ID:', member.id);
+    console.log('Beach Number:', member.beachNumber);
+    console.log('Raw Lat/Lng:', member.lat, member.lng);
+    console.log('--- END DEBUG ---');
+    // 🚨 [1단계 제약] 해수욕장 등록 여부 확인
+    if (!member.beachNumber || member.beachNumber === 0) {
+        alert('신고 기능은 그룹원이 해수욕장(beachNumber)에 등록되어 있는 경우에만 가능합니다.');
+        return; 
+    }
+    
+    const memberId = member.id; // userNumber로 사용
+    
+    // 🚨 [핵심] Number()를 사용하여 명시적 형변환 시도 (PostGIS 좌표 변환 오류 방지)
+    const memberLat = Number(member.lat);
+    const memberLng = Number(member.lng);
+    
+    // 🚨 [BPM Fix] 수동 신고 시 BPM 정보는 없으므로 NULL로 설정
+    const memberBpm = null;
+    
+    // 🚨 [수정] 나이 계산 로직 적용 (member.birthDate 필드가 서버에서 내려와야 함)
+    const memberAge = calculateAge(member.birthDate); 
+    const memberGender = member.gender || 'N/A';
+    
+    // 수동 호출 로그 메시지
+    const manualLog = `관리자 수동 호출 시작 (${member.name} 위치 기준)`;
 
-  // 필수 유효성 검사 (isFinite로 숫자이면서 NaN/Infinity가 아님을 확인)
-    if (!memberId || !Number.isFinite(memberLat) || !Number.isFinite(memberLng)) {
-        // 🚨 [디버깅] 유효성 검사 실패 시, 어떤 값이 문제인지 명시적으로 출력
-        console.error("❌ 위치 값 오류:", { lat: member.lat, lng: member.lng, isNumLat: Number.isFinite(memberLat) });
-        alert('필수 위치/사용자 정보가 유효하지 않습니다. (ID, 위도, 경도 확인 필요)');
-        return;
-    }
-
-    // reportTarget 객체 구성
-    reportTarget.value = {
-        memberName: member.name,
-        age: memberAge, // 🚨 계산된 나이 적용
-        gender: memberGender,
-        bpm: memberBpm, // 🚨 NULL 전달
-        userNumber: memberId, // GroupReportModal에 전달할 userNumber
-        latitude: memberLat, 
-        longitude: memberLng, // 🚨 Number 타입으로 전달
-        timestamp: Date.now(),
-        log: manualLog,
-    };
-    
-    // 🚨 [추가] 최종 전달 Props 확인 로그
-   console.log('✅ [Report Props] Lat/Lng:', reportTarget.value.latitude, reportTarget.value.longitude);
-    // ...
-
-    showReportModal.value = true;
-    
-    // 선택된 멤버의 위치로 지도를 중앙 이동 (시각적 강조)
-    if (map) {
-        const reportPos = new window.naver.maps.LatLng(memberLat, memberLng);
-        map.setCenter(reportPos);
-        map.setZoom(18); 
-    }
+    // 필수 유효성 검사 (isFinite로 숫자이면서 NaN/Infinity가 아님을 확인)
+  if (!memberId || !Number.isFinite(memberLat) || !Number.isFinite(memberLng) || (memberLat === 0 && memberLng === 0)) {
+        console.error("❌ 위치 값 오류:", { lat: member.lat, lng: member.lng, isNum: Number.isFinite(memberLat) });
+        alert('필수 위치/사용자 정보가 유효하지 않습니다. (ID, 위도, 경도 확인 필요)');
+        return;
+    }
+    // reportTarget 객체 구성
+    reportTarget.value = {
+        memberName: member.name,
+        age: memberAge, // 🚨 계산된 나이 적용
+        gender: memberGender,
+        bpm: memberBpm, // 🚨 NULL 전달
+        userNumber: memberId, // GroupReportModal에 전달할 userNumber
+        latitude: memberLat, // 🚨 Number 타입으로 전달
+        longitude: memberLng, // 🚨 Number 타입으로 전달
+        timestamp: Date.now(),
+        log: manualLog,
+    };
+    
+    showReportModal.value = true;
+    
+    // 선택된 멤버의 위치로 지도를 중앙 이동 (시각적 강조)
+    if (map) {
+        const reportPos = new window.naver.maps.LatLng(memberLat, memberLng);
+        map.setCenter(reportPos);
+        map.setZoom(18); 
+    }
 };
+
+const handleReportModalClose = () => {
+    showReportModal.value = false;
+    reportTarget.value = null;
+}
+
 
 /* ===== 알림 ===== */
 const prevMemberDistances = ref({})
@@ -812,6 +823,7 @@ watch(groupLocations, (members) => {
   min-height: calc(100vh - 55px - 60px);
 }
 
+/* 지도 버튼 */
 .map-overlay-buttons button:first-child {
   background-color: rgba(255, 255, 255, 0.8);
   color: v-bind(darkColor);
@@ -824,6 +836,7 @@ watch(groupLocations, (members) => {
   color: white !important;
 }
 
+/* 빈 그룹 카드 */
 .empty-group-card {
   border-width: 1px !important;
   border-radius: 0.5rem;
@@ -831,6 +844,7 @@ watch(groupLocations, (members) => {
   max-width: 400px;
 }
 
+/* 그룹 액션 버튼 영역 */
 .group-actions {
   position: relative;
   padding-top: 1rem;
@@ -851,6 +865,7 @@ watch(groupLocations, (members) => {
   background-color: #e9ecef;
 }
 
+/* 아웃라인 버튼 커스텀 */
 .btn-outline-danger {
   border-color: #dc3545;
   color: #dc3545;

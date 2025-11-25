@@ -2,7 +2,6 @@
   <div class="report-detail container-fluid p-3" style="background-color: #F8F9FA;">
     <div class="row">
 
-      <!-- Left: Active reports list -->
       <div class="col-lg-4 mb-4 mb-lg-0">
         <h4 class="mb-3 text-secondary">신고 리스트</h4>
         <div class="list-group" style="height: 700px; overflow-y: auto;">
@@ -38,7 +37,6 @@
         </div>
       </div>
 
-      <!-- Right: Detail panel (narrower for better balance) -->
       <div class="col-lg-8" v-if="selectedReport">
         <h4 class="mb-3 text-secondary">신고 상세정보</h4>
         <div class="row g-3">
@@ -54,7 +52,6 @@
                 지도 API 준비 중입니다.
               </div>
 
-              <!-- 좌표 있으면 지도 렌더링 -->
               <div
                 v-else
                 ref="mapEl"
@@ -82,7 +79,6 @@
                     
                   </div>
                   
-                  <!-- Updated 신고 정보 영역 -->
                   <div class="card-body text-dark">
                     <div class="info-grid row gy-3">
                       <div class="col-12 d-flex align-items-center">
@@ -95,13 +91,13 @@
                       <div class="fs-2 info-value fw-bold text-truncate">
                         {{ selectedReport.location }}
                         <small
-                          v-if="selectedReport.coordinateLabel"
-                          class="text-muted ms-2 fs-6 coordinate-tag"
-                        >
-                          {{ selectedReport.coordinateLabel }}
-                        </small>
+                            v-if="selectedReport.coordinateLabel && selectedReport.location !== selectedReport.coordinateLabel"
+                            class="text-muted ms-2 fs-6 coordinate-tag"
+                          >
+                          </small>
                       </div>
                     </div>
+
 
                     <div class="col-12 d-flex align-items-center">
                       <i class="fs-1 bi bi-heart-pulse info-icon text-muted me-2" title="심박수"></i>
@@ -162,7 +158,7 @@
       <div class="rescue-modal-header d-flex justify-content-between align-items-start">
         <div>
           <h5 class="mb-1">구조 요청 전송</h5>
-          <p class="text-muted small mb-0">다음과 같은 내용을 구조요원에게 전달합니다</p>
+          <p class="text-muted small mb-0">다음과 같은 내용을 119 센터에 전달합니다</p>
         </div>
         <button
           type="button"
@@ -203,8 +199,10 @@
             <span class="value">{{ prettyHr(selectedReport.hr) }}</span>
           </div>
           <div class="modal-info-row">
-            <span class="label">해수욕장</span>
-            <span class="value">{{ selectedReport.location }}</span>
+            <span class="label">위치</span>
+            <span class="value text-end">
+              {{ selectedReport.location }}
+            </span>
           </div>
         </div>
       </div>
@@ -233,11 +231,14 @@ const mapEl = ref(null);
 const processedReportIds = ref(new Set());
 const showRescueModal = ref(false);
 const modalMapEl = ref(null);
+const POSITION_ERROR_RADIUS_M = 20;
 
 let map = null;
 let watchMarker = null;
+let watchCircle = null;
 let modalMap = null;
 let modalWatchMarker = null;
+let modalWatchCircle = null;
 
 const route = useRoute();
 const DEFAULT_CONTROL_TOWER_NUMBER = 1;
@@ -428,23 +429,56 @@ const determineLevel = (count) => {
   return 'warning';
 };
 
+// ------------------------------------------------------------------
+// [복원] 수동 신고 관련 로직 (Pre-merge Code에서 가져옴)
+// ------------------------------------------------------------------
+
+const mapReportType = (typeCode) => {
+    // 🚨 수동 신고 Type Code를 한글 이름으로 매핑
+    const codeMap = {
+        'DROWNING': '물에 빠짐',
+        'INJURY': '부상',
+        'COLLAPSE': '쓰러짐',
+        'MISSING': '일행 이탈/실종',
+        'OTHERS': '수동 호출 (기타)',
+        'WATCH': '심박수 이상',
+        '라이프가드 호출': '라이프가드 호출', // 기존 기본값
+    };
+    // DTO에서 받은 typeCode가 map에 있으면 반환, 없으면 기본값
+    return codeMap[String(typeCode).toUpperCase()] || String(typeCode) || '라이프가드 호출';
+}
+
 const determineTypeAndLocation = (task) => {
-  const backendType = typeof task?.type === 'string' ? task.type.trim() : null;
-  const resolvedType = backendType && backendType.length ? backendType : '심박수 이상';
+  // 🚨 [필드 확인] Task DTO에 taskLat/taskLon이 추가되었다고 가정하고 가져옴
+  const taskLat = toFiniteNumber(task?.taskLat); 
+  // 원본 Pre-merge 코드 주석에 따르면 DTO 이슈가 있었던 것으로 보이나,
+  // taskLon 필드를 확인하는 것이 안전합니다. (userLon은 사용자 위치)
+  const taskLon = toFiniteNumber(task?.taskLon ?? task?.userLon); 
+  
   const watchLat = toFiniteNumber(task?.watchLat);
   const watchLon = toFiniteNumber(task?.watchLon);
-  const userLat = toFiniteNumber(task?.userLat);
+  const userLat = toFiniteNumber(task?.userLat); // User의 기본 위치
   const userLon = toFiniteNumber(task?.userLon);
+  
+  let type = task?.type ?? '라이프가드 호출'; // DTO의 type을 우선 사용
 
+  // 1. Task Location (수동 신고 위치)이 있는지 확인 (최우선)
+  if (isValidCoordinatePair(taskLat, taskLon)) {
+      return { type, mapLat: taskLat, mapLon: taskLon };
+  }
+  
+  // 2. Watch Location (자동 신고 위치)이 있는지 확인
   if (isValidCoordinatePair(watchLat, watchLon)) {
-    return { type: resolvedType, mapLat: watchLat, mapLon: watchLon };
+    // 자동 신고일 경우 type 조정 (task.type이 WATCH일 수 있음)
+    return { type: type === '라이프가드 호출' ? '심박수 이상' : type, mapLat: watchLat, mapLon: watchLon };
   }
 
+  // 3. User Location (기본 위치)이 있는지 확인
   if (isValidCoordinatePair(userLat, userLon)) {
-    return { type: resolvedType, mapLat: userLat, mapLon: userLon };
+    return { type, mapLat: userLat, mapLon: userLon };
   }
 
-  return { type: resolvedType, mapLat: null, mapLon: null };
+  return { type, mapLat: null, mapLon: null };
 };
 
 const formatCoordinateLabel = (lat, lon) => {
@@ -465,9 +499,15 @@ const toReportViewModel = (task) => {
   const backendProcessed = task?.taskProcessed === 1;
   const locallyProcessed = id !== null && processedReportIds.value.has(id);
 
+  // 🚨 [복원] Type Code를 한글 Label로 변환
+  const typeLabel = mapReportType(type);
+
+  // 🚨 [복원] location 필드 로직: beachName이 없으면 좌표 표시
+  const locationText = task?.beachName ?? (mapLat ? `위치 (${mapLat.toFixed(4)}, ${mapLon.toFixed(4)})` : '위치 정보 없음');
+
   return {
     id,
-    type,
+    type: typeLabel, // 한글 변환된 타입 사용
     level: determineLevel(count),
     date,
     time,
@@ -476,7 +516,7 @@ const toReportViewModel = (task) => {
     genderLabel,
     hr,
     spo2: toFiniteNumber(task?.spo2),
-    location: task?.beachName ?? '위치 정보 없음',
+    location: locationText, // 복원된 위치 텍스트
     mapLat,
     mapLon,
     coordinateLabel: formatCoordinateLabel(mapLat, mapLon),
@@ -486,6 +526,8 @@ const toReportViewModel = (task) => {
     raw: task
   };
 };
+
+// ------------------------------------------------------------------
 
 const fetchReports = async ({ silent = false } = {}) => {
   if (isFetching) {
@@ -500,6 +542,7 @@ const fetchReports = async ({ silent = false } = {}) => {
     const response = await fetchTaskList({ controlTowerNumber: controlTowerNumber.value });
     loadError.value = null;
     const list = Array.isArray(response?.result) ? response.result : [];
+    
     const nextProcessed = new Set(processedReportIds.value);
     list.forEach((task) => {
       const id = task?.id ?? task?.taskNumber ?? task?.task_number ?? null;
@@ -513,6 +556,9 @@ const fetchReports = async ({ silent = false } = {}) => {
 
     activeReports.value = mapped;
 
+    const hadReports = activeReports.value.length;
+    const hasNewReports = mapped.length > hadReports;
+
     if (!mapped.length) {
       setSelectedReport(null);
       activityLogs.value = [];
@@ -523,11 +569,20 @@ const fetchReports = async ({ silent = false } = {}) => {
       return;
     }
 
-    const previousId = selectedReport.value?.id;
-    const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
-    const shouldFlash = previousId !== nextSelected?.id;
-    setSelectedReport(nextSelected, shouldFlash);
-    loadReportLogs(nextSelected, { silent }).catch(() => {});
+    // 새 신고가 추가된 경우 → 자동으로 첫 번째 신고 선택
+    if (hasNewReports) {
+      const newestReport = mapped[0];
+      setSelectedReport(newestReport, true);
+      loadReportLogs(newestReport, { silent }).catch(() => {});
+    } else {
+      // 기존 유지 로직
+      const previousId = selectedReport.value?.id;
+      const nextSelected = mapped.find((report) => report.id === previousId) ?? mapped[0];
+      const shouldFlash = previousId !== nextSelected?.id;
+      setSelectedReport(nextSelected, shouldFlash);
+      loadReportLogs(nextSelected, { silent }).catch(() => {});
+    }
+
   } catch (error) {
     console.error('관제 신고 목록 조회 실패:', error);
     if (!silent) {
@@ -680,12 +735,11 @@ const getLevelBorderColor = (level) => {
 
 const buildMarkerHtml = (borderColor) => `
   <div style="
-    width: 22px;
-    height: 22px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     border: 3px solid ${borderColor};
-    background: rgba(0,146,186,0.20);
-    box-shadow: 0 0 0 4px rgba(0,146,186,0.15);
+    background: ${borderColor};
     box-sizing: border-box;
   "></div>
 `;
@@ -739,7 +793,7 @@ watchEffect(() => {
       map,
       icon: {
         content: markerHtml,
-        anchor: new window.naver.maps.Point(11, 11) // 동그라미 중심 기준
+        anchor: new window.naver.maps.Point(5, 5) // 동그라미 중심 기준
       }
     });
   } else {
@@ -747,7 +801,27 @@ watchEffect(() => {
     // 레벨이 바뀔 수도 있으니 아이콘도 같이 업데이트
     watchMarker.setIcon({
       content: markerHtml,
-      anchor: new window.naver.maps.Point(11, 11)
+      anchor: new window.naver.maps.Point(5, 5)
+    });
+  }
+  // 워치 위치 기준 20m 오차 원(반경 표시)
+  if (!watchCircle) {
+    watchCircle = new window.naver.maps.Circle({
+      map,
+      center: pos,
+      radius: POSITION_ERROR_RADIUS_M, // 20m
+      strokeColor: borderColor,
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      fillColor: borderColor,
+      fillOpacity: 0.15
+    });
+  } else {
+    watchCircle.setCenter(pos);
+    watchCircle.setRadius(POSITION_ERROR_RADIUS_M);
+    watchCircle.setOptions({
+      strokeColor: borderColor,
+      fillColor: borderColor
     });
   }
 });
@@ -759,6 +833,12 @@ watch(showRescueModal, (visible) => {
     }
     modalMap = null;
     modalWatchMarker = null;
+    // 반경 원도 제거
+    if (modalWatchCircle) {
+      modalWatchCircle.setMap(null);
+      modalWatchCircle = null;
+    }
+
     modalMapEl.value = null;
   }
 });
@@ -793,16 +873,37 @@ watchEffect(() => {
       map: modalMap,
       icon: {
         content: markerHtml,
-        anchor: new window.naver.maps.Point(11, 11)
+        anchor: new window.naver.maps.Point(5, 5)
       }
     });
   } else {
     modalWatchMarker.setPosition(pos);
     modalWatchMarker.setIcon({
       content: markerHtml,
-      anchor: new window.naver.maps.Point(11, 11)
+      anchor: new window.naver.maps.Point(5, 5)
     });
   }
+  // 모달 지도에서도 동일한 20m 오차 반경 표시
+  if (!modalWatchCircle) {
+    modalWatchCircle = new window.naver.maps.Circle({
+      map: modalMap,
+      center: pos,
+      radius: POSITION_ERROR_RADIUS_M,
+      strokeColor: borderColor,
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      fillColor: borderColor,
+      fillOpacity: 0.15
+    });
+  } else {
+    modalWatchCircle.setCenter(pos);
+    modalWatchCircle.setRadius(POSITION_ERROR_RADIUS_M);
+    modalWatchCircle.setOptions({
+      strokeColor: borderColor,
+      fillColor: borderColor
+    });
+  }
+
 });
 </script>
 

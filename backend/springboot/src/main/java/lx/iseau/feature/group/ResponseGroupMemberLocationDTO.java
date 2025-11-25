@@ -21,6 +21,7 @@ public class ResponseGroupMemberLocationDTO {
     private String userStatus;
     
     //--
+    private Integer beachNumber;
     private Integer id;
     private Double lat;
     private Double lng;

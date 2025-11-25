@@ -6,7 +6,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
-
+import java.util.regex.Pattern
 
 /**
  * ✅ 서버 전송 전담 모듈 (워치 → 데이터 서버)
@@ -19,7 +19,9 @@ import java.util.concurrent.Executors
 object AlertSender {
     private const val TAG = "HrAlertSender"
 
-    private const val SERVER_URL = "https://iseau.kr"
+    // private const val SERVER_URL = "https://iseau.kr"
+    // private const val SERVER_URL = "https://uneffusing-bowen-noninteractive.ngrok-free.dev"
+    private const val SERVER_URL = "https://ongoing-dierdre-consonantly.ngrok-free.dev"
     private const val ENDPOINT = SERVER_URL+"/api/controltower/heart-rate"
 
     private val io = Executors.newFixedThreadPool(2)
@@ -36,6 +38,7 @@ object AlertSender {
     fun sendHeartRateAsync(userNumber: Int, heartRateBpm: Int, occurredAtIso: String, latitude: Double?, longitude: Double?, altitude: Double?) {
         io.execute {
             try {
+
                 // 1. 추가 데이터(위치/고도) JSON 조각 만들기
                 // 주의: 이전 DTO(HeartRateRequest)에 맞춰 키 이름을 watchLatitude 등으로 변경함
                 val sb = StringBuilder()

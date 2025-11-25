@@ -230,7 +230,11 @@
       AND user_number = #{userNumber}
     ]]>
   </update>
-
+<update id="updateUserBeachSelection">
+    UPDATE tb_user
+    SET beach_number = #{beachNumber}
+    WHERE user_number = #{userNumber}
+</update>
   <delete id="deleteBeachComment" parameterType="ResponseBeachCommentDTO">
     <![CDATA[
     DELETE FROM tb_beach_comment_list
